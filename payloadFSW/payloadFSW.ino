@@ -9,10 +9,11 @@
  * Adafruit BMP3XX
  */
 
+#include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
-#include "Adafruit_BMP3XX.h>
+#include <Adafruit_BMP3XX.h>
 #include <utility/imumaths.h>
 
 #define SEALEVELPRESSURE_HPA (1013.25)
