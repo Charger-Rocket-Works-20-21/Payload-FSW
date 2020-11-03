@@ -10,6 +10,8 @@
  */
 
 #include "src/system.h"
+#include "src/alt.h"
+#include "src/imu.h"
 
 void setup() {
   // Initialize
