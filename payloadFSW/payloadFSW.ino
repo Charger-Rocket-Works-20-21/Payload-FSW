@@ -9,45 +9,20 @@
  * Adafruit BMP3XX
  */
 
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include "Adafruit_BMP3XX.h>
-#include <utility/imumaths.h>
-
-#define SEALEVELPRESSURE_HPA (1013.25)
+#include "includes.h"
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 Adafruit_BMP3XX bmp;
 
 void setup() {
-  // Initialize 
-  Serial.begin(9600);
+  // Initialize
+  Serial.begin(115200);
 
   // Initialize IMU
-  if (!bno.begin()){
-    Serial.println("BNO055 Not Detected");
-    while(1);
-  }
-  
-  delay(1000);
-  
-  bno.setExtCrystalUse(true);
+  imu_init(&bno);
 
-
-  
   // Initialize Altimeter
-  if (!bmp.begin_I2C()) {
-    Serial.println("BMP388 Not Detected");
-    while(1);
-  }
-  
-  bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-  bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);
-  bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
-  bmp.setOutputDataRate(BMP3_ODR_50_HZ);
-  
- 
+  alt_init(&bmp); 
 }
 
 void loop() {
@@ -77,10 +52,39 @@ void loop() {
   Serial.println(" hPa");
 
   Serial.print("Approx. Altitude = ");
-  Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA));
+  Serial.print(bmp.readAltitude(SEALEVELPRESSURE));
   Serial.println(" m");
-
   Serial.println();
   
   delay(100);
+}
+
+/*
+ * Inertial Measurement Unit Inititialization
+ */
+void imu_init(Adafruit_BNO055* sensor){
+  if (! sensor->begin()){
+    Serial.println("BNO055 Not Detected");
+    while(1);
+  }
+  
+  delay(1000);
+  
+  sensor->setExtCrystalUse(true);
+}
+
+
+/*
+ * Atmospheric Pressure Sensor Inititialization
+ */
+void alt_init(Adafruit_BMP3XX* sensor){
+  if (!sensor->begin_I2C()) {
+    Serial.println("BMP388 Not Detected");
+    while(1);
+  }
+  
+  sensor->setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+  sensor->setPressureOversampling(BMP3_OVERSAMPLING_4X);
+  sensor->setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+  sensor->setOutputDataRate(BMP3_ODR_50_HZ);
 }
