@@ -10,7 +10,7 @@ Uses:
 * 
 
 Dependencies:
-* Arduino Libraries
+* Arduino Libraries (Wire, SPI)
 * Adafruit BNO055 Library
 * Adafruit BMP3XX Library
 
