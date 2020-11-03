@@ -9,31 +9,20 @@
  * Adafruit BMP3XX
  */
 
-#include <Arduino.h>
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include <Adafruit_BMP3XX.h>
-#include <utility/imumaths.h>
-
-#define SEALEVELPRESSURE     1013.25   // hPa
-#define SEALEVELTEMPERATRE   273.15    // Kelvin
+#include "includes.h"
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 Adafruit_BMP3XX bmp;
 
 void setup() {
-  // Initialize 
-  Serial.begin(9600);
+  // Initialize
+  Serial.begin(115200);
 
   // Initialize IMU
   imu_init(&bno);
 
-  
   // Initialize Altimeter
-  alt_init(&bmp);
-  
- 
+  alt_init(&bmp); 
 }
 
 void loop() {
@@ -63,7 +52,7 @@ void loop() {
   Serial.println(" hPa");
 
   Serial.print("Approx. Altitude = ");
-  Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA));
+  Serial.print(bmp.readAltitude(SEALEVELPRESSURE));
   Serial.println(" m");
   Serial.println();
   
