@@ -1,3 +1,7 @@
+/* Reference: 
+ *    - https://learn.adafruit.com/adafruit-bno055-absolute-orientation-sensor/arduino-code
+ *    - https://learn.adafruit.com/using-the-adafruit-unified-sensor-driver/how-does-it-work
+ */
 #include "imu.h"
 
 

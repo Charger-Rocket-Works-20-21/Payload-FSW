@@ -1,3 +1,8 @@
+/* Reference: 
+ *    - https://learn.adafruit.com/adafruit-bmp388-bmp390-bmp3xx/arduino
+ *    - https://adafruit.github.io/Adafruit_BMP3XX/html/index.html
+ */
+
 #include "alt.h"
 
 // Global Variable Declarations
