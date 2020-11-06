@@ -9,9 +9,9 @@
  * Adafruit BMP3XX
  */
 
-#include "src/system.h"
-#include "src/alt.h"
-#include "src/imu.h"
+#include "system.h"
+#include "alt.h"
+#include "imu.h"
 
 void setup() {
   // Initialize
