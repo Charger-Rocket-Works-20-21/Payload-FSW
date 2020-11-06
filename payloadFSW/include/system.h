@@ -10,6 +10,7 @@
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 
+#include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
 // #include <utility/imumaths.h> Giving an error?
