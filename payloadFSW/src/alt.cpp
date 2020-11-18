@@ -14,15 +14,36 @@ Adafruit_BMP3XX bmp;
  * Atmospheric Pressure Sensor Inititialization
  */
 void alt_init(Adafruit_BMP3XX* sensor){
-  if (!sensor->begin_I2C()) {
-    Serial.println("BMP388 Not Detected");
-    while(1);
-  }
+	if (!sensor->begin_I2C()) {
+		Serial.println("BMP388 Not Detected");
+    	while(1);
+	}
   
-  sensor->setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-  sensor->setPressureOversampling(BMP3_OVERSAMPLING_4X);
-  sensor->setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
-  sensor->setOutputDataRate(BMP3_ODR_50_HZ);
+	sensor->setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+	sensor->setPressureOversampling(BMP3_OVERSAMPLING_4X);
+	sensor->setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+	sensor->setOutputDataRate(BMP3_ODR_50_HZ);
+}
+
+double getSmoothTemp(double smoothingFactor, double smoothTemp) {
+	double newTemp = bmp.readTemperature();
+	return smoothingFactor * newTemp + (1 - smoothingFactor) * smoothTemp;
+}
+
+double getSmoothPres(double smoothingFactor, double smoothPres) {
+	double newPres = bmp.readPressure();
+	return smoothingFactor * newPres + (1 - smoothingFactor) * smoothPres;
+}
+
+double getSmoothAlt(double smoothingFactor, double smoothAlt) {
+	double newAlt = bmp.readAltitude(SEALEVELPRESSURE);
+	return smoothingFactor * newAlt + (1 - smoothingFactor) * smoothAlt;
+}
+
+double getSmoothVel(double smoothingFactor, double smoothVel, double smoothAlt, double pastTime, double currentTime) {
+	double newAlt = getSmoothAlt(smoothingFactor, smoothAlt);
+	double newVel = (newAlt - smoothAlt) / (currentTime - pastTime);
+	return smoothingFactor * newVel + (1 - smoothingFactor) * smoothVel;
 }
 
 // -------------------- Test Functions ---------------------

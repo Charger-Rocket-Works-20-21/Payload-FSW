@@ -11,6 +11,10 @@ extern Adafruit_BMP3XX bmp;
 
 // Functions
 void alt_init(Adafruit_BMP3XX*);
+double getSmoothTemp(double smoothingFactor, double smoothTemp);
+double getSmoothPres(double smoothingFactor, double smoothPres);
+double getSmoothAlt(double smoothingFactor, double smoothAlt);
+double getSmoothVel(double smoothingFactor, double smoothVel, double smoothAlt, double pastTime, double currentTime);
 
 // Test Functions
 #ifdef DEBUG

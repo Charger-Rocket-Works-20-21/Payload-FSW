@@ -12,6 +12,7 @@ extern Adafruit_BNO055 bno;
 
 // Functions
 void imu_init(Adafruit_BNO055* sensor);
+double resultantAccel(double smoothingFactor, double smoothAcceleration);
 
 // Test Functions
 #ifdef DEBUG

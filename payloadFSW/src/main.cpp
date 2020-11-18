@@ -19,21 +19,20 @@ States states;
 
 // Initialize Variables
 extern flightState currentFS;
-double temperature;				// Degrees Celsius
-double pressure;				// Pascals
-double altitude;				// Meters
-double velocity;				// Meters/Second
-double accel;					// Meters/Second/Second
 
 double initialTemp;
 double initialPres;
 double initialAlt;
 
 double smoothingFactor = 0.5;
-double smoothAltitude;
-double smoothVelocity;
-double smoothAccel;
+double smoothTemperature;		// Degrees Celsius
+double smoothPressure;			// Pascals
+double smoothAltitude;			// Meters
+double smoothVelocity;			// Meters/Second
+double smoothAcceleration;		// Meters/Second/Second
 
+double currentTime;
+double pastTime;
 
 void setup() {
 //--Initialize Board
@@ -60,9 +59,21 @@ void setup() {
 void loop() {
 //--Sensor Readings
 	Serial.println("Reading Sensors.");
+	//Tests:
 	bno055_test();
 	bmp3XX_test();
     
+	// Read Temperature, Pressure, and Altitude from BMP388
+	smoothTemperature = getSmoothTemp(smoothingFactor, smoothTemperature);
+	smoothPressure = getSmoothPres(smoothingFactor, smoothPressure);
+	smoothAltitude = getSmoothPres(smoothingFactor, smoothAltitude);
+
+	currentTime = millis();
+	smoothVelocity = getSmoothVel(smoothingFactor, smoothVelocity, smoothAltitude, pastTime, currentTime);
+
+	// Read Net Acceleration from BNO055
+	smoothAcceleration = resultantAccel(smoothingFactor, smoothAcceleration);
+
 	Serial.println(currentFS);
 	switch (currentFS) {
 	case UNARMED:
@@ -75,7 +86,7 @@ void loop() {
 		states.ascent(smoothAltitude, initialAlt, smoothVelocity);
 		break;
 	case DESCENT:
-		states.descent(smoothVelocity, smoothAccel);
+		states.descent(smoothVelocity, smoothAcceleration);
 		break;
 	case LEVELLING:
 		states.levelling();
@@ -85,5 +96,6 @@ void loop() {
 		break;
 	}
 
+	pastTime = currentTime;
 	delay(100);
 }
