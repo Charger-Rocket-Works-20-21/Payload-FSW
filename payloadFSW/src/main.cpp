@@ -20,6 +20,8 @@ States states;
 // Initialize Variables
 extern flightState currentFS;
 
+uint16_t packetCount = 0;
+
 double initialTemp;
 double initialPres;
 double initialAlt;
@@ -40,23 +42,35 @@ void setup() {
 	Serial.println("Payload FSW Software Initializing.");
 	Wire.begin();
 	SPI.begin();
+	SD.begin(BUILTIN_SDCARD);
+
+//--Initialize Start of SD Card write for given test/run
+	File dataFile = SD.open("datalog.txt", FILE_WRITE);
+	if (dataFile) {
+		dataFile.println("STARTING OUTPUT");
+		dataFile.close();
+	}
 
 //--Initialize Sensors
 	imu_init(&bno); // Initialize IMU
 	alt_init(&bmp); // Initialize Altimeter
 
 //--Initialize Ground Parameters
-	// Get Accurate Pressure
-	// Get Accurate Temperature
-	// Get Accurate Altitude
-	
-	// Dummy Definitions
-	initialTemp = 27.0;
-	initialPres = 125300;
-	initialAlt = 0;
+	smoothTemperature = 27.0;
+	smoothPressure = 125300;
+	smoothAltitude = 0;
+	for (int i = 0; i < 5; i++) {
+		smoothTemperature = getSmoothTemp(smoothingFactor, smoothTemperature);
+		smoothPressure = getSmoothPres(smoothingFactor, smoothPressure);
+		smoothAltitude = getSmoothPres(smoothingFactor, smoothAltitude);
+	}
+	initialTemp = smoothTemperature;
+	initialPres = smoothPressure;
+	initialAlt = smoothAltitude;
 }
 
 void loop() {
+	packetCount++;
 //--Sensor Readings
 	Serial.println("Reading Sensors.");
 	//Tests:
@@ -74,6 +88,32 @@ void loop() {
 	// Read Net Acceleration from BNO055
 	smoothAcceleration = resultantAccel(smoothingFactor, smoothAcceleration);
 
+	// Prepping Packet for SD Card Write
+	String packet = "";
+	packet += String(packetCount);
+	packet += ",";
+	packet += String(currentTime);
+	packet += ",";
+	packet += String(smoothTemperature);
+	packet += ",";
+	packet += String(smoothPressure);
+	packet += ",";
+	packet += String(smoothAltitude);
+	packet += ",";
+	packet += String(smoothVelocity);
+	packet += ",";
+	packet += String(smoothAcceleration);
+	packet += ",";
+	packet += String(currentFS);
+
+	// Writing Packet to SD Card
+	File dataFile = SD.open("datalog.txt", FILE_WRITE);
+	if (dataFile) {
+		dataFile.println(packet);
+		dataFile.close();
+	}
+
+	// Determining current Flight State, including logic to go to the next state
 	Serial.println(currentFS);
 	switch (currentFS) {
 	case UNARMED:

@@ -13,6 +13,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <SD.h>
 // #include <utility/imumaths.h> Giving an error?
 // #include "RingBuffer.h" Giving errors?
 
