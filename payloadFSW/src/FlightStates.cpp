@@ -56,6 +56,18 @@ void States::finished() {
 	//Run until powered off
 }
 
+bool States::dropTest(uint16_t packetCount, double altitude) {
+	currentFS = TEST;
+
+	if (packetCount % 200) {
+		oldAlt = currentAlt;
+		currentAlt = altitude;
+		if (oldAlt - currentAlt > 4) {
+			return true;
+		}
+	}
+}
+
 /*void States::whichState(flightState newState) {
 	switch (newState) {
 	case UNARMED:

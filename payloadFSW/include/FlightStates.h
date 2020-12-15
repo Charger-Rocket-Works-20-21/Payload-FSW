@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED };
+enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED, TEST };
 
 class States {
 public:
@@ -14,6 +14,12 @@ public:
 	void descent(double velocity, double gForce);
 	void levelling();
     void finished();
+
+	bool dropTest(uint16_t packetCount, double altitude);
+
+private:
+	double oldAlt = 0;
+	double currentAlt = 0;	
 };
 
 

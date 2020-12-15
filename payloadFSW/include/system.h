@@ -21,5 +21,7 @@
 #define SEALEVELPRESSURE     1013.25   // hPa
 #define SEALEVELTEMPERATRE   273.15    // Kelvin
 
+#define DROPTEST
+
 // Global Variables
 #endif /* SYSTEM_H_ */

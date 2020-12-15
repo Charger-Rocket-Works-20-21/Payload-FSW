@@ -67,6 +67,10 @@ void setup() {
 	initialTemp = smoothTemperature;
 	initialPres = smoothPressure;
 	initialAlt = smoothAltitude;
+
+	#ifdef DROPTEST
+		currentFS = TEST;
+	#endif
 }
 
 void loop() {
@@ -133,6 +137,16 @@ void loop() {
 		break;
 	case FINISHED:
 		states.finished();
+		break;
+	case TEST:
+		if (states.dropTest(packetCount, smoothAltitude)) {
+			// Writing Drop Test Warning to SD Card
+			File dataFile = SD.open("datalog.txt", FILE_WRITE);
+			if (dataFile) {
+				dataFile.println("POSSIBLE DROP TEST END");
+				dataFile.close();
+			}
+		}
 		break;
 	}
 
