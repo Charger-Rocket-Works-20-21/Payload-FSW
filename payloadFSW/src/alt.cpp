@@ -13,16 +13,17 @@ Adafruit_BMP3XX bmp;
 /*
  * Atmospheric Pressure Sensor Inititialization
  */
-void alt_init(Adafruit_BMP3XX* sensor){
+bool alt_init(Adafruit_BMP3XX* sensor){
 	if (!sensor->begin_I2C()) {
 		Serial.println("BMP388 Not Detected");
-    	while(1);
+    	return false;
 	}
   
 	sensor->setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
 	sensor->setPressureOversampling(BMP3_OVERSAMPLING_4X);
 	sensor->setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
 	sensor->setOutputDataRate(BMP3_ODR_50_HZ);
+	return true;
 }
 
 double getSmoothTemp(double smoothingFactor, double smoothTemp) {

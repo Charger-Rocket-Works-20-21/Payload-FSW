@@ -11,8 +11,9 @@ extern sensors_event_t event;
 extern Adafruit_BNO055 bno;
 
 // Functions
-void imu_init(Adafruit_BNO055* sensor);
-double resultantAccel(double smoothingFactor, double smoothAcceleration);
+bool imu_init(Adafruit_BNO055* sensor);
+std::vector<double> resultantAccel(double smoothingFactor, std::vector<double> smoothAcceleration);
+std::vector<double> resultantOrient(double smoothingFactor, std::vector<double> smoothOrientation);
 
 // Test Functions
 #ifdef DEBUG

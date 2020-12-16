@@ -15,26 +15,44 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 /*
  * Inertial Measurement Unit Inititialization
  */
-void imu_init(Adafruit_BNO055* sensor){
+bool imu_init(Adafruit_BNO055* sensor){
 	if (! sensor->begin()){
     	Serial.println("BNO055 Not Detected");
-		while(1);
+		return false;
 	}
   
 	delay(1000);
   
 	sensor->setExtCrystalUse(true);
+	return true;
 }
 
-double resultantAccel(double smoothingFactor, double smoothAcceleration) {
+std::vector<double> resultantAccel(double smoothingFactor, std::vector<double> smoothAcceleration) {
 	bno.getEvent(&event);
 
-	double accelx = event.acceleration.x;
-	double accely = event.acceleration.y;
-	double accelz = event.acceleration.z;
+	double accelx = smoothingFactor * event.acceleration.x + (1 - smoothingFactor) * smoothAcceleration.at(0);
+	double accely = smoothingFactor * event.acceleration.y + (1 - smoothingFactor) * smoothAcceleration.at(1);
+	double accelz = smoothingFactor * event.acceleration.z + (1 - smoothingFactor) * smoothAcceleration.at(2);
 
-	double resultantVector = sqrt(pow(accelx, 2.0) + pow(accely, 2.0) + pow(accelz, 2.0));
-	return smoothingFactor * resultantVector + (1 - smoothingFactor) * smoothAcceleration;
+	std::vector<double> resultantVector;
+	resultantVector.push_back(accelx);
+	resultantVector.push_back(accely);
+	resultantVector.push_back(accelz);
+	return resultantVector;
+}
+
+std::vector<double> resultantOrient(double smoothingFactor, std::vector<double> smoothOrientation) {
+	bno.getEvent(&event);
+
+	double orientx = smoothingFactor * event.orientation.x + (1 - smoothingFactor) * smoothOrientation.at(0);
+	double orienty = smoothingFactor * event.orientation.y + (1 - smoothingFactor) * smoothOrientation.at(1);
+	double orientz = smoothingFactor * event.orientation.z + (1 - smoothingFactor) * smoothOrientation.at(2);
+
+	std::vector<double> resultantVector;
+	resultantVector.push_back(orientx);
+	resultantVector.push_back(orienty);
+	resultantVector.push_back(orientz);
+	return resultantVector;
 }
 
 // -------------------- Test Functions ---------------------

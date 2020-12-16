@@ -30,11 +30,11 @@ void States::ascent(double altitude, double initialAltitude, double velocity) {
 	
 }
 
-void States::descent(double velocity, double accel) {
+void States::descent(double velocity, std::vector<double> accel) {
 	currentFS = DESCENT;
 	//Perform Descent Operations
 
-	if (fabs(velocity) <= 5 && accel < .05) {
+	if (fabs(velocity) <= 5 && accel.at(0) < .05) {
 		currentFS = LEVELLING;
 	}
 }
@@ -65,7 +65,11 @@ bool States::dropTest(uint16_t packetCount, double altitude) {
 		if (oldAlt - currentAlt > 4) {
 			return true;
 		}
+		else {
+			return false;
+		}
 	}
+	return false;
 }
 
 /*void States::whichState(flightState newState) {

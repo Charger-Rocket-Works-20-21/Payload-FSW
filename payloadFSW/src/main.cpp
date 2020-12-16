@@ -27,14 +27,20 @@ double initialPres;
 double initialAlt;
 
 double smoothingFactor = 0.5;
-double smoothTemperature;		// Degrees Celsius
-double smoothPressure;			// Pascals
-double smoothAltitude;			// Meters
-double smoothVelocity;			// Meters/Second
-double smoothAcceleration;		// Meters/Second/Second
+double smoothTemperature;					// Degrees Celsius
+double smoothPressure;						// Pascals
+double smoothAltitude;						// Meters
+double smoothVelocity;						// Meters/Second
+std::vector<double> smoothAcceleration;		// Meters/Second/Second
+std::vector<double> smoothOrientation;		// Degrees
 
 double currentTime;
 double pastTime;
+double diffTime;
+
+const char * file;
+
+void fileNamer();
 
 void setup() {
 //--Initialize Board
@@ -42,18 +48,40 @@ void setup() {
 	Serial.println("Payload FSW Software Initializing.");
 	Wire.begin();
 	SPI.begin();
+	#ifdef USESD
 	SD.begin(BUILTIN_SDCARD);
 
 //--Initialize Start of SD Card write for given test/run
-	File dataFile = SD.open("datalog.txt", FILE_WRITE);
+	fileNamer();
+	#endif
+
+	File dataFile = SD.open(file, FILE_WRITE);
 	if (dataFile) {
-		dataFile.println("STARTING OUTPUT");
+		dataFile.println("weewoo weewoo");
 		dataFile.close();
 	}
 
 //--Initialize Sensors
-	imu_init(&bno); // Initialize IMU
-	alt_init(&bmp); // Initialize Altimeter
+	if(!imu_init(&bno)) { // Initialize IMU
+		dataFile = SD.open(file, FILE_WRITE);
+		if (dataFile) {
+			dataFile.println("BNO055 Not Detected");
+			dataFile.close();
+		}
+	} 
+	if(!alt_init(&bmp)) { // Initialize Altimeter
+		dataFile = SD.open(file, FILE_WRITE);
+		if (dataFile) {
+			dataFile.println("BMP388 Not Detected");
+			dataFile.close();
+		}
+	} 
+
+	dataFile = SD.open(file, FILE_WRITE);
+	if (dataFile) {
+		dataFile.println("post init");
+		dataFile.close();
+	}
 
 //--Initialize Ground Parameters
 	smoothTemperature = 27.0;
@@ -71,6 +99,8 @@ void setup() {
 	#ifdef DROPTEST
 		currentFS = TEST;
 	#endif
+
+	digitalWrite(13, HIGH);
 }
 
 void loop() {
@@ -89,8 +119,9 @@ void loop() {
 	currentTime = millis();
 	smoothVelocity = getSmoothVel(smoothingFactor, smoothVelocity, smoothAltitude, pastTime, currentTime);
 
-	// Read Net Acceleration from BNO055
+	// Read Acceleration and Orientation from BNO055
 	smoothAcceleration = resultantAccel(smoothingFactor, smoothAcceleration);
+	smoothOrientation = resultantOrient(smoothingFactor, smoothOrientation);
 
 	// Prepping Packet for SD Card Write
 	String packet = "";
@@ -106,16 +137,28 @@ void loop() {
 	packet += ",";
 	packet += String(smoothVelocity);
 	packet += ",";
-	packet += String(smoothAcceleration);
+	packet += String(smoothAcceleration.at(0));
+	packet += ",";
+	packet += String(smoothAcceleration.at(1));
+	packet += ",";
+	packet += String(smoothAcceleration.at(2));
+	packet += ",";
+	packet += String(smoothOrientation.at(0));
+	packet += ",";
+	packet += String(smoothOrientation.at(1));
+	packet += ",";
+	packet += String(smoothOrientation.at(2));
 	packet += ",";
 	packet += String(currentFS);
 
+	#ifdef USESD
 	// Writing Packet to SD Card
-	File dataFile = SD.open("datalog.txt", FILE_WRITE);
+	File dataFile = SD.open(file, FILE_WRITE);
 	if (dataFile) {
 		dataFile.println(packet);
 		dataFile.close();
 	}
+	#endif
 
 	// Determining current Flight State, including logic to go to the next state
 	Serial.println(currentFS);
@@ -140,16 +183,36 @@ void loop() {
 		break;
 	case TEST:
 		if (states.dropTest(packetCount, smoothAltitude)) {
+			#ifdef USESD
 			// Writing Drop Test Warning to SD Card
-			File dataFile = SD.open("datalog.txt", FILE_WRITE);
+			File dataFile = SD.open(file, FILE_WRITE);
 			if (dataFile) {
 				dataFile.println("POSSIBLE DROP TEST END");
 				dataFile.close();
 			}
+			#endif
 		}
 		break;
 	}
 
+	diffTime = currentTime - pastTime;
 	pastTime = currentTime;
-	delay(100);
+	delay(50);
+}
+
+void fileNamer() {
+	for (int i = 0; i < 1000; i++) {
+		String fileName = "datalog";
+		fileName += String(i);
+		fileName += ".txt";
+		file = fileName.c_str();
+		if (!SD.exists(file)){
+			File dataFile = SD.open(file, FILE_WRITE);
+			if (dataFile) {
+				dataFile.println("STARTING OUTPUT");
+				dataFile.close();
+			}
+			return;
+		}
+	}
 }

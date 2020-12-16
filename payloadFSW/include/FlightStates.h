@@ -2,6 +2,7 @@
 #define _FLIGHTSTATES_H
 
 #include <stdint.h>
+#include "system.h"
 
 enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED, TEST };
 
@@ -11,7 +12,7 @@ public:
 	void unarmed();
 	void standby(double altitude, double initialAltitude, double velocity);
 	void ascent(double altitude, double initialAltitude, double velocity);
-	void descent(double velocity, double gForce);
+	void descent(double velocity, std::vector<double> accel);
 	void levelling();
     void finished();
 

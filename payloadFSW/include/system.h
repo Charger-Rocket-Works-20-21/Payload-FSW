@@ -6,16 +6,20 @@
 // All included files
 
 #define DEBUG
+#define USESD
 
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 
+#include <vector>
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
-#include <SD.h>
+#ifdef USESD
+    #include <SD.h>
+#endif
 // #include <utility/imumaths.h> Giving an error?
-// #include "RingBuffer.h" Giving errors?
+#include "RingBuffer.h" //Giving errors?
 
 // Constant Definitions
 #define SEALEVELPRESSURE     1013.25   // hPa
