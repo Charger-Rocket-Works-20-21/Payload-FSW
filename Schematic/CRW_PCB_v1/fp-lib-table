@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name BMP388)(type KiCad)(uri ${KIPRJMOD}/Libraries/BMP388)(options "")(descr ""))
+  (lib (name BNO055)(type KiCad)(uri ${KIPRJMOD}/Libraries/BNO055)(options "")(descr ""))
+  (lib (name Teensy4_1)(type KiCad)(uri ${KIPRJMOD}/Libraries/Teensy4_1)(options "")(descr ""))
+)
