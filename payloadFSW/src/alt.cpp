@@ -19,6 +19,8 @@ bool alt_init(Adafruit_BMP3XX* sensor){
     	return false;
 	}
   
+  	Serial.println("BMP388 Detected");
+
 	sensor->setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
 	sensor->setPressureOversampling(BMP3_OVERSAMPLING_4X);
 	sensor->setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);

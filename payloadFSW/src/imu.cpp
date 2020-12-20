@@ -16,11 +16,13 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
  * Inertial Measurement Unit Inititialization
  */
 bool imu_init(Adafruit_BNO055* sensor){
+	Serial.println("Checking IMU Init");
 	if (! sensor->begin()){
     	Serial.println("BNO055 Not Detected");
 		return false;
 	}
-  
+
+	Serial.println("BNO055 Detected");  
 	delay(1000);
   
 	sensor->setExtCrystalUse(true);
@@ -28,12 +30,14 @@ bool imu_init(Adafruit_BNO055* sensor){
 }
 
 std::vector<double> resultantAccel(double smoothingFactor, std::vector<double> smoothAcceleration) {
-	bno.getEvent(&event);
-
+	Serial.println("here");
+	bno.getEvent(&event, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+	Serial.println("Event Got");
+	Serial.println(event.acceleration.x);
 	double accelx = smoothingFactor * event.acceleration.x + (1 - smoothingFactor) * smoothAcceleration.at(0);
 	double accely = smoothingFactor * event.acceleration.y + (1 - smoothingFactor) * smoothAcceleration.at(1);
 	double accelz = smoothingFactor * event.acceleration.z + (1 - smoothingFactor) * smoothAcceleration.at(2);
-
+	Serial.println("Accels Calculated");
 	std::vector<double> resultantVector;
 	resultantVector.push_back(accelx);
 	resultantVector.push_back(accely);
@@ -42,7 +46,7 @@ std::vector<double> resultantAccel(double smoothingFactor, std::vector<double> s
 }
 
 std::vector<double> resultantOrient(double smoothingFactor, std::vector<double> smoothOrientation) {
-	bno.getEvent(&event);
+	bno.getEvent(&event, Adafruit_BNO055::VECTOR_MAGNETOMETER);
 
 	double orientx = smoothingFactor * event.orientation.x + (1 - smoothingFactor) * smoothOrientation.at(0);
 	double orienty = smoothingFactor * event.orientation.y + (1 - smoothingFactor) * smoothOrientation.at(1);
