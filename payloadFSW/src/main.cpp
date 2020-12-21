@@ -40,88 +40,117 @@ double diffTime;
 
 const char * file;
 
+bool ledOn;
+int ledPin = 13;
+
 void fileNamer();
+void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
 
 void setup() {
 //--Initialize Board
+	pinMode(ledPin, OUTPUT);
+	// for (int j = 0; j < 5; j++) {
+	// 	digitalWrite(ledPin, HIGH);   // turn the LED on (HIGH is the voltage level)
+	// 	delay(1000);               // wait for a second
+	// 	digitalWrite(ledPin, LOW);    // turn the LED off by making the voltage LOW
+	// 	delay(1000);               // wait for a second
+	// }
+	digitalWrite(ledPin, HIGH);
+	delay(2000);
+	ledOn = true;
 	Serial.begin(115200);
 	Serial.println("Payload FSW Software Initializing.");
-	Wire.begin();
-	SPI.begin();
+	// Wire.begin();
+	// SPI.begin();
+	
 	#ifdef USESD
 	SD.begin(BUILTIN_SDCARD);
 
 //--Initialize Start of SD Card write for given test/run
 	fileNamer();
 	#endif
-
-	File dataFile = SD.open(file, FILE_WRITE);
-	if (dataFile) {
-		dataFile.println("weewoo weewoo");
-		dataFile.close();
-	}
-
+	
 //--Initialize Sensors
 	if(!imu_init(&bno)) { // Initialize IMU
+		#ifdef USESD
 		dataFile = SD.open(file, FILE_WRITE);
 		if (dataFile) {
 			dataFile.println("BNO055 Not Detected");
 			dataFile.close();
 		}
+		#endif
+
 	} 
 	if(!alt_init(&bmp)) { // Initialize Altimeter
+		#ifdef USESD
 		dataFile = SD.open(file, FILE_WRITE);
 		if (dataFile) {
 			dataFile.println("BMP388 Not Detected");
 			dataFile.close();
 		}
-	} 
-
-	dataFile = SD.open(file, FILE_WRITE);
-	if (dataFile) {
-		dataFile.println("post init");
-		dataFile.close();
+		#endif
 	}
-
+	
 //--Initialize Ground Parameters
-	smoothTemperature = 27.0;
-	smoothPressure = 125300;
-	smoothAltitude = 0;
-	for (int i = 0; i < 5; i++) {
-		smoothTemperature = getSmoothTemp(smoothingFactor, smoothTemperature);
-		smoothPressure = getSmoothPres(smoothingFactor, smoothPressure);
-		smoothAltitude = getSmoothPres(smoothingFactor, smoothAltitude);
-	}
-	initialTemp = smoothTemperature;
-	initialPres = smoothPressure;
-	initialAlt = smoothAltitude;
+	// Serial.println("Declaring Initial Parameters");
+	// smoothTemperature = 27.0;
+	// smoothPressure = 125300;
+	// smoothAltitude = 0;
+	// for (int i = 0; i < 5; i++) {
+	// 	smoothTemperature = getSmoothTemp(smoothingFactor, smoothTemperature);
+	// 	smoothPressure = getSmoothPres(smoothingFactor, smoothPressure);
+	// 	smoothAltitude = getSmoothPres(smoothingFactor, smoothAltitude);
+	// }
+	// initialTemp = smoothTemperature;
+	// initialPres = smoothPressure;
+	// initialAlt = smoothAltitude;
 
+	String initParams = "";
+	initParams += String(initialTemp);
+	initParams += ",";
+	initParams += String(initialPres);
+	initParams += ",";
+	initParams += String(initialAlt);
+	initParams += ",";
+	Serial.println(initParams);
+	
 	#ifdef DROPTEST
 		currentFS = TEST;
 	#endif
 
-	digitalWrite(13, HIGH);
+	Serial.println("End of Setup");
 }
 
 void loop() {
+	toBlinkOrNotToBlink(packetCount, ledOn);
+
 	packetCount++;
 //--Sensor Readings
 	Serial.println("Reading Sensors.");
 	//Tests:
-	bno055_test();
-	bmp3XX_test();
+	// bno055_test();
+	// bmp3XX_test();
     
 	// Read Temperature, Pressure, and Altitude from BMP388
-	smoothTemperature = getSmoothTemp(smoothingFactor, smoothTemperature);
-	smoothPressure = getSmoothPres(smoothingFactor, smoothPressure);
-	smoothAltitude = getSmoothPres(smoothingFactor, smoothAltitude);
+	Serial.print("Reading Temperature... ");
+	// smoothTemperature = getSmoothTemp(smoothingFactor, smoothTemperature);
+	Serial.print("Reading Pressure... ");
+	// smoothPressure = getSmoothPres(smoothingFactor, smoothPressure);
+	Serial.print("Reading Altitude...\n");
+	// smoothAltitude = getSmoothPres(smoothingFactor, smoothAltitude);
 
 	currentTime = millis();
-	smoothVelocity = getSmoothVel(smoothingFactor, smoothVelocity, smoothAltitude, pastTime, currentTime);
+	Serial.print("Calculating Velocity...\n");
+	// smoothVelocity = getSmoothVel(smoothingFactor, smoothVelocity, smoothAltitude, pastTime, currentTime);
 
 	// Read Acceleration and Orientation from BNO055
-	smoothAcceleration = resultantAccel(smoothingFactor, smoothAcceleration);
-	smoothOrientation = resultantOrient(smoothingFactor, smoothOrientation);
+	// Serial.print("Reading Acceleration... ");
+	// smoothAcceleration = resultantAccel(smoothingFactor, smoothAcceleration);
+	// Serial.print("Reading Orientation... ");
+	// smoothOrientation = resultantOrient(smoothingFactor, smoothOrientation);
+	bno055_test();
+
+	Serial.println("Finished Polling Sensors.");
 
 	// Prepping Packet for SD Card Write
 	String packet = "";
@@ -150,6 +179,8 @@ void loop() {
 	packet += String(smoothOrientation.at(2));
 	packet += ",";
 	packet += String(currentFS);
+
+	Serial.println(packet);
 
 	#ifdef USESD
 	// Writing Packet to SD Card
@@ -200,6 +231,7 @@ void loop() {
 	delay(50);
 }
 
+#ifdef USESD
 void fileNamer() {
 	for (int i = 0; i < 1000; i++) {
 		String fileName = "datalog";
@@ -213,6 +245,20 @@ void fileNamer() {
 				dataFile.close();
 			}
 			return;
+		}
+	}
+}
+#endif
+
+void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn) {
+	if (packetNumber % 100 == 0) {
+		if (lightsOn) {
+			lightsOn = false;
+			digitalWrite(13, LOW);
+		}
+		else {
+			lightsOn = true;
+			digitalWrite(13, HIGH);
 		}
 	}
 }

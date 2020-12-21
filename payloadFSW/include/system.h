@@ -6,7 +6,7 @@
 // All included files
 
 #define DEBUG
-#define USESD
+// #define USESD
 
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
@@ -15,6 +15,8 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
 #ifdef USESD
     #include <SD.h>
 #endif

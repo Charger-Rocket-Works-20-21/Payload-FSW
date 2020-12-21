@@ -59,7 +59,7 @@ void States::finished() {
 bool States::dropTest(uint16_t packetCount, double altitude) {
 	currentFS = TEST;
 
-	if (packetCount % 200) {
+	if (packetCount % 200 == 0) {
 		oldAlt = currentAlt;
 		currentAlt = altitude;
 		if (oldAlt - currentAlt > 4) {
