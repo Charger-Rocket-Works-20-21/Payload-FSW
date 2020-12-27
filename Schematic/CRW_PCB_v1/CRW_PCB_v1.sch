@@ -2574,4 +2574,16 @@ Wire Wire Line
 Connection ~ 7200 11450
 Wire Wire Line
 	7200 11450 7250 11450
+Wire Wire Line
+	7250 11350 7200 11350
+Wire Wire Line
+	7200 11350 7200 11450
+Wire Wire Line
+	4050 11350 4000 11350
+Wire Wire Line
+	4000 11350 4000 11450
+Wire Wire Line
+	600  11350 550  11350
+Wire Wire Line
+	550  11350 550  11450
 $EndSCHEMATC
