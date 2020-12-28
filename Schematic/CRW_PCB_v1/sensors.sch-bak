@@ -1,0 +1,707 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 2 5
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Device:C C?
+U 1 1 5FFCBD81
+P 9675 2700
+AR Path="/5FFCBD81" Ref="C?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBD81" Ref="C?"  Part="1" 
+F 0 "C?" H 10000 2650 50  0000 R CNN
+F 1 "0.1uF" H 10000 2725 50  0000 R CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 9713 2550 50  0001 C CNN
+F 3 "~" H 9675 2700 50  0001 C CNN
+	1    9675 2700
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 5FFCBD87
+P 9925 2700
+AR Path="/5FFCBD87" Ref="C?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBD87" Ref="C?"  Part="1" 
+F 0 "C?" H 10040 2746 50  0000 L CNN
+F 1 "0.1uF" H 10040 2655 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 9963 2550 50  0001 C CNN
+F 3 "~" H 9925 2700 50  0001 C CNN
+	1    9925 2700
+	1    0    0    -1  
+$EndComp
+Text Notes 7875 3500 0    50   ~ 0
+Pressure
+$Comp
+L BMP388:BMP388 BNO?
+U 1 1 5FFCBD91
+P 9025 2800
+AR Path="/5FFCBD91" Ref="BNO?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBD91" Ref="BNO?"  Part="1" 
+F 0 "BNO?" H 9025 3567 50  0000 C CNN
+F 1 "BMP388" H 9025 3476 50  0000 C CNN
+F 2 "BMP388:PQFN50P200X200X80-10N" H 9025 2800 50  0001 L BNN
+F 3 "" H 9025 2800 50  0001 L BNN
+F 4 "1.1" H 9025 2800 50  0001 L BNN "PARTREV"
+F 5 "BOSCH" H 9025 2800 50  0001 L BNN "MANUFACTURER"
+F 6 "IPC 7351B" H 9025 2800 50  0001 L BNN "STANDARD"
+	1    9025 2800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9525 2550 9575 2550
+Wire Wire Line
+	9675 2850 9575 2850
+Wire Wire Line
+	9525 2950 9575 2950
+Wire Wire Line
+	9925 2950 9925 2850
+Wire Wire Line
+	9925 2550 9925 2450
+Wire Wire Line
+	9925 2450 9575 2450
+Wire Wire Line
+	9525 3050 9575 3050
+Wire Wire Line
+	9575 3050 9575 2950
+Connection ~ 9575 2950
+Wire Wire Line
+	9575 2950 9925 2950
+$Comp
+L power:-BATT #PWR?
+U 1 1 5FFCBDA1
+P 9575 3100
+AR Path="/5FFCBDA1" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDA1" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 9575 2950 50  0001 C CNN
+F 1 "-BATT" H 9590 3273 50  0000 C CNN
+F 2 "" H 9575 3100 50  0001 C CNN
+F 3 "" H 9575 3100 50  0001 C CNN
+	1    9575 3100
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	9575 3100 9575 3050
+Connection ~ 9575 3050
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5FFCBDA9
+P 9575 2400
+AR Path="/5FFCBDA9" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDA9" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 9575 2250 50  0001 C CNN
+F 1 "+3.3V" H 9590 2573 50  0000 C CNN
+F 2 "" H 9575 2400 50  0001 C CNN
+F 3 "" H 9575 2400 50  0001 C CNN
+	1    9575 2400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9575 2400 9575 2450
+Connection ~ 9575 2450
+Wire Wire Line
+	9575 2450 9525 2450
+Wire Wire Line
+	9575 2550 9575 2450
+Connection ~ 9575 2550
+Wire Wire Line
+	9575 2550 9675 2550
+Wire Wire Line
+	9575 2850 9575 2950
+Connection ~ 9575 2850
+Wire Wire Line
+	9575 2850 9525 2850
+Wire Notes Line
+	10325 1900 10325 3500
+Wire Notes Line
+	7875 1900 7875 3500
+$Comp
+L Device:Thermistor TH?
+U 1 1 5FFCBDBA
+P 7750 5400
+AR Path="/5FFCBDBA" Ref="TH?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDBA" Ref="TH?"  Part="1" 
+F 0 "TH?" H 7645 5354 50  0000 R CNN
+F 1 "Thermistor" H 7645 5445 50  0000 R CNN
+F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P2.54mm_Vertical" H 7750 5400 50  0001 C CNN
+F 3 "~" H 7750 5400 50  0001 C CNN
+	1    7750 5400
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 5FFCBDC0
+P 7750 4950
+AR Path="/5FFCBDC0" Ref="R?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDC0" Ref="R?"  Part="1" 
+F 0 "R?" H 7820 4996 50  0000 L CNN
+F 1 "47k" H 7820 4905 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 7680 4950 50  0001 C CNN
+F 3 "~" H 7750 4950 50  0001 C CNN
+	1    7750 4950
+	1    0    0    -1  
+$EndComp
+Text GLabel 7650 5150 0    50   Output ~ 0
+THERM_ADC
+Wire Wire Line
+	7750 5200 7750 5150
+Wire Wire Line
+	7750 5150 7650 5150
+Connection ~ 7750 5150
+Wire Wire Line
+	7750 5150 7750 5100
+$Comp
+L power:-BATT #PWR?
+U 1 1 5FFCBDCB
+P 7750 5600
+AR Path="/5FFCBDCB" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDCB" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 7750 5450 50  0001 C CNN
+F 1 "-BATT" H 7765 5773 50  0000 C CNN
+F 2 "" H 7750 5600 50  0001 C CNN
+F 3 "" H 7750 5600 50  0001 C CNN
+	1    7750 5600
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 5FFCBDD1
+P 10100 5400
+AR Path="/5FFCBDD1" Ref="R?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDD1" Ref="R?"  Part="1" 
+F 0 "R?" H 10170 5446 50  0000 L CNN
+F 1 "47k" H 10170 5355 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 10030 5400 50  0001 C CNN
+F 3 "~" H 10100 5400 50  0001 C CNN
+	1    10100 5400
+	1    0    0    -1  
+$EndComp
+Text GLabel 10000 5200 0    50   Output ~ 0
+BATT_ADC
+Wire Wire Line
+	10100 5250 10100 5200
+Wire Wire Line
+	10100 5200 10000 5200
+Connection ~ 10100 5200
+Wire Wire Line
+	10100 5200 10100 5150
+$Comp
+L power:+BATT #PWR?
+U 1 1 5FFCBDDC
+P 10100 4850
+AR Path="/5FFCBDDC" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDDC" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 10100 4700 50  0001 C CNN
+F 1 "+BATT" H 10115 5023 50  0000 C CNN
+F 2 "" H 10100 4850 50  0001 C CNN
+F 3 "" H 10100 4850 50  0001 C CNN
+	1    10100 4850
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:-BATT #PWR?
+U 1 1 5FFCBDE2
+P 10100 5550
+AR Path="/5FFCBDE2" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDE2" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 10100 5400 50  0001 C CNN
+F 1 "-BATT" H 10115 5723 50  0000 C CNN
+F 2 "" H 10100 5550 50  0001 C CNN
+F 3 "" H 10100 5550 50  0001 C CNN
+	1    10100 5550
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 5FFCBDE8
+P 10100 5000
+AR Path="/5FFCBDE8" Ref="R?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDE8" Ref="R?"  Part="1" 
+F 0 "R?" H 10170 5046 50  0000 L CNN
+F 1 "100k" H 10170 4955 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 10030 5000 50  0001 C CNN
+F 3 "~" H 10100 5000 50  0001 C CNN
+	1    10100 5000
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5FFCBDEE
+P 7750 4800
+AR Path="/5FFCBDEE" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBDEE" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 7750 4650 50  0001 C CNN
+F 1 "+3.3V" H 7765 4973 50  0000 C CNN
+F 2 "" H 7750 4800 50  0001 C CNN
+F 3 "" H 7750 4800 50  0001 C CNN
+	1    7750 4800
+	1    0    0    -1  
+$EndComp
+Wire Notes Line
+	7150 4550 8300 4550
+Wire Notes Line
+	8300 4550 8300 5850
+Wire Notes Line
+	8300 5850 7150 5850
+Wire Notes Line
+	7150 5850 7150 4550
+Wire Notes Line
+	9550 5850 9550 4550
+Wire Notes Line
+	9550 4550 10500 4550
+Wire Notes Line
+	10500 4550 10500 5850
+Wire Notes Line
+	10500 5850 9550 5850
+Text Notes 9550 5850 0    50   ~ 0
+Battery Voltage
+Text Notes 7150 5850 0    50   ~ 0
+Thermistor
+Text GLabel 8525 2900 0    50   BiDi ~ 0
+I2C_SDA
+Text GLabel 8525 2700 0    50   BiDi ~ 0
+I2C_SCL
+Text GLabel 8525 3000 0    50   Input ~ 0
+BMP_ADDR_SEL
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5FFCBE01
+P 8475 2600
+AR Path="/5FFCBE01" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/5FFCBE01" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 8475 2450 50  0001 C CNN
+F 1 "+3.3V" V 8525 2650 50  0000 C CNN
+F 2 "" H 8475 2600 50  0001 C CNN
+F 3 "" H 8475 2600 50  0001 C CNN
+	1    8475 2600
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	8475 2600 8525 2600
+Wire Notes Line
+	7875 3500 10325 3500
+Wire Notes Line
+	7875 1900 10325 1900
+Text GLabel 8525 2400 0    50   Output ~ 0
+BMP_INT
+$Comp
+L power:+3.3V #PWR?
+U 1 1 60027996
+P 4825 5550
+AR Path="/60027996" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/60027996" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 4825 5400 50  0001 C CNN
+F 1 "+3.3V" H 4840 5723 50  0000 C CNN
+F 2 "" H 4825 5550 50  0001 C CNN
+F 3 "" H 4825 5550 50  0001 C CNN
+	1    4825 5550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4825 5550 4825 5600
+Wire Wire Line
+	4825 5700 4775 5700
+Wire Wire Line
+	4775 5600 4825 5600
+Connection ~ 4825 5600
+Wire Wire Line
+	4825 5600 4825 5700
+$Comp
+L power:-BATT #PWR?
+U 1 1 600279A1
+P 4825 6750
+AR Path="/600279A1" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/600279A1" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 4825 6600 50  0001 C CNN
+F 1 "-BATT" H 4840 6923 50  0000 C CNN
+F 2 "" H 4825 6750 50  0001 C CNN
+F 3 "" H 4825 6750 50  0001 C CNN
+	1    4825 6750
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4825 6750 4825 6700
+Wire Wire Line
+	4825 6600 4775 6600
+Wire Wire Line
+	4825 6700 4775 6700
+Connection ~ 4825 6700
+Wire Wire Line
+	4825 6700 4825 6600
+Wire Wire Line
+	3175 5600 3125 5600
+Wire Wire Line
+	3125 5600 3125 5700
+Wire Wire Line
+	3125 5700 3175 5700
+NoConn ~ 3175 5800
+$Comp
+L Device:R R?
+U 1 1 600279B0
+P 2925 5700
+AR Path="/600279B0" Ref="R?"  Part="1" 
+AR Path="/5FFBFF13/600279B0" Ref="R?"  Part="1" 
+F 0 "R?" H 2995 5746 50  0000 L CNN
+F 1 "10k" H 2995 5655 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 2855 5700 50  0001 C CNN
+F 3 "~" H 2925 5700 50  0001 C CNN
+	1    2925 5700
+	-1   0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 600279B6
+P 2925 5450
+AR Path="/600279B6" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/600279B6" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 2925 5300 50  0001 C CNN
+F 1 "+3.3V" H 2940 5623 50  0000 C CNN
+F 2 "" H 2925 5450 50  0001 C CNN
+F 3 "" H 2925 5450 50  0001 C CNN
+	1    2925 5450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2925 5500 2925 5550
+Wire Wire Line
+	2925 5850 2925 5900
+Wire Wire Line
+	2925 5900 3175 5900
+Text GLabel 2875 5900 0    50   Input ~ 0
+IMU_~RESET
+Wire Wire Line
+	2875 5900 2925 5900
+Connection ~ 2925 5900
+$Comp
+L power:-BATT #PWR?
+U 1 1 600279C2
+P 3125 5550
+AR Path="/600279C2" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/600279C2" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 3125 5400 50  0001 C CNN
+F 1 "-BATT" H 3140 5723 50  0000 C CNN
+F 2 "" H 3125 5550 50  0001 C CNN
+F 3 "" H 3125 5550 50  0001 C CNN
+	1    3125 5550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3125 5550 3125 5600
+Connection ~ 3125 5600
+$Comp
+L Device:C C?
+U 1 1 600279CA
+P 3125 6900
+AR Path="/600279CA" Ref="C?"  Part="1" 
+AR Path="/5FFBFF13/600279CA" Ref="C?"  Part="1" 
+F 0 "C?" H 3240 6946 50  0000 L CNN
+F 1 "1uF" H 3240 6855 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 3163 6750 50  0001 C CNN
+F 3 "~" H 3125 6900 50  0001 C CNN
+	1    3125 6900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3175 6700 3125 6700
+Wire Wire Line
+	3125 6700 3125 6750
+$Comp
+L power:-BATT #PWR?
+U 1 1 600279D2
+P 3125 7150
+AR Path="/600279D2" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/600279D2" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 3125 7000 50  0001 C CNN
+F 1 "-BATT" H 3140 7323 50  0000 C CNN
+F 2 "" H 3125 7150 50  0001 C CNN
+F 3 "" H 3125 7150 50  0001 C CNN
+	1    3125 7150
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	3125 7050 3125 7100
+$Comp
+L BNO055:BNO055 BMP?
+U 1 1 600279DA
+P 3975 6100
+AR Path="/600279DA" Ref="BMP?"  Part="1" 
+AR Path="/5FFBFF13/600279DA" Ref="BMP?"  Part="1" 
+F 0 "BMP?" H 3975 6867 50  0000 C CNN
+F 1 "BNO055" H 3975 6776 50  0000 C CNN
+F 2 "BNO055:LGA28R50P4X10_380X520X100" H 3975 6100 50  0001 L BNN
+F 3 "" H 3975 6100 50  0001 L BNN
+F 4 "BOSCH" H 3975 6100 50  0001 L BNN "MANUFACTURER"
+	1    3975 6100
+	1    0    0    -1  
+$EndComp
+Connection ~ 4825 6600
+NoConn ~ 4775 6500
+NoConn ~ 4775 6400
+$Comp
+L Device:R R?
+U 1 1 600279E3
+P 2325 5700
+AR Path="/600279E3" Ref="R?"  Part="1" 
+AR Path="/5FFBFF13/600279E3" Ref="R?"  Part="1" 
+F 0 "R?" H 2395 5746 50  0000 L CNN
+F 1 "10k" H 2395 5655 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 2255 5700 50  0001 C CNN
+F 3 "~" H 2325 5700 50  0001 C CNN
+	1    2325 5700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2925 5500 2325 5500
+Wire Wire Line
+	2325 5500 2325 5550
+Connection ~ 2925 5500
+Wire Wire Line
+	2925 5450 2925 5500
+Wire Wire Line
+	2325 5850 2325 6100
+Wire Wire Line
+	2325 6100 3175 6100
+$Comp
+L Device:R R?
+U 1 1 600279EF
+P 2075 5700
+AR Path="/600279EF" Ref="R?"  Part="1" 
+AR Path="/5FFBFF13/600279EF" Ref="R?"  Part="1" 
+F 0 "R?" H 2145 5746 50  0000 L CNN
+F 1 "4.7k" H 2145 5655 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 2005 5700 50  0001 C CNN
+F 3 "~" H 2075 5700 50  0001 C CNN
+	1    2075 5700
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	2325 5500 2075 5500
+Wire Wire Line
+	2075 5500 2075 5550
+Connection ~ 2325 5500
+Wire Wire Line
+	2075 5850 2075 6200
+Wire Wire Line
+	2075 6200 3175 6200
+Text GLabel 2025 6200 0    50   BiDi ~ 0
+I2C_SDA
+Wire Wire Line
+	2025 6200 2075 6200
+Connection ~ 2075 6200
+$Comp
+L Device:R R?
+U 1 1 600279FD
+P 1575 5700
+AR Path="/600279FD" Ref="R?"  Part="1" 
+AR Path="/5FFBFF13/600279FD" Ref="R?"  Part="1" 
+F 0 "R?" H 1645 5746 50  0000 L CNN
+F 1 "4.7k" H 1645 5655 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 1505 5700 50  0001 C CNN
+F 3 "~" H 1575 5700 50  0001 C CNN
+	1    1575 5700
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	1575 5850 1575 6300
+Text GLabel 1525 6300 0    50   BiDi ~ 0
+I2C_SCL
+Text GLabel 3175 6500 0    50   Input ~ 0
+IMU_ADDR_SEL
+Wire Wire Line
+	3175 6400 2525 6400
+Wire Wire Line
+	2525 6400 2525 7100
+Wire Wire Line
+	2525 7100 3125 7100
+Connection ~ 3125 7100
+Wire Wire Line
+	3125 7150 3125 7100
+NoConn ~ 4775 5900
+Connection ~ 4825 5700
+Text GLabel 4775 6000 2    50   Output ~ 0
+IMU_INT
+Wire Wire Line
+	5175 6400 5175 6600
+Wire Wire Line
+	4825 6600 5175 6600
+Wire Wire Line
+	5175 6100 5175 5700
+Wire Wire Line
+	4825 5700 5175 5700
+Text Notes 1125 7425 0    50   ~ 0
+IMU
+$Comp
+L Device:C C?
+U 1 1 60027A13
+P 5425 6250
+AR Path="/60027A13" Ref="C?"  Part="1" 
+AR Path="/5FFBFF13/60027A13" Ref="C?"  Part="1" 
+F 0 "C?" H 5540 6296 50  0000 L CNN
+F 1 "0.1uF" H 5540 6205 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 5463 6100 50  0001 C CNN
+F 3 "~" H 5425 6250 50  0001 C CNN
+	1    5425 6250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5425 6100 5425 5600
+Wire Wire Line
+	5425 5600 4825 5600
+Wire Wire Line
+	5425 6400 5425 6700
+Wire Wire Line
+	5425 6700 4825 6700
+Wire Wire Line
+	1575 5500 1575 5550
+Wire Notes Line
+	1125 7425 1125 5225
+Wire Notes Line
+	5825 7425 5825 5225
+Wire Wire Line
+	1575 5500 2075 5500
+Connection ~ 2075 5500
+Wire Wire Line
+	1525 6300 1575 6300
+Connection ~ 1575 6300
+Wire Wire Line
+	1575 6300 3175 6300
+Wire Notes Line
+	1125 5225 5825 5225
+Wire Notes Line
+	1125 7425 5825 7425
+NoConn ~ 4775 6300
+$Comp
+L Device:C C?
+U 1 1 60027A28
+P 5175 6250
+AR Path="/60027A28" Ref="C?"  Part="1" 
+AR Path="/5FFBFF13/60027A28" Ref="C?"  Part="1" 
+F 0 "C?" H 4850 6300 50  0000 L CNN
+F 1 "120nF" H 4850 6200 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 5213 6100 50  0001 C CNN
+F 3 "~" H 5175 6250 50  0001 C CNN
+	1    5175 6250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x04_Female RANGE?
+U 1 1 6004D29C
+P 3250 3400
+AR Path="/6004D29C" Ref="RANGE?"  Part="1" 
+AR Path="/5FFBFF13/6004D29C" Ref="RANGE?"  Part="1" 
+F 0 "RANGE?" V 3400 3450 50  0000 R CNN
+F 1 "QWIIC_Connector" V 3300 3700 50  0000 R CNN
+F 2 "Connector_JST:JST_SH_BM04B-SRSS-TB_1x04-1MP_P1.00mm_Vertical" H 3250 3400 50  0001 C CNN
+F 3 "~" H 3250 3400 50  0001 C CNN
+	1    3250 3400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:-BATT #PWR?
+U 1 1 6004D2A2
+P 3150 3600
+AR Path="/6004D2A2" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/6004D2A2" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 3150 3450 50  0001 C CNN
+F 1 "-BATT" V 3165 3727 50  0000 L CNN
+F 2 "" H 3150 3600 50  0001 C CNN
+F 3 "" H 3150 3600 50  0001 C CNN
+	1    3150 3600
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 6004D2A8
+P 3150 3700
+AR Path="/6004D2A8" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/6004D2A8" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 3150 3550 50  0001 C CNN
+F 1 "+3.3V" V 3165 3828 50  0000 L CNN
+F 2 "" H 3150 3700 50  0001 C CNN
+F 3 "" H 3150 3700 50  0001 C CNN
+	1    3150 3700
+	0    -1   -1   0   
+$EndComp
+Text GLabel 3350 3600 3    50   Input ~ 0
+I2C_SDA
+Text GLabel 3450 3600 3    50   Input ~ 0
+I2C_SCL
+Wire Wire Line
+	3250 3600 3250 3700
+Wire Wire Line
+	3250 3700 3150 3700
+Wire Wire Line
+	3250 2200 3250 2100
+Wire Wire Line
+	3350 2200 3250 2200
+$Comp
+L power:-BATT #PWR?
+U 1 1 6004D2B4
+P 3350 2200
+AR Path="/6004D2B4" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/6004D2B4" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 3350 2050 50  0001 C CNN
+F 1 "-BATT" V 3365 2328 50  0000 L CNN
+F 2 "" H 3350 2200 50  0001 C CNN
+F 3 "" H 3350 2200 50  0001 C CNN
+	1    3350 2200
+	0    1    1    0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 6004D2BA
+P 3350 2100
+AR Path="/6004D2BA" Ref="#PWR?"  Part="1" 
+AR Path="/5FFBFF13/6004D2BA" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 3350 1950 50  0001 C CNN
+F 1 "+3.3V" V 3365 2228 50  0000 L CNN
+F 2 "" H 3350 2100 50  0001 C CNN
+F 3 "" H 3350 2100 50  0001 C CNN
+	1    3350 2100
+	0    1    1    0   
+$EndComp
+Text GLabel 3150 2100 3    50   Output ~ 0
+GPS_UART_MISO
+$Comp
+L Connector:Conn_01x03_Female GPS?
+U 1 1 6004D2C1
+P 3250 1900
+AR Path="/6004D2C1" Ref="GPS?"  Part="1" 
+AR Path="/5FFBFF13/6004D2C1" Ref="GPS?"  Part="1" 
+F 0 "GPS?" V 3400 1950 50  0000 R CNN
+F 1 "GPS_Connector" V 3300 2150 50  0000 R CNN
+F 2 "Connector_JST:JST_SH_BM03B-SRSS-TB_1x03-1MP_P1.00mm_Vertical" H 3250 1900 50  0001 C CNN
+F 3 "~" H 3250 1900 50  0001 C CNN
+	1    3250 1900
+	0    -1   -1   0   
+$EndComp
+Wire Notes Line
+	2650 1600 2650 2800
+Wire Notes Line
+	2650 2800 4150 2800
+Wire Notes Line
+	4150 2800 4150 1600
+Wire Notes Line
+	4150 1600 2650 1600
+Text Notes 2650 2800 0    50   ~ 0
+GPS
+Wire Notes Line
+	2750 3150 3850 3150
+Wire Notes Line
+	3850 3150 3850 4050
+Wire Notes Line
+	3850 4050 2750 4050
+Wire Notes Line
+	2750 4050 2750 3150
+Text Notes 2750 4050 0    50   ~ 0
+Rangefinder
+$EndSCHEMATC

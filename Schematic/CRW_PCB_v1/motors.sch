@@ -1,0 +1,671 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 4 5
+Title "USLI Payload PCB"
+Date "2020-12-28"
+Rev "v1"
+Comp "UAH CRW"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L power:-BATT #PWR?
+U 1 1 600BB9C7
+P 5850 3775
+AR Path="/600BB9C7" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BB9C7" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 5850 3625 50  0001 C CNN
+F 1 "-BATT" V 5750 3725 50  0000 L CNN
+F 2 "" H 5850 3775 50  0001 C CNN
+F 3 "" H 5850 3775 50  0001 C CNN
+	1    5850 3775
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:Q_NMOS_GSD Q?
+U 1 1 600BB9CD
+P 5750 3475
+AR Path="/600BB9CD" Ref="Q?"  Part="1" 
+AR Path="/600B1082/600BB9CD" Ref="Q?"  Part="1" 
+F 0 "Q?" H 5954 3521 50  0000 L CNN
+F 1 "Q_NMOS_GSD" H 5954 3430 50  0000 L CNN
+F 2 "Package_TO_SOT_SMD:SC-59_Handsoldering" H 5950 3575 50  0001 C CNN
+F 3 "~" H 5750 3475 50  0001 C CNN
+	1    5750 3475
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5850 3725 5850 3675
+$Comp
+L Device:R R?
+U 1 1 600BB9D4
+P 5650 3725
+AR Path="/600BB9D4" Ref="R?"  Part="1" 
+AR Path="/600B1082/600BB9D4" Ref="R?"  Part="1" 
+F 0 "R?" V 5550 3725 50  0000 C CNN
+F 1 "10k" V 5450 3725 50  0000 C CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 5580 3725 50  0001 C CNN
+F 3 "~" H 5650 3725 50  0001 C CNN
+	1    5650 3725
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	5500 3725 5500 3475
+Wire Wire Line
+	5500 3475 5550 3475
+Wire Wire Line
+	5500 3475 5450 3475
+Connection ~ 5500 3475
+Wire Wire Line
+	5800 3725 5850 3725
+Wire Wire Line
+	5850 3725 5850 3775
+Connection ~ 5850 3725
+Text GLabel 5100 3475 0    50   Input ~ 0
+GYRO_RELEASE
+$Comp
+L power:+BATT #PWR?
+U 1 1 600BB9E2
+P 5450 3225
+AR Path="/600BB9E2" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BB9E2" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 5450 3075 50  0001 C CNN
+F 1 "+BATT" V 5465 3352 50  0000 L CNN
+F 2 "" H 5450 3225 50  0001 C CNN
+F 3 "" H 5450 3225 50  0001 C CNN
+	1    5450 3225
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CRW_PCB_v1:DRV8838DSGR U?
+U 1 1 600BB9E8
+P 2475 5450
+AR Path="/600BB9E8" Ref="U?"  Part="1" 
+AR Path="/600B1082/600BB9E8" Ref="U?"  Part="1" 
+F 0 "U?" H 2475 5875 50  0000 C CNN
+F 1 "DRV8838DSGR" H 2475 5784 50  0000 C CNN
+F 2 "CRW_PCB_v1:DRV8838DSGR" H 2475 5450 50  0001 C CNN
+F 3 "" H 2475 5450 50  0001 C CNN
+	1    2475 5450
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+BATT #PWR?
+U 1 1 600BB9EE
+P 2025 5200
+AR Path="/600BB9EE" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BB9EE" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 2025 5050 50  0001 C CNN
+F 1 "+BATT" H 1875 5300 50  0000 C CNN
+F 2 "" H 2025 5200 50  0001 C CNN
+F 3 "" H 2025 5200 50  0001 C CNN
+	1    2025 5200
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR?
+U 1 1 600BB9F4
+P 2025 5400
+AR Path="/600BB9F4" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BB9F4" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 2025 5250 50  0001 C CNN
+F 1 "+3V3" H 2175 5450 50  0000 C CNN
+F 2 "" H 2025 5400 50  0001 C CNN
+F 3 "" H 2025 5400 50  0001 C CNN
+	1    2025 5400
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 600BB9FA
+P 1675 5500
+AR Path="/600BB9FA" Ref="C?"  Part="1" 
+AR Path="/600B1082/600BB9FA" Ref="C?"  Part="1" 
+F 0 "C?" H 1375 5550 50  0000 L CNN
+F 1 "0.1uF" H 1375 5450 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 1713 5350 50  0001 C CNN
+F 3 "~" H 1675 5500 50  0001 C CNN
+	1    1675 5500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2025 5400 2025 5350
+Wire Wire Line
+	1675 5350 2025 5350
+Connection ~ 2025 5350
+Wire Wire Line
+	2025 5350 2075 5350
+$Comp
+L Device:C C?
+U 1 1 600BBA04
+P 1225 5500
+AR Path="/600BBA04" Ref="C?"  Part="1" 
+AR Path="/600B1082/600BBA04" Ref="C?"  Part="1" 
+F 0 "C?" H 925 5550 50  0000 L CNN
+F 1 "0.1uF" H 925 5450 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 1263 5350 50  0001 C CNN
+F 3 "~" H 1225 5500 50  0001 C CNN
+	1    1225 5500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1225 5350 1225 5250
+Wire Wire Line
+	1225 5250 2025 5250
+Wire Wire Line
+	2025 5250 2025 5200
+Connection ~ 2025 5250
+Wire Wire Line
+	2025 5250 2075 5250
+Wire Wire Line
+	1675 5650 1225 5650
+Connection ~ 1675 5650
+$Comp
+L Connector:Conn_01x02_Female MOTOR?
+U 1 1 600BBA11
+P 2975 5950
+AR Path="/600BBA11" Ref="MOTOR?"  Part="1" 
+AR Path="/600B1082/600BBA11" Ref="MOTOR?"  Part="1" 
+F 0 "MOTOR?" V 2913 5762 50  0000 R CNN
+F 1 "LEVEL1" V 2822 5762 50  0000 R CNN
+F 2 "Connector_JST:JST_SH_BM02B-SRSS-TB_1x02-1MP_P1.00mm_Vertical" H 2975 5950 50  0001 C CNN
+F 3 "~" H 2975 5950 50  0001 C CNN
+	1    2975 5950
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	2875 5650 2975 5650
+Wire Wire Line
+	2975 5650 2975 5750
+Wire Wire Line
+	2875 5550 3075 5550
+Wire Wire Line
+	3075 5550 3075 5750
+Text GLabel 2875 5250 2    50   Input ~ 0
+LEVEL1_DIR
+Text GLabel 2875 5350 2    50   Input ~ 0
+LEVEL1_PWM
+Text GLabel 3375 5450 2    50   Input ~ 0
+LEVEL1_~SLEEP
+$Comp
+L power:+3V3 #PWR?
+U 1 1 600BBA1E
+P 3275 5850
+AR Path="/600BBA1E" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBA1E" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 3275 5700 50  0001 C CNN
+F 1 "+3V3" H 3290 6023 50  0000 C CNN
+F 2 "" H 3275 5850 50  0001 C CNN
+F 3 "" H 3275 5850 50  0001 C CNN
+	1    3275 5850
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 600BBA24
+P 3275 5650
+AR Path="/600BBA24" Ref="R?"  Part="1" 
+AR Path="/600B1082/600BBA24" Ref="R?"  Part="1" 
+F 0 "R?" H 3345 5696 50  0000 L CNN
+F 1 "10k" H 3345 5605 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 3205 5650 50  0001 C CNN
+F 3 "~" H 3275 5650 50  0001 C CNN
+	1    3275 5650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3275 5500 3275 5450
+Wire Wire Line
+	3275 5450 2875 5450
+Wire Wire Line
+	3375 5450 3275 5450
+Connection ~ 3275 5450
+Wire Wire Line
+	3275 5850 3275 5800
+$Comp
+L CRW_PCB_v1:DRV8838DSGR U?
+U 1 1 600BBA2F
+P 5925 5450
+AR Path="/600BBA2F" Ref="U?"  Part="1" 
+AR Path="/600B1082/600BBA2F" Ref="U?"  Part="1" 
+F 0 "U?" H 5925 5875 50  0000 C CNN
+F 1 "DRV8838DSGR" H 5925 5784 50  0000 C CNN
+F 2 "CRW_PCB_v1:DRV8838DSGR" H 5925 5450 50  0001 C CNN
+F 3 "" H 5925 5450 50  0001 C CNN
+	1    5925 5450
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+BATT #PWR?
+U 1 1 600BBA35
+P 5475 5200
+AR Path="/600BBA35" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBA35" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 5475 5050 50  0001 C CNN
+F 1 "+BATT" H 5325 5300 50  0000 C CNN
+F 2 "" H 5475 5200 50  0001 C CNN
+F 3 "" H 5475 5200 50  0001 C CNN
+	1    5475 5200
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR?
+U 1 1 600BBA3B
+P 5475 5400
+AR Path="/600BBA3B" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBA3B" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 5475 5250 50  0001 C CNN
+F 1 "+3V3" H 5625 5450 50  0000 C CNN
+F 2 "" H 5475 5400 50  0001 C CNN
+F 3 "" H 5475 5400 50  0001 C CNN
+	1    5475 5400
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 600BBA41
+P 5125 5500
+AR Path="/600BBA41" Ref="C?"  Part="1" 
+AR Path="/600B1082/600BBA41" Ref="C?"  Part="1" 
+F 0 "C?" H 4825 5550 50  0000 L CNN
+F 1 "0.1uF" H 4825 5450 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 5163 5350 50  0001 C CNN
+F 3 "~" H 5125 5500 50  0001 C CNN
+	1    5125 5500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5475 5400 5475 5350
+Wire Wire Line
+	5125 5350 5475 5350
+Connection ~ 5475 5350
+Wire Wire Line
+	5475 5350 5525 5350
+$Comp
+L Device:C C?
+U 1 1 600BBA4B
+P 4675 5500
+AR Path="/600BBA4B" Ref="C?"  Part="1" 
+AR Path="/600B1082/600BBA4B" Ref="C?"  Part="1" 
+F 0 "C?" H 4375 5550 50  0000 L CNN
+F 1 "0.1uF" H 4375 5450 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 4713 5350 50  0001 C CNN
+F 3 "~" H 4675 5500 50  0001 C CNN
+	1    4675 5500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4675 5350 4675 5250
+Wire Wire Line
+	4675 5250 5475 5250
+Wire Wire Line
+	5475 5250 5475 5200
+Connection ~ 5475 5250
+Wire Wire Line
+	5475 5250 5525 5250
+Wire Wire Line
+	5125 5650 4675 5650
+Connection ~ 5125 5650
+$Comp
+L Connector:Conn_01x02_Female MOTOR?
+U 1 1 600BBA58
+P 6425 5950
+AR Path="/600BBA58" Ref="MOTOR?"  Part="1" 
+AR Path="/600B1082/600BBA58" Ref="MOTOR?"  Part="1" 
+F 0 "MOTOR?" V 6363 5762 50  0000 R CNN
+F 1 "LEVEL2" V 6272 5762 50  0000 R CNN
+F 2 "Connector_JST:JST_SH_BM02B-SRSS-TB_1x02-1MP_P1.00mm_Vertical" H 6425 5950 50  0001 C CNN
+F 3 "~" H 6425 5950 50  0001 C CNN
+	1    6425 5950
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	6325 5650 6425 5650
+Wire Wire Line
+	6425 5650 6425 5750
+Wire Wire Line
+	6325 5550 6525 5550
+Wire Wire Line
+	6525 5550 6525 5750
+Text GLabel 6325 5250 2    50   Input ~ 0
+LEVEL2_DIR
+Text GLabel 6325 5350 2    50   Input ~ 0
+LEVEL2_PWM
+Text GLabel 6825 5450 2    50   Input ~ 0
+LEVEL2_~SLEEP
+$Comp
+L power:+3V3 #PWR?
+U 1 1 600BBA65
+P 6725 5850
+AR Path="/600BBA65" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBA65" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 6725 5700 50  0001 C CNN
+F 1 "+3V3" H 6740 6023 50  0000 C CNN
+F 2 "" H 6725 5850 50  0001 C CNN
+F 3 "" H 6725 5850 50  0001 C CNN
+	1    6725 5850
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 600BBA6B
+P 6725 5650
+AR Path="/600BBA6B" Ref="R?"  Part="1" 
+AR Path="/600B1082/600BBA6B" Ref="R?"  Part="1" 
+F 0 "R?" H 6795 5696 50  0000 L CNN
+F 1 "10k" H 6795 5605 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 6655 5650 50  0001 C CNN
+F 3 "~" H 6725 5650 50  0001 C CNN
+	1    6725 5650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6725 5500 6725 5450
+Wire Wire Line
+	6725 5450 6325 5450
+Wire Wire Line
+	6825 5450 6725 5450
+Connection ~ 6725 5450
+Wire Wire Line
+	6725 5850 6725 5800
+$Comp
+L CRW_PCB_v1:DRV8838DSGR U?
+U 1 1 600BBA76
+P 9125 5450
+AR Path="/600BBA76" Ref="U?"  Part="1" 
+AR Path="/600B1082/600BBA76" Ref="U?"  Part="1" 
+F 0 "U?" H 9125 5875 50  0000 C CNN
+F 1 "DRV8838DSGR" H 9125 5784 50  0000 C CNN
+F 2 "CRW_PCB_v1:DRV8838DSGR" H 9125 5450 50  0001 C CNN
+F 3 "" H 9125 5450 50  0001 C CNN
+	1    9125 5450
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+BATT #PWR?
+U 1 1 600BBA7C
+P 8675 5200
+AR Path="/600BBA7C" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBA7C" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 8675 5050 50  0001 C CNN
+F 1 "+BATT" H 8525 5300 50  0000 C CNN
+F 2 "" H 8675 5200 50  0001 C CNN
+F 3 "" H 8675 5200 50  0001 C CNN
+	1    8675 5200
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR?
+U 1 1 600BBA82
+P 8675 5400
+AR Path="/600BBA82" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBA82" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 8675 5250 50  0001 C CNN
+F 1 "+3V3" H 8825 5450 50  0000 C CNN
+F 2 "" H 8675 5400 50  0001 C CNN
+F 3 "" H 8675 5400 50  0001 C CNN
+	1    8675 5400
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 600BBA88
+P 8325 5500
+AR Path="/600BBA88" Ref="C?"  Part="1" 
+AR Path="/600B1082/600BBA88" Ref="C?"  Part="1" 
+F 0 "C?" H 8025 5550 50  0000 L CNN
+F 1 "0.1uF" H 8025 5450 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 8363 5350 50  0001 C CNN
+F 3 "~" H 8325 5500 50  0001 C CNN
+	1    8325 5500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8675 5400 8675 5350
+Wire Wire Line
+	8325 5350 8675 5350
+Connection ~ 8675 5350
+Wire Wire Line
+	8675 5350 8725 5350
+$Comp
+L Device:C C?
+U 1 1 600BBA92
+P 7875 5500
+AR Path="/600BBA92" Ref="C?"  Part="1" 
+AR Path="/600B1082/600BBA92" Ref="C?"  Part="1" 
+F 0 "C?" H 7575 5550 50  0000 L CNN
+F 1 "0.1uF" H 7575 5450 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 7913 5350 50  0001 C CNN
+F 3 "~" H 7875 5500 50  0001 C CNN
+	1    7875 5500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7875 5350 7875 5250
+Wire Wire Line
+	7875 5250 8675 5250
+Wire Wire Line
+	8675 5250 8675 5200
+Connection ~ 8675 5250
+Wire Wire Line
+	8675 5250 8725 5250
+Wire Wire Line
+	8325 5650 7875 5650
+Connection ~ 8325 5650
+$Comp
+L Connector:Conn_01x02_Female MOTOR?
+U 1 1 600BBA9F
+P 9625 5950
+AR Path="/600BBA9F" Ref="MOTOR?"  Part="1" 
+AR Path="/600B1082/600BBA9F" Ref="MOTOR?"  Part="1" 
+F 0 "MOTOR?" V 9563 5762 50  0000 R CNN
+F 1 "LEVEL3" V 9472 5762 50  0000 R CNN
+F 2 "Connector_JST:JST_SH_BM02B-SRSS-TB_1x02-1MP_P1.00mm_Vertical" H 9625 5950 50  0001 C CNN
+F 3 "~" H 9625 5950 50  0001 C CNN
+	1    9625 5950
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	9525 5650 9625 5650
+Wire Wire Line
+	9625 5650 9625 5750
+Wire Wire Line
+	9525 5550 9725 5550
+Wire Wire Line
+	9725 5550 9725 5750
+Text GLabel 9525 5250 2    50   Input ~ 0
+LEVEL3_DIR
+Text GLabel 9525 5350 2    50   Input ~ 0
+LEVEL3_PWM
+Text GLabel 10025 5450 2    50   Input ~ 0
+LEVEL3_~SLEEP
+$Comp
+L power:+3V3 #PWR?
+U 1 1 600BBAAC
+P 9925 5850
+AR Path="/600BBAAC" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBAAC" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 9925 5700 50  0001 C CNN
+F 1 "+3V3" H 9940 6023 50  0000 C CNN
+F 2 "" H 9925 5850 50  0001 C CNN
+F 3 "" H 9925 5850 50  0001 C CNN
+	1    9925 5850
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 600BBAB2
+P 9925 5650
+AR Path="/600BBAB2" Ref="R?"  Part="1" 
+AR Path="/600B1082/600BBAB2" Ref="R?"  Part="1" 
+F 0 "R?" H 9995 5696 50  0000 L CNN
+F 1 "10k" H 9995 5605 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 9855 5650 50  0001 C CNN
+F 3 "~" H 9925 5650 50  0001 C CNN
+	1    9925 5650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9925 5500 9925 5450
+Wire Wire Line
+	9925 5450 9525 5450
+Wire Wire Line
+	10025 5450 9925 5450
+Connection ~ 9925 5450
+Wire Wire Line
+	9925 5850 9925 5800
+Wire Notes Line
+	775  6100 10825 6100
+Text Notes 775  6100 0    50   ~ 0
+Motor Drivers
+$Comp
+L Connector:Conn_01x02_Female RELEASE?
+U 1 1 600BBABF
+P 5750 2875
+AR Path="/600BBABF" Ref="RELEASE?"  Part="1" 
+AR Path="/600B1082/600BBABF" Ref="RELEASE?"  Part="1" 
+F 0 "RELEASE?" V 5900 2925 50  0000 R CNN
+F 1 "AUTOGYRO_RELEASE" V 5800 3225 50  0000 R CNN
+F 2 "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical" H 5750 2875 50  0001 C CNN
+F 3 "~" H 5750 2875 50  0001 C CNN
+	1    5750 2875
+	0    -1   -1   0   
+$EndComp
+Wire Notes Line
+	6600 2675 6600 4025
+Wire Notes Line
+	4450 4025 4450 2675
+Text Notes 4450 4025 0    50   ~ 0
+Release
+$Comp
+L Device:R R?
+U 1 1 600BBAC8
+P 5300 3475
+AR Path="/600BBAC8" Ref="R?"  Part="1" 
+AR Path="/600B1082/600BBAC8" Ref="R?"  Part="1" 
+F 0 "R?" V 5400 3475 50  0000 C CNN
+F 1 "220" V 5500 3475 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" V 5230 3475 50  0001 C CNN
+F 3 "~" H 5300 3475 50  0001 C CNN
+	1    5300 3475
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	5100 3475 5150 3475
+Wire Notes Line
+	4450 2675 6600 2675
+Wire Notes Line
+	4450 4025 6600 4025
+$Comp
+L Device:D D?
+U 1 1 600BBAD1
+P 5700 3225
+AR Path="/600BBAD1" Ref="D?"  Part="1" 
+AR Path="/600B1082/600BBAD1" Ref="D?"  Part="1" 
+F 0 "D?" H 5600 3125 50  0000 C CNN
+F 1 "FLYBACK" H 5550 3025 50  0000 C CNN
+F 2 "Diode_SMD:D_SMC" H 5700 3225 50  0001 C CNN
+F 3 "~" H 5700 3225 50  0001 C CNN
+	1    5700 3225
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5450 3225 5500 3225
+Wire Wire Line
+	5750 3125 5500 3125
+Wire Wire Line
+	5500 3125 5500 3225
+Connection ~ 5500 3225
+Wire Wire Line
+	5500 3225 5550 3225
+Wire Wire Line
+	5850 3075 5850 3225
+Connection ~ 5850 3225
+Wire Wire Line
+	5850 3225 5850 3275
+Wire Wire Line
+	1675 5650 2025 5650
+$Comp
+L power:-BATT #PWR?
+U 1 1 600BBAE0
+P 2025 5700
+AR Path="/600BBAE0" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBAE0" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 2025 5550 50  0001 C CNN
+F 1 "-BATT" H 2040 5873 50  0000 C CNN
+F 2 "" H 2025 5700 50  0001 C CNN
+F 3 "" H 2025 5700 50  0001 C CNN
+	1    2025 5700
+	-1   0    0    1   
+$EndComp
+Connection ~ 2025 5650
+Wire Wire Line
+	2025 5650 2075 5650
+Wire Wire Line
+	2025 5700 2025 5650
+$Comp
+L power:-BATT #PWR?
+U 1 1 600BBAE9
+P 5475 5700
+AR Path="/600BBAE9" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBAE9" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 5475 5550 50  0001 C CNN
+F 1 "-BATT" H 5490 5873 50  0000 C CNN
+F 2 "" H 5475 5700 50  0001 C CNN
+F 3 "" H 5475 5700 50  0001 C CNN
+	1    5475 5700
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5475 5700 5475 5650
+$Comp
+L power:-BATT #PWR?
+U 1 1 600BBAF0
+P 8675 5700
+AR Path="/600BBAF0" Ref="#PWR?"  Part="1" 
+AR Path="/600B1082/600BBAF0" Ref="#PWR?"  Part="1" 
+F 0 "#PWR?" H 8675 5550 50  0001 C CNN
+F 1 "-BATT" H 8690 5873 50  0000 C CNN
+F 2 "" H 8675 5700 50  0001 C CNN
+F 3 "" H 8675 5700 50  0001 C CNN
+	1    8675 5700
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	8675 5700 8675 5650
+Wire Notes Line
+	775  6100 775  4950
+Wire Notes Line
+	10825 6100 10825 4950
+Wire Notes Line
+	775  4950 10825 4950
+Wire Wire Line
+	5750 3075 5750 3125
+Wire Wire Line
+	5125 5650 5475 5650
+Connection ~ 5475 5650
+Wire Wire Line
+	5475 5650 5525 5650
+Wire Wire Line
+	8325 5650 8675 5650
+Connection ~ 8675 5650
+Wire Wire Line
+	8675 5650 8725 5650
+Wire Wire Line
+	8725 5550 8675 5550
+Wire Wire Line
+	8675 5550 8675 5650
+Wire Wire Line
+	5525 5550 5475 5550
+Wire Wire Line
+	5475 5550 5475 5650
+Wire Wire Line
+	2075 5550 2025 5550
+Wire Wire Line
+	2025 5550 2025 5650
+$EndSCHEMATC
