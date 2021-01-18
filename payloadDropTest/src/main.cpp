@@ -4,10 +4,11 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <Adafruit_BMP3XX.h>
+#include <SoftwareSerial.h>
 #include <utility/imumaths.h>
 #include <SD.h>
 
-#define BNO055_SAMPLERATE_DELAY_MS 50
+#define SAMPLERATE_DELAY_MS 50
 
 #define BMP_SCL 19
 #define BMP_SDI 18
@@ -16,6 +17,7 @@
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 Adafruit_BMP3XX bmp;
+SoftwareSerial XBee(2,3);
 
 uint16_t packetCount = 0;
 double currentTime;
@@ -28,6 +30,7 @@ void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
 void setup() {
   	// put your setup code here, to run once:
 	Serial.begin(115200);
+	XBee.begin(9600);
 	delay(1000);
 	Serial.println("Beginning Payload Autogyro Drop Test...");
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -95,6 +98,8 @@ void loop() {
 			digitalWrite(LED_BUILTIN, HIGH);
 		}
 	}
+	
+	readCommand();
 	packetCount++;
 	currentTime = millis()/1000.0;
 
@@ -147,6 +152,8 @@ void loop() {
 		Serial.println("Could not open datalog.txt");
 	}
 
+	XBee.println(packet);
+
 	// Serial.print(F("Acceleration: "));
 	// Serial.print((float)accelEvent.acceleration.x);
 	// Serial.print(F(" "));
@@ -173,8 +180,33 @@ void loop() {
 	// Serial.print(F(" "));
 	// Serial.println(mag, DEC);
 
-	delay(BNO055_SAMPLERATE_DELAY_MS);
+	delay(SAMPLERATE_DELAY_MS);
 }
+
+void readCommand() {
+	if (XBee.available()) {
+		String command = XBee.readString();
+		if (command.equalsIgnoreCase("RST")){
+			// Reset Teensy
+		}
+		else if (command.equalsIgnoreCase("LVL")){
+			// Restart Levelling process
+		}
+		else if (command.equalsIgnoreCase("PIC")){
+			// Retake Picture
+		}
+		else if (command.equalsIgnoreCase("RSD")){
+			// Resend Picture
+		}
+		else if (command.equalsIgnoreCase("CAL")){
+			// Recalibrate payload altitude
+		}
+		else if (command.equalsIgnoreCase("DRP")){
+			// Release Payload from Drone (DROP TEST ONLY - REMOVE BEFORE ACTUAL FLIGHT)
+		}
+	}
+}
+
 
 // void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn) {
 // 	if (packetNumber % 4 == 0) {
