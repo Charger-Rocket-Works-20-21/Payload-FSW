@@ -303,7 +303,6 @@ NoConn ~ 1700 3400
 NoConn ~ 1700 3600
 NoConn ~ 1700 3700
 NoConn ~ 1700 4100
-NoConn ~ 1700 4200
 Wire Wire Line
 	3650 1750 3650 1800
 Text GLabel 3700 1900 2    50   Output ~ 0
@@ -337,4 +336,120 @@ U 5FEC70F1
 F0 "Cameras" 50
 F1 "cameras.sch" 50
 $EndSheet
+Text GLabel 1500 4200 0    50   Output ~ 0
+HOTWIRE
+Wire Wire Line
+	1500 4200 1700 4200
+$Comp
+L power:-BATT #PWR053
+U 1 1 600901B3
+P 10275 2325
+AR Path="/600901B3" Ref="#PWR053"  Part="1" 
+AR Path="/600B1082/600901B3" Ref="#PWR?"  Part="1" 
+F 0 "#PWR053" H 10275 2175 50  0001 C CNN
+F 1 "-BATT" V 10175 2275 50  0000 L CNN
+F 2 "" H 10275 2325 50  0001 C CNN
+F 3 "" H 10275 2325 50  0001 C CNN
+	1    10275 2325
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:Q_NMOS_GSD Q5
+U 1 1 600901B9
+P 10175 2025
+AR Path="/600901B9" Ref="Q5"  Part="1" 
+AR Path="/600B1082/600901B9" Ref="Q?"  Part="1" 
+F 0 "Q5" H 10379 2071 50  0000 L CNN
+F 1 "Q_NMOS_GSD" H 10379 1980 50  0000 L CNN
+F 2 "Package_TO_SOT_SMD:SC-59_Handsoldering" H 10375 2125 50  0001 C CNN
+F 3 "~" H 10175 2025 50  0001 C CNN
+	1    10175 2025
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10275 2275 10275 2225
+$Comp
+L Device:R R34
+U 1 1 600901C0
+P 10075 2275
+AR Path="/600901C0" Ref="R34"  Part="1" 
+AR Path="/600B1082/600901C0" Ref="R?"  Part="1" 
+F 0 "R34" V 9975 2275 50  0000 C CNN
+F 1 "10k" V 9875 2275 50  0000 C CNN
+F 2 "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder" V 10005 2275 50  0001 C CNN
+F 3 "~" H 10075 2275 50  0001 C CNN
+	1    10075 2275
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	9925 2275 9925 2025
+Wire Wire Line
+	9925 2025 9975 2025
+Wire Wire Line
+	9925 2025 9875 2025
+Connection ~ 9925 2025
+Wire Wire Line
+	10225 2275 10275 2275
+Wire Wire Line
+	10275 2275 10275 2325
+Connection ~ 10275 2275
+Text GLabel 9525 2025 0    50   Input ~ 0
+HOTWIRE
+$Comp
+L Connector:Conn_01x02_Female HOTWIRE1
+U 1 1 600901CE
+P 10175 1425
+AR Path="/600901CE" Ref="HOTWIRE1"  Part="1" 
+AR Path="/600B1082/600901CE" Ref="RELEASE?"  Part="1" 
+F 0 "HOTWIRE1" V 10325 1525 50  0000 R CNN
+F 1 "HOTWIRE" V 10225 1525 50  0000 R CNN
+F 2 "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical" H 10175 1425 50  0001 C CNN
+F 3 "~" H 10175 1425 50  0001 C CNN
+	1    10175 1425
+	0    -1   -1   0   
+$EndComp
+Wire Notes Line
+	11025 1225 11025 2575
+Wire Notes Line
+	8875 2575 8875 1225
+Text Notes 8875 2575 0    50   ~ 0
+Hot Wire
+$Comp
+L Device:R R33
+U 1 1 600901D7
+P 9725 2025
+AR Path="/600901D7" Ref="R33"  Part="1" 
+AR Path="/600B1082/600901D7" Ref="R?"  Part="1" 
+F 0 "R33" V 9825 2025 50  0000 C CNN
+F 1 "220" V 9925 2025 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" V 9655 2025 50  0001 C CNN
+F 3 "~" H 9725 2025 50  0001 C CNN
+	1    9725 2025
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9525 2025 9575 2025
+Wire Notes Line
+	8875 1225 11025 1225
+Wire Notes Line
+	8875 2575 11025 2575
+Wire Wire Line
+	10275 1625 10275 1825
+Wire Wire Line
+	10100 1775 10175 1775
+$Comp
+L power:+BATT #PWR052
+U 1 1 600901E2
+P 10100 1775
+AR Path="/600901E2" Ref="#PWR052"  Part="1" 
+AR Path="/600B1082/600901E2" Ref="#PWR?"  Part="1" 
+F 0 "#PWR052" H 10100 1625 50  0001 C CNN
+F 1 "+BATT" V 10115 1902 50  0000 L CNN
+F 2 "" H 10100 1775 50  0001 C CNN
+F 3 "" H 10100 1775 50  0001 C CNN
+	1    10100 1775
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	10175 1625 10175 1775
 $EndSCHEMATC

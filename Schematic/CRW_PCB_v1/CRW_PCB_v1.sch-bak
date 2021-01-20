@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 5
 Title "USLI Payload PCB"
-Date "2020-12-20"
+Date "2020-12-28"
 Rev "v1"
 Comp "UAH CRW"
 Comment1 ""
@@ -303,7 +303,6 @@ NoConn ~ 1700 3400
 NoConn ~ 1700 3600
 NoConn ~ 1700 3700
 NoConn ~ 1700 4100
-NoConn ~ 1700 4200
 Wire Wire Line
 	3650 1750 3650 1800
 Text GLabel 3700 1900 2    50   Output ~ 0
@@ -337,4 +336,8 @@ U 5FEC70F1
 F0 "Cameras" 50
 F1 "cameras.sch" 50
 $EndSheet
+Text GLabel 1500 4200 0    50   Output ~ 0
+HOTWIRE
+Wire Wire Line
+	1500 4200 1700 4200
 $EndSCHEMATC
