@@ -12,6 +12,7 @@
 #include "system.h"
 #include "alt.h"
 #include "imu.h"
+#include "thermistor.h"
 #include "FlightStates.h"
 
 // Initialize Classes
