@@ -10,8 +10,8 @@
 
 #define SAMPLERATE_DELAY_MS 50
 
-#define BMP_SCL 19
-#define BMP_SDI 18
+#define BMP_SCL 16
+#define BMP_SDI 17
 
 #define SEALEVELPRESSURE_HPA 1013.25
 
@@ -25,7 +25,8 @@ bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
 
-void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
+//void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
+void readCommand();
 
 void setup() {
   	// put your setup code here, to run once:
@@ -40,7 +41,7 @@ void setup() {
 
 	SD.begin(BUILTIN_SDCARD);
 
-	if (!bmp.begin_I2C()) {   // hardware I2C mode, can pass in address & alt Wire
+	if (!bmp.begin_I2C(0x77, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
 		Serial.println("Could not find a valid BMP3 sensor, check wiring!");
 		while (1);
   	}
@@ -86,7 +87,7 @@ void loop() {
 		blinkRate = 5;
 	}
 	else {
-		blinkRate = 50;
+		blinkRate = 30;
 	}
 	if (packetCount % blinkRate == 0) {
 		if (ledOn) {
@@ -121,12 +122,12 @@ void loop() {
 	packet += String(packetCount);
 	packet += ",";
 	packet += String(currentTime);
-	// packet += ",";
-	// packet += String(bmp.temperature);
-	// packet += ",";
-	// packet += String(bmp.pressure);
-	// packet += ",";
-	// packet += String(bmp.readAltitude(SEALEVELPRESSURE_HPA));
+	packet += ",";
+	packet += String(bmp.temperature);
+	packet += ",";
+	packet += String(bmp.pressure);
+	packet += ",";
+	packet += String(bmp.readAltitude(SEALEVELPRESSURE_HPA));
 	packet += ",";
 	packet += String(accelEvent.acceleration.x);
 	packet += ",";
@@ -200,9 +201,6 @@ void readCommand() {
 		}
 		else if (command.equalsIgnoreCase("CAL")){
 			// Recalibrate payload altitude
-		}
-		else if (command.equalsIgnoreCase("DRP")){
-			// Release Payload from Drone (DROP TEST ONLY - REMOVE BEFORE ACTUAL FLIGHT)
 		}
 	}
 }
