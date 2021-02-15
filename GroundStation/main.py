@@ -12,7 +12,12 @@ xbee = serial.Serial(port,baud)
 
 xbee.write(b"Hello?\n")
 buff = []
+print('Welcome to the Payload Drop Test UI')
+print('In order to release, type "Release"')
+print('In order to lock, type "Lock"')
 while True:
+    
+
     while xbee.in_waiting > 0: # While their are bytes waiting to be read
         char = xbee.read()
         print(char) # DEBUG
@@ -20,7 +25,7 @@ while True:
         buff.append(char) # Appends the read character to the message buffer
 
         # if the message is finishe (marked by return character) then decode and display message
-        if char == b'\r':
+        if char in [b'\r', b'\n']:
             # Flag Structure for task management?
 
             mess = ''
