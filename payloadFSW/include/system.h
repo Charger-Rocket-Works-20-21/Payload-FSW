@@ -6,7 +6,7 @@
 // All included files
 
 #define DEBUG
-// #define USESD
+#define USESD
 
 #ifndef SYSTEM_H_
 #define SYSTEM_H_

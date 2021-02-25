@@ -14,6 +14,7 @@
 #include "imu.h"
 #include "thermistor.h"
 #include "FlightStates.h"
+#include "pid.h"
 
 // Initialize Classes
 States states;
@@ -68,7 +69,16 @@ void setup() {
 	SD.begin(BUILTIN_SDCARD);
 
 //--Initialize Start of SD Card write for given test/run
-	fileNamer();
+	File dataFile = SD.open("datalog.txt", FILE_WRITE);
+	if (dataFile) {
+		dataFile.println("DROPTEST FSW INITIALIZED");
+		dataFile.println(" , , Acceleration, , , Orientation, ");
+		dataFile.println("Packet, Time, x, y, z, x, y, z");
+		dataFile.close();
+	}
+	else {
+		Serial.println("Could not open datalog.txt");
+	}
 	#endif
 	
 //--Initialize Sensors
@@ -114,10 +124,6 @@ void setup() {
 	initParams += String(initialAlt);
 	initParams += ",";
 	Serial.println(initParams);
-	
-	#ifdef DROPTEST
-		currentFS = TEST;
-	#endif
 
 	Serial.println("End of Setup");
 }
@@ -213,43 +219,12 @@ void loop() {
 	case FINISHED:
 		states.finished();
 		break;
-	case TEST:
-		if (states.dropTest(packetCount, smoothAltitude)) {
-			#ifdef USESD
-			// Writing Drop Test Warning to SD Card
-			File dataFile = SD.open(file, FILE_WRITE);
-			if (dataFile) {
-				dataFile.println("POSSIBLE DROP TEST END");
-				dataFile.close();
-			}
-			#endif
-		}
-		break;
 	}
 
 	diffTime = currentTime - pastTime;
 	pastTime = currentTime;
 	delay(50);
 }
-
-#ifdef USESD
-void fileNamer() {
-	for (int i = 0; i < 1000; i++) {
-		String fileName = "datalog";
-		fileName += String(i);
-		fileName += ".txt";
-		file = fileName.c_str();
-		if (!SD.exists(file)){
-			File dataFile = SD.open(file, FILE_WRITE);
-			if (dataFile) {
-				dataFile.println("STARTING OUTPUT");
-				dataFile.close();
-			}
-			return;
-		}
-	}
-}
-#endif
 
 void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn) {
 	if (packetNumber % 100 == 0) {

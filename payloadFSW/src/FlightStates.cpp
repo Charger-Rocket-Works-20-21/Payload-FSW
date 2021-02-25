@@ -1,4 +1,5 @@
 #include "FlightStates.h"
+#include "pid.h"
 #include <math.h>
 
 using namespace std;
@@ -39,9 +40,10 @@ void States::descent(double velocity, std::vector<double> accel) {
 	}
 }
 
-void States::levelling(){
+void States::levelling(std::vector<double> orientation, uint32_t timems) {
     currentFS = LEVELLING;
 	//Perform Levelling Operations
+	pid_update(orientation, timems);
 
 	// If Levelled:
 	// Transmit Photos
@@ -54,22 +56,6 @@ void States::finished() {
 	currentFS = FINISHED;
 	//Decrease transmission rate
 	//Run until powered off
-}
-
-bool States::dropTest(uint16_t packetCount, double altitude) {
-	currentFS = TEST;
-
-	if (packetCount % 200 == 0) {
-		oldAlt = currentAlt;
-		currentAlt = altitude;
-		if (oldAlt - currentAlt > 4) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	return false;
 }
 
 /*void States::whichState(flightState newState) {

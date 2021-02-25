@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "system.h"
 
-enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED, TEST };
+enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED };
 
 class States {
 public:
@@ -13,10 +13,8 @@ public:
 	void standby(double altitude, double initialAltitude, double velocity);
 	void ascent(double altitude, double initialAltitude, double velocity);
 	void descent(double velocity, std::vector<double> accel);
-	void levelling();
+	void levelling(std::vector<double> orientation, uint32_t timems);
     void finished();
-
-	bool dropTest(uint16_t packetCount, double altitude);
 
 private:
 	double oldAlt = 0;
