@@ -4,18 +4,12 @@
  */
 #include "imu.h"
 
-
-// Global Variables
-sensors_event_t event;
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
-
-
 // ------------------- Functions -----------------------
 
 /*
  * Inertial Measurement Unit Inititialization
  */
-bool imu_init(Adafruit_BNO055* sensor){
+bool imuInit(Adafruit_BNO055* sensor){
 	Serial.println("Checking IMU Init");
 	if (! sensor->begin()){
     	Serial.println("BNO055 Not Detected");
@@ -29,15 +23,13 @@ bool imu_init(Adafruit_BNO055* sensor){
 	return true;
 }
 
-std::vector<double> resultantAccel(double smoothingFactor, std::vector<double> smoothAcceleration) {
-	Serial.println("here");
-	bno.getEvent(&event, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-	Serial.println("Event Got");
-	Serial.println(event.acceleration.x);
-	double accelx = smoothingFactor * event.acceleration.x + (1 - smoothingFactor) * smoothAcceleration.at(0);
-	double accely = smoothingFactor * event.acceleration.y + (1 - smoothingFactor) * smoothAcceleration.at(1);
-	double accelz = smoothingFactor * event.acceleration.z + (1 - smoothingFactor) * smoothAcceleration.at(2);
-	Serial.println("Accels Calculated");
+std::vector<double> getSmoothAccel(double smoothingFactor, std::vector<double> smoothAcceleration) {
+	bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+
+	double accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * smoothAcceleration.at(0);
+	double accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * smoothAcceleration.at(1);
+	double accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * smoothAcceleration.at(2);
+
 	std::vector<double> resultantVector;
 	resultantVector.push_back(accelx);
 	resultantVector.push_back(accely);
@@ -45,12 +37,12 @@ std::vector<double> resultantAccel(double smoothingFactor, std::vector<double> s
 	return resultantVector;
 }
 
-std::vector<double> resultantOrient(double smoothingFactor, std::vector<double> smoothOrientation) {
-	bno.getEvent(&event, Adafruit_BNO055::VECTOR_MAGNETOMETER);
+std::vector<double> getSmoothOrient(double smoothingFactor, std::vector<double> smoothOrientation) {
+	bno.getEvent(&orientEvent);
 
-	double orientx = smoothingFactor * event.orientation.x + (1 - smoothingFactor) * smoothOrientation.at(0);
-	double orienty = smoothingFactor * event.orientation.y + (1 - smoothingFactor) * smoothOrientation.at(1);
-	double orientz = smoothingFactor * event.orientation.z + (1 - smoothingFactor) * smoothOrientation.at(2);
+	double orientx = smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * smoothOrientation.at(0);
+	double orienty = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * smoothOrientation.at(1);
+	double orientz = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * smoothOrientation.at(2);
 
 	std::vector<double> resultantVector;
 	resultantVector.push_back(orientx);
@@ -58,20 +50,3 @@ std::vector<double> resultantOrient(double smoothingFactor, std::vector<double> 
 	resultantVector.push_back(orientz);
 	return resultantVector;
 }
-
-// -------------------- Test Functions ---------------------
-#ifdef DEBUG
-
-void bno055_test(void){
-    bno.getEvent(&event);
-
-    Serial.print("X: ");
-    Serial.print(event.orientation.x, 4);
-    Serial.print("\tY: ");
-    Serial.print(event.orientation.y, 4);
-    Serial.print("\tZ: ");
-    Serial.print(event.orientation.z, 4);
-    Serial.println("");
-}
-
-#endif

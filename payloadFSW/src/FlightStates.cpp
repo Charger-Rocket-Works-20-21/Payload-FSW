@@ -40,10 +40,10 @@ void States::descent(double velocity, std::vector<double> accel) {
 	}
 }
 
-void States::levelling(std::vector<double> orientation, uint32_t timems) {
+void States::levelling(double xorient, double zorient, uint32_t timems) {
     currentFS = LEVELLING;
 	//Perform Levelling Operations
-	pid_update(orientation, timems);
+	pidUpdate(xorient, zorient, timems);
 
 	// If Levelled:
 	// Transmit Photos

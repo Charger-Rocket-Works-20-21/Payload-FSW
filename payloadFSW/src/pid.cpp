@@ -1,39 +1,32 @@
 #include "pid.h"
 
 double kp, ki, kd;
-double input, output, setpoint;
+double output, targetPoint;
 double errSum, lastErr;
 
 uint32_t last_millis = 0;
 
-void pid_init(double setkp, double setki, double setkd, double setsetpoint)
-{
-	pid_set_gains(setkp, setki, setkd);
-	pid_set_setpoint(setsetpoint);
+void pidInit(double setkp, double setki, double setkd, double target) {
+	pidSetGains(setkp, setki, setkd);
+	targetPoint = target;
 }
 
-void pid_set_gains(double setkp, double setki, double setkd)
-{
+void pidSetGains(double setkp, double setki, double setkd) {
 	kp = setkp;
 	ki = setki;
 	kd = setkd;
 }
 
-void pid_set_setpoint(double setsetpoint)
-{
-	setpoint = setsetpoint;
-}
-
-void pid_clear_integral()
-{
+void pidClearIntegral() {
 	errSum = 0;
 }
 
-void pid_update (std::vector<double> heading, uint32_t millis)
-{
+void pidUpdate (double xorient, double zorient, uint32_t millis) {
+	double rorient = sqrt(pow((xorient+90), 2) + pow(zorient, 2)); // Resultant vector
+
 	double dt = ((double)(millis - last_millis))/1000.0;
 	
-	double error = setpoint - heading; //TODO: redo this to work for a 360 degree rotation
+	double error = targetPoint - rorient;
 	
 	errSum += (error * dt);
 	double dErr = (error - lastErr) / dt;
@@ -45,8 +38,7 @@ void pid_update (std::vector<double> heading, uint32_t millis)
 	lastErr = error;
 }
 
-uint16_t pid_output()
-{
+uint16_t pidOutput() {
 	return (uint16_t)(max(min(-output+500.0,1000.0),0.0)); // add 500 so it is centered
 
 }

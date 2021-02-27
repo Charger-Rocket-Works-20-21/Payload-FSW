@@ -3,21 +3,15 @@
 
 // Necessary Includes
 #include "system.h"
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
 
 // Globals
-extern sensors_event_t event;
-extern Adafruit_BNO055 bno;
+Adafruit_BNO055 bno;
+sensors_event_t accelEvent;
+sensors_event_t orientEvent;
 
 // Functions
-bool imu_init(Adafruit_BNO055* sensor);
-std::vector<double> resultantAccel(double smoothingFactor, std::vector<double> smoothAcceleration);
-std::vector<double> resultantOrient(double smoothingFactor, std::vector<double> smoothOrientation);
-
-// Test Functions
-#ifdef DEBUG
-void bno055_test(void);
-#endif /* DEBUG */
+bool imuInit(Adafruit_BNO055* sensor);
+std::vector<double> getSmoothAccel(double smoothingFactor, std::vector<double> smoothAcceleration);
+std::vector<double> getSmoothOrient(double smoothingFactor, std::vector<double> smoothOrientation);
 
 #endif /* IMU_H_ */

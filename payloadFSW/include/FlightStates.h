@@ -13,7 +13,7 @@ public:
 	void standby(double altitude, double initialAltitude, double velocity);
 	void ascent(double altitude, double initialAltitude, double velocity);
 	void descent(double velocity, std::vector<double> accel);
-	void levelling(std::vector<double> orientation, uint32_t timems);
+	void levelling(double xorient, double zorient, uint32_t timems);
     void finished();
 
 private:

@@ -6,20 +6,33 @@
 // All included files
 
 #define DEBUG
-#define USESD
 
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 
 #include <vector>
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <SD.h>
+
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
-#ifdef USESD
-    #include <SD.h>
-#endif
+#include <Adafruit_BMP3XX.h>
+#include <ComponentObject.h>
+#include <RangeSensor.h>
+#include <SparkFun_VL53L1X.h>
+#include <vl53l1x_class.h>
+#include <vl53l1_error_codes.h>
+
+#include "alt.h"
+#include "imu.h"
+#include "thermistor.h"
+#include "FlightStates.h"
+#include "pid.h"
+#include "rangefinder.h"
+
 // #include <utility/imumaths.h> Giving an error?
 #include "RingBuffer.h" //Giving errors?
 

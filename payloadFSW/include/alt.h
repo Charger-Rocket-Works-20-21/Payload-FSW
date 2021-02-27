@@ -7,10 +7,10 @@
 #include <Adafruit_BMP3XX.h>
 
 // Globals
-extern Adafruit_BMP3XX bmp;
+Adafruit_BMP3XX bmp;
 
 // Functions
-bool alt_init(Adafruit_BMP3XX*);
+bool altInit(Adafruit_BMP3XX*);
 double getSmoothTemp(double smoothingFactor, double smoothTemp);
 double getSmoothPres(double smoothingFactor, double smoothPres);
 double getSmoothAlt(double smoothingFactor, double smoothAlt);
