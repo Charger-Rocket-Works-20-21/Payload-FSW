@@ -10,65 +10,59 @@
 #define SHUTDOWN_PIN 2
 #define INTERRUPT_PIN 3
 
-//SFEVL53L1X distanceSensor;
+SFEVL53L1X distanceSensor;
 //Uncomment the following line to use the optional shutdown and interrupt pins.
-//SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
+// SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
 
-bool solenoidOn = false;
+double smoothDistance = 0;
+double smoothingFactor = 0.5;
 
 void setup() {
-	//Wire2.begin();
+	Wire.begin();
 
 	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(8, OUTPUT);
 
-	Serial.begin(115200);
+	delay(500);
+	
+	Serial.begin(9600);
 	Serial.println("VL53L1X Qwiic Test");
 
-	// if (distanceSensor.begin() != 0) { //Begin returns 0 on a good init
-	// 	Serial.println("Sensor failed to begin. Please check wiring. Freezing...");
-	// }
-	// Serial.println("Sensor online!");
+	if (distanceSensor.begin() != 0) { //Begin returns 0 on a good init
+		Serial.println("Sensor failed to begin. Please check wiring. Freezing...");
+	}
+	Serial.println("Sensor online!");
 }
 
 void loop() {
-	// distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
-	// while (!distanceSensor.checkForDataReady()) {
-	// 	delay(1);
-	// }
-	// int distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
-	// distanceSensor.clearInterrupt();
-	// distanceSensor.stopRanging();
-
-	// Serial.print("Distance(mm): ");
-	// Serial.print(distance);
-
-	// float distanceInches = distance * 0.0393701;
-	// float distanceFeet = distanceInches / 12.0;
-
-	// Serial.print("\tDistance(ft): ");
-	// Serial.print(distanceFeet, 2);
-
-	// Serial.println();
-
-	// if (distanceFeet <= 4) {
-	// 	digitalWrite(LED_BUILTIN, HIGH);
-	// }
-	// else {
-	// 	digitalWrite(LED_BUILTIN, LOW);
-	// }
-	// delay(10);
-
-	// Solenoid Test
-	if (solenoidOn) {
-		digitalWrite(8, LOW);
-		digitalWrite(LED_BUILTIN, LOW);
-		solenoidOn = false;
+	distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+	while (!distanceSensor.checkForDataReady()) {
+		delay(1);
 	}
-	else {
+	int distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+	distanceSensor.clearInterrupt();
+	distanceSensor.stopRanging();
+
+	Serial.print("Distance(mm): ");
+	Serial.print(distance);
+
+	float distanceInches = distance * 0.0393701;
+	float distanceFeet = distanceInches / 12.0;
+
+	Serial.print("\tDistance(ft): ");
+	Serial.print(distanceFeet, 2);
+
+	Serial.println();
+
+	smoothDistance = smoothingFactor * distanceFeet + (1 - smoothingFactor) * smoothDistance;
+
+	if (smoothDistance <= 4) {
 		digitalWrite(8, HIGH);
 		digitalWrite(LED_BUILTIN, HIGH);
-		solenoidOn = true;
 	}
-	delay(500);
+	else {
+		digitalWrite(8, LOW);
+		digitalWrite(LED_BUILTIN, LOW);
+	}
+	delay(10);
 }
