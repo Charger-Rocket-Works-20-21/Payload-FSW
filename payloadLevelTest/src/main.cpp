@@ -17,7 +17,6 @@
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 Adafruit_BMP3XX bmp;
-SoftwareSerial XBee(2,3);
 
 uint16_t packetCount = 0;
 double currentTime;
@@ -25,13 +24,17 @@ bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
 
-//void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
-void readCommand();
+// PID Constants
+double kp, ki, kd;
+double output, targetPoint;
+double errSum, lastErr;
+uint32_t pidLastMillis = 0;
+
+void pidUpdate (double xorient, double zorient, uint32_t millis);
 
 void setup() {
   	// put your setup code here, to run once:
 	Serial.begin(115200);
-	XBee.begin(9600);
 	delay(1000);
 	Serial.println("Beginning Payload Autogyro Drop Test...");
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -65,7 +68,7 @@ void setup() {
 
 	File dataFile = SD.open("datalog.txt", FILE_WRITE);
 	if (dataFile) {
-		dataFile.println("DROPTEST FSW INITIALIZED");
+		dataFile.println("LEVELLING TEST FSW INITIALIZED");
 		dataFile.println(" , , , , , Acceleration, , , Orientation, ");
 		dataFile.println("Packet, Time, Temp, Pressure, Altitude, x, y, z, x, y, z");
 		dataFile.close();
@@ -100,14 +103,8 @@ void loop() {
 		}
 	}
 	
-	readCommand();
 	packetCount++;
 	currentTime = millis()/1000.0;
-
-	// // Read Temperature, Pressure, and Altitude from Barometer
-	// if (!bmp.performReading()) {
-	// 	Serial.println("Failed To Perform Reading");
-	// }
 
 	// Read Accelerometer and Magnetometer data from IMU
 	sensors_event_t accelEvent;
@@ -153,69 +150,24 @@ void loop() {
 		Serial.println("Could not open datalog.txt");
 	}
 
-	XBee.println(packet);
-
-	// Serial.print(F("Acceleration: "));
-	// Serial.print((float)accelEvent.acceleration.x);
-	// Serial.print(F(" "));
-	// Serial.print((float)accelEvent.acceleration.y);
-	// Serial.print(F(" "));
-	// Serial.print((float)accelEvent.acceleration.z);
-	// Serial.println(F(""));
-
-	// Serial.print(F("Orientation: "));
-	// Serial.print((float)orientEvent.orientation.x);
-	// Serial.print(F(" "));
-	// Serial.print((float)orientEvent.orientation.y);
-	// Serial.print(F(" "));
-	// Serial.print((float)orientEvent.orientation.z);
-	// Serial.println(F(""));
-
-	
-	// Serial.print(F("Calibration: "));
-	// Serial.print(sys, DEC);
-	// Serial.print(F(" "));
-	// Serial.print(gyro, DEC);
-	// Serial.print(F(" "));
-	// Serial.print(accel, DEC);
-	// Serial.print(F(" "));
-	// Serial.println(mag, DEC);
-
 	delay(SAMPLERATE_DELAY_MS);
 }
 
-void readCommand() {
-	if (XBee.available()) {
-		String command = XBee.readString();
-		if (command.equalsIgnoreCase("RST")){
-			// Reset Teensy
-		}
-		else if (command.equalsIgnoreCase("LVL")){
-			// Restart Levelling process
-		}
-		else if (command.equalsIgnoreCase("PIC")){
-			// Retake Picture
-		}
-		else if (command.equalsIgnoreCase("RSD")){
-			// Resend Picture
-		}
-		else if (command.equalsIgnoreCase("CAL")){
-			// Recalibrate payload altitude
-		}
-	}
+
+
+void pidUpdate (double xorient, double zorient, uint32_t millis) {
+	double rorient = sqrt(pow((xorient+90), 2) + pow(zorient, 2)); // Resultant vector
+
+	double dt = ((double)(millis - pidLastMillis))/1000.0;
+	
+	double error = targetPoint - rorient;
+	
+	errSum += (error * dt);
+	double dErr = (error - lastErr) / dt;
+	
+	//printf("P: = %f I: %f D: %f\n",kp*error, ki*errSum, kd*dErr);
+	output = kp*error + ki*errSum + kd*dErr;
+	
+	pidLastMillis = millis;
+	lastErr = error;
 }
-
-
-// void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn) {
-// 	if (packetNumber % 4 == 0) {
-// 		Serial.println("Blinking");
-// 		if (lightsOn) {
-// 			lightsOn = false;
-// 			digitalWrite(LED_BUILTIN, LOW);
-// 		}
-// 		else {
-// 			lightsOn = true;
-// 			digitalWrite(LED_BUILTIN, HIGH);
-// 		}
-// 	}
-// }
