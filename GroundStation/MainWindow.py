@@ -1,22 +1,16 @@
-import sys
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from GlobalHeader import *
 
 
 from CSVManager import CSVFileManager
 from SerialManager import SerialProcess
 
-isLogGlobal = False
 
-def LOG(message, isLogEnabled=True):
-    if(isLogEnabled):
-        print(message)
-        
+
+
 
 
 class window(QWidget):
-    isLogLocal = isLogGlobal;
+    isLogLocal = isLogGlobal
 
     # Serial Manager
     ser = None
@@ -35,9 +29,18 @@ class window(QWidget):
       
 
       self.csvFile = CSVFileManager()
-      LOG("Creating Serial", self.isLogLocal)
+      
       self.ser = SerialProcess()
-      self.ser.start_process()
+      self.ser.serial.port = "COM1"
+      self.ser.connectDevice()
+
+      self.ser2 = SerialProcess()
+      self.ser2.serial.port = "COM2"
+
+      self.ser2.connectDevice()
+
+
+      self.ser.serial.serialPort.writeData(bytes('abc','utf-8'))
 
 
 
@@ -47,5 +50,6 @@ def main():
    ex = window()
    ex.show()
    sys.exit(app.exec_())
+   
 if __name__ == '__main__':
    main()

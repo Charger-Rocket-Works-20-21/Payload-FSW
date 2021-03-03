@@ -1,10 +1,8 @@
-
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from GlobalHeader import *
 
 import serial.tools.list_ports
-
+import serial
+from serial import *
 
 
 portlist = [comport.name + ' - ' + comport.description for comport in serial.tools.list_ports.comports()]
@@ -14,54 +12,160 @@ for port in portlist: print(port)
 
 
 
-class SerialProcess(QObject):
+class MySerial(QObject):
+    isLogLocal = isLogGlobal
+    baudRate = 0
+    settings = QSettings()
+    parity = 0
+    dataBits = 0
+    stopBits = 0
+    flowControl = 0
+    portList = []
+    baudRateList = []
+    serialPort = None
+    port = "COM1"
 
     def __init__(self):
+        super(MySerial,self).__init__()
+        LOG("Serial Device Initialized")
+
+
+    def openSerialPort(self):
+        self.serialPort = QSerialPort(self.port)
+        return self.serialPort
+
+
+class SerialProcess(QObject):
+    ## Instance Vars
+    isLogLocal = isLogGlobal
+
+    dataBuffer = []
+    device = None
+    serial = None
+    watchdog = QTimer()
+    receivedBytes = 0
+    ########################################################
+    
+
+    ## Signals
+    tx                          = pyqtSignal()
+    rx                          = pyqtSignal()
+    deviceChanged               = pyqtSignal();
+    connectedChanged            = pyqtSignal();
+    watchdogTriggered           = pyqtSignal();
+    dataSourceChanged           = pyqtSignal();
+    writeEnabledChanged         = pyqtSignal();
+    receivedBytesChanged        = pyqtSignal();
+    maxBufferSizeChanged        = pyqtSignal();
+    startSequenceChanged        = pyqtSignal();
+    finishSequenceChanged       = pyqtSignal();
+    watchdogIntervalChanged     = pyqtSignal();
+    frameValidationRegexChanged = pyqtSignal();
+    dataReceived                = pyqtSignal(['QByteArray']);
+    frameReceived               = pyqtSignal(['QByteArray']);
+    ########################################################
+
+    
+    def __init__(self):
         super(SerialProcess,self).__init__()
-
-
-
-    def message(self,s):
-        print(s)
-
-    def start_process(self):
-        self.message("Starting Serial Listener Process.")
-        self.p = QProcess()
-        self.p.readyReadStandardOutput.connect(self.handle_stdout)
-        self.p.readyReadStandardError.connect(self.handle_stderr)
-        self.p.stateChanged.connect(self.handle_state)
-        self.p.finished.connect(self.process_finished)
-        self.p.start("C:\\Users\\quaz9\\AppData\\Local\\Programs\\Python\\Python39\\python",['C:\\Users\\quaz9\\Documents\\MAE490\\Payload-FSW\\GroundStation\\main.py'])
-        print("NOLO")
+        LOG("Serial Manager Initialized",self.isLogLocal)
+        
+        self.serial = MySerial()
+        self.device = self.serial.openSerialPort()
         
 
 
-    def handle_stdout(self):
-        #print("AAAAAA")
-        data = self.p.readAllStandardOutput()
-        stdout = bytes(data).decode("utf8")
-        self.message(stdout)
+    def deviceAvailable(self):
+        return self.device is not None
+
+    ## Slots
+    ########################################################
+
+    @pyqtSlot()
+    def connectDevice(self):
+        self.disconnectDevice()
+
+        self.setDevice(self.serial.openSerialPort())
+
+        if(self.deviceAvailable()):
+            mode = QIODevice.ReadWrite
+            if(self.device.open(mode)):
+                self.device.readyRead.connect(self.onDataReceived)
+                LOG("Device Opened Successfully",self.isLogLocal)
+
+            else:
+                LOG("Failed to Open Device",self.isLogLocal)
+                self.disconnectDevice()
+
+            self.connectedChanged.emit()
+            
+    @pyqtSlot()
+    def toggleConnection(self):
+        pass
+
+    @pyqtSlot()
+    def disconnectDevice(self):
+        if(self.deviceAvailable()):
+            #self.device.disconnect(self.onDataReceived())
+            self.device = None
+            self.receivedBytes = 0
+            self.dataBuffer = []
+            
+
+    @pyqtSlot(int,bool)
+    def setWriteEnabled(self,enabled):
+        pass
+
+    @pyqtSlot(int,int)
+    def setMaxBufferSize(self,maxBufferSize):
+        pass
+
+    @pyqtSlot(int,int)
+    def setWatchdogInterval(self,interval=15):
+        self.watchdog.setInterval(interval)
+        self.watchdog.setTimerType(Qt.PreciseTimer)
+    
+
+    @pyqtSlot()
+    def readFrames(self):
+        pass
+
+    @pyqtSlot()
+    def feedWatchdog(self):
+        self.watchdog.stop()
+        self.watchdog.start()
+
+    @pyqtSlot()
+    def onDataReceived(self):
+        #if(self.device != None):
+            #self.disconnectDevice()
         
-    def handle_stderr(self):
-        data = self.p.readAllStandardError()
-        stderr = bytes(data).decode("utf8")
-        self.message(stderr)
+        data = self.device.readAll()
+        byt = len(data)
 
-    def handle_state(self, state):
-        states = {   
-            QProcess.NotRunning: 'Not running',
-            QProcess.Starting: 'Starting',
-            QProcess.Running: 'Running',
-        }
-        print(str(self.p.error()))
-        state_name = states[state]
-        self.message(f"State changed: {state_name}")
-        
+        self.feedWatchdog()
 
-    def process_finished(self):
-            self.message("Process finished.")
-            self.p = None        
+        self.dataBuffer.append(data)
 
+        self.receivedBytes += byt
 
+        self.receivedBytesChanged.emit()
+        self.dataReceived.emit(data)
+        self.rx.emit()
+        print("Received Data:   " + str(data))
 
-#print("Hello")
+    @pyqtSlot()
+    def clearTempBuffer(self):
+        self.dataBuffer.clear()
+
+    @pyqtSlot()
+    def onWatchdogTriggered(self):
+        self.clearTempBuffer()
+
+    @pyqtSlot(int,'QIODevice')
+    def setDevice(self,device):
+        self.disconnectDevice()
+        self.device = device
+        self.deviceChanged.emit()
+    
+    
