@@ -35,6 +35,7 @@ class MySerial(QObject):
         return self.serialPort
 
 
+
 class SerialProcess(QObject):
     ## Instance Vars
     isLogLocal = isLogGlobal
@@ -50,26 +51,26 @@ class SerialProcess(QObject):
     ## Signals
     tx                          = pyqtSignal()
     rx                          = pyqtSignal()
-    deviceChanged               = pyqtSignal();
-    connectedChanged            = pyqtSignal();
-    watchdogTriggered           = pyqtSignal();
-    dataSourceChanged           = pyqtSignal();
-    writeEnabledChanged         = pyqtSignal();
-    receivedBytesChanged        = pyqtSignal();
-    maxBufferSizeChanged        = pyqtSignal();
-    startSequenceChanged        = pyqtSignal();
-    finishSequenceChanged       = pyqtSignal();
-    watchdogIntervalChanged     = pyqtSignal();
-    frameValidationRegexChanged = pyqtSignal();
-    dataReceived                = pyqtSignal(['QByteArray']);
-    frameReceived               = pyqtSignal(['QByteArray']);
+    deviceChanged               = pyqtSignal()
+    connectedChanged            = pyqtSignal()
+    watchdogTriggered           = pyqtSignal()
+    dataSourceChanged           = pyqtSignal()
+    writeEnabledChanged         = pyqtSignal()
+    receivedBytesChanged        = pyqtSignal()
+    maxBufferSizeChanged        = pyqtSignal()
+    startSequenceChanged        = pyqtSignal()
+    finishSequenceChanged       = pyqtSignal()
+    watchdogIntervalChanged     = pyqtSignal()
+    frameValidationRegexChanged = pyqtSignal()
+    dataReceived                = pyqtSignal(['QByteArray'])
+    frameReceived               = pyqtSignal(['QByteArray'])
     ########################################################
 
     
     def __init__(self):
         super(SerialProcess,self).__init__()
         LOG("Serial Manager Initialized",self.isLogLocal)
-        
+        self.setWatchdogInterval(15)
         self.serial = MySerial()
         self.device = self.serial.openSerialPort()
         
@@ -78,12 +79,29 @@ class SerialProcess(QObject):
     def deviceAvailable(self):
         return self.device is not None
 
+
+    def watchdogInterval(self):
+        return self.watchdog.interval()
+
+    
+    def writeData(self,data):
+        bytes = 0
+        
+        bytes = self.device.write(data)
+
+        if(bytes>0):
+            self.tx.emit()
+        
+        self.device.flush()
+        #print(self.device)
+        self.device.waitForBytesWritten()
+        return bytes
     ## Slots
     ########################################################
 
     @pyqtSlot()
     def connectDevice(self):
-        self.disconnectDevice()
+        #self.disconnectDevice()
 
         self.setDevice(self.serial.openSerialPort())
 
@@ -98,6 +116,7 @@ class SerialProcess(QObject):
                 self.disconnectDevice()
 
             self.connectedChanged.emit()
+            self.deviceChanged.emit()
             
     @pyqtSlot()
     def toggleConnection(self):
@@ -106,11 +125,14 @@ class SerialProcess(QObject):
     @pyqtSlot()
     def disconnectDevice(self):
         if(self.deviceAvailable()):
-            #self.device.disconnect(self.onDataReceived())
+            try: self.device.disconnect()
+            except: pass
             self.device = None
             self.receivedBytes = 0
             self.dataBuffer = []
             
+            self.connectedChanged.emit()
+            self.deviceChanged.emit()
 
     @pyqtSlot(int,bool)
     def setWriteEnabled(self,enabled):
@@ -124,6 +146,7 @@ class SerialProcess(QObject):
     def setWatchdogInterval(self,interval=15):
         self.watchdog.setInterval(interval)
         self.watchdog.setTimerType(Qt.PreciseTimer)
+        self.watchdogIntervalChanged.emit()
     
 
     @pyqtSlot()
@@ -137,8 +160,8 @@ class SerialProcess(QObject):
 
     @pyqtSlot()
     def onDataReceived(self):
-        #if(self.device != None):
-            #self.disconnectDevice()
+        #if(self.device == None):
+         #   self.disconnectDevice()
         
         data = self.device.readAll()
         byt = len(data)
