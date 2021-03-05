@@ -52,11 +52,12 @@ void loop() {
 	Serial.print("\tDistance(ft): ");
 	Serial.print(distanceFeet, 2);
 
+	smoothDistance = smoothingFactor * distanceFeet + (1 - smoothingFactor) * smoothDistance;
+	Serial.print("\tSmoothDistance(ft): ");
+	Serial.print(smoothDistance, 2);
 	Serial.println();
 
-	smoothDistance = smoothingFactor * distanceFeet + (1 - smoothingFactor) * smoothDistance;
-
-	if (smoothDistance <= 4) {
+	if (distanceFeet <= 4.0) {
 		digitalWrite(8, HIGH);
 		digitalWrite(LED_BUILTIN, HIGH);
 	}
