@@ -9,7 +9,7 @@ from SerialManager import SerialProcess
 
 
 
-class window(QWidget):
+class window(QMainWindow):
     isLogLocal = isLogGlobal
 
     # Serial Manager
@@ -21,9 +21,10 @@ class window(QWidget):
     
     def __init__(self, parent = None):
       super(window, self).__init__(parent)
+      uic.loadUi('main.ui',self)
       self.setWindowTitle("UAH Ground Station")
 
-
+      
 
       self.csvFile = CSVFileManager()
       
@@ -32,6 +33,9 @@ class window(QWidget):
       self.ser.connectDevice()
 
       self.ser.telemetryProcessed.connect(self.csvFile.writeLine)
+
+      self.ser.missionTimeUpdated.connect(self.missionTime.setText)
+      self.ser.imageProcessed.connect(self.image.setPixmap)
 
       if(isSimulateSerial):
           self.p = QProcess()
@@ -45,6 +49,8 @@ class window(QWidget):
       
 def main():
    app = QApplication(sys.argv)
+
+
    ex = window()
    ex.show()
    sys.exit(app.exec_())

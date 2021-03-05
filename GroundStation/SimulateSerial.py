@@ -4,6 +4,7 @@ import time
 import random
 from PIL import Image
 import numpy as np
+import io
 ser2 = SerialProcess()
 ser2.serial.port = "COM2"
 
@@ -53,17 +54,17 @@ def level(rotx,roty,rotz):
 
 def generateImage():
     
-    tempImg = Image.open("TestImg.png")
+    tempImg = Image.open("huntsville_color.jpg")
     matImg = np.asarray(tempImg)
     x,y,colors = matImg.shape
     imgVect = matImg.ravel()
 
     img = imgVect
 
-    return img,x,y,colors
+    return tempImg,x,y,colors
 
-
-
+#flightState = 4
+time.sleep(0.5)
 for i in range(500):
     
     if(xz < 5 and flightState ==0):
@@ -104,12 +105,28 @@ for i in range(500):
     #Transmit Image
     if(flightState == 4):
         img,x,y,colors = generateImage()
-        listOfVars = ["Image",x,y,colors]
+        listOfVars = ["Image"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
-        for i in img:
-            temp = "," + str(i)
-            ser2.writeData(bytes(temp,'utf-8'))
+        output = io.BytesIO()
+        img.save(output,format='TIFF')
+        hex_data = output.getvalue()
+        
+        count = 0
+
+        for i in range(len(hex_data)):
+            if(i%1000 == 0):
+                if(i +1000>=len(hex_data)):
+                    ser2.writeData(hex_data[i:])
+                else:
+                    ser2.writeData(hex_data[i:i+1000])
+                time.sleep(0.000000000000000001)
+        
+        time.sleep(0.1)
+        #for i in img:
+        #    temp = "," + str(i)
+        #    ser2.writeData(bytes(temp,'utf-8'))
+        #    time.sleep(0.01)
         temp2 = ",Image End"
         ser2.writeData(bytes(temp2,'utf-8'))
         flightState = 5
