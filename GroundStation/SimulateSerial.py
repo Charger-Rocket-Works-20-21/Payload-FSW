@@ -62,7 +62,7 @@ def generateImage():
 
     return img,x,y,colors
 
-flightState = 4
+
 
 for i in range(500):
     

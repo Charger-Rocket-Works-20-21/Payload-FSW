@@ -23,7 +23,7 @@ class window(QWidget):
       super(window, self).__init__(parent)
       self.setWindowTitle("UAH Ground Station")
 
-            
+
 
       self.csvFile = CSVFileManager()
       
@@ -31,6 +31,7 @@ class window(QWidget):
       self.ser.serial.port = "COM1"
       self.ser.connectDevice()
 
+      self.ser.telemetryProcessed.connect(self.csvFile.writeLine)
 
       if(isSimulateSerial):
           self.p = QProcess()

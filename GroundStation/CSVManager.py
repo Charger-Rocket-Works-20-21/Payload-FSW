@@ -18,6 +18,7 @@ class CSVFileManager(QObject):
     filePath = "default.csv"
     
     def __init__(self,name="default.csv"):
+        super(CSVFileManager,self).__init__()
         self.filePath = name
         
 

@@ -67,6 +67,10 @@ class SerialProcess(QObject):
     dataReceived                = pyqtSignal(['QByteArray'])
     frameReceived               = pyqtSignal(['QString'])
     imageReceived               = pyqtSignal(['QString'])
+    imageProcessed              = pyqtSignal(['QImage'])
+
+    telemetryReceived          = pyqtSignal(['QString'])
+    telemetryProcessed         = pyqtSignal([list])
     ########################################################
 
     
@@ -83,7 +87,7 @@ class SerialProcess(QObject):
         self.frameTimer.start()
 
         self.imageReceived.connect(self.receiveImage)
-        
+        self.telemetryReceived.connect(self.receiveTelemetry)
 
 
     def deviceAvailable(self):
@@ -178,8 +182,18 @@ class SerialProcess(QObject):
         print(MatImg)
         im = Image.fromarray(np.uint8(MatImg))
         im.show()
+        qimage = QImage(MatImg, MatImg.shape[1], MatImg.shape[0], QImage.Format_RGB888)
+        self.imageProcessed.emit(qimage)
 
-
+    @pyqtSlot('QString')
+    def receiveTelemetry(self,telemetryString):
+        s = str(telemetryString)
+        sList = s.split(',')
+        while("" in sList):
+            sList.remove("")
+        tel = list(map(float,sList))
+        LOG(tel,self.isLogLocal)
+        self.telemetryProcessed.emit(tel)
 
     @pyqtSlot()
     def readFrames(self):
@@ -195,16 +209,16 @@ class SerialProcess(QObject):
             sIndex = self.dataBuffer.index(startNormal)
 
             buffer = buffer[sIndex+len(startNormal)+1:]
-            LOG("Buffer1: " + buffer,self.isLogLocal)
+            #LOG("Buffer1: " + buffer,self.isLogLocal)
             if(not endNormal in buffer):
                 break
 
             fIndex = buffer.index(endNormal)
             buffer = buffer[0:fIndex-1]
-            LOG("Buffer2: " + buffer,self.isLogLocal)
+            #LOG("Buffer2: " + buffer,self.isLogLocal)
             if(buffer != ""):
-                self.frameReceived.emit(buffer)
-                self.dataBuffer = self.dataBuffer[0:sIndex]+self.dataBuffer[fIndex+len(endNormal)+sIndex+len(startNormal)+1:]
+                self.telemetryReceived.emit(buffer)
+                self.dataBuffer = self.dataBuffer[0:sIndex-1]+self.dataBuffer[fIndex+len(endNormal)+sIndex+len(startNormal)+1:]
                 LOG(self.dataBuffer,self.isLogLocal)
 
 
@@ -213,16 +227,16 @@ class SerialProcess(QObject):
             sIndex = self.dataBuffer.index(startImg)
 
             buffer = buffer[sIndex+len(startImg)+1:]
-            LOG("Buffer1: " + buffer,self.isLogLocal)
+            #LOG("Buffer1: " + buffer,self.isLogLocal)
             if(not endImg in buffer):
                 break
 
             fIndex = buffer.index(endImg)
             buffer = buffer[0:fIndex-1]
-            LOG("Buffer2: " + buffer,self.isLogLocal)
+            #LOG("Buffer2: " + buffer,self.isLogLocal)
             if(buffer != ""):
                 self.imageReceived.emit(buffer)
-                self.dataBuffer = self.dataBuffer[0:sIndex]+self.dataBuffer[fIndex+len(endImg)+sIndex+len(startImg)+1:]
+                self.dataBuffer = self.dataBuffer[0:sIndex-1]+self.dataBuffer[fIndex+len(endImg)+sIndex+len(startImg)+1:]
                 LOG(self.dataBuffer,self.isLogLocal)
 
         
