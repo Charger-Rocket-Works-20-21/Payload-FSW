@@ -8,6 +8,7 @@ from PyQt5.QtSerialPort import *
 
 
 isLogGlobal = True
+isSimulateSerial = True
 
 def LOG(message, isLogEnabled=True):
     if(isLogEnabled):
