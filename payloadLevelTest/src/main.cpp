@@ -45,23 +45,14 @@ double initialOrientation;
 double radialOrient;
 double tangentialOrient;
 
-// PID Constants
-double kp = 10.0;
-double ki = 0.1;
-double kd = 3.0;
-double output;
-double targetPoint = 0;
-double errSum, lastErr;
-uint32_t pidLastMillis = 0;
-uint16_t pidOutput;
-
 bool calibrated, initialized;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 double resultCurrent, resultPrevious;
 
-uint16_t pidUpdate (double xorient, double zorient, uint32_t millis);
-bool leveler (double result, int motorPin, uint32_t millis);
 int hasChanged (double currentOrient, double initialOrient);
+void driveMotor (int motorNumber, int direction);
+void resetCalibration();
+void calibrateLeveler();
 
 void setup() {
 	Serial.begin(9600);
@@ -148,46 +139,22 @@ void loop() {
 	tangentialOrient = smoothOrientation.z;
 	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 	
-	//pidOutput = pidUpdate(radialOrient, tangentialOrient, currentTime*1000);
+	calibrateLeveler();
 
-	if (!calibrated && calibration >= 8) {
-		calibrated = true;
-	}
-
-	if (calibrated && !initialized) {
-		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
-		initialized = true;
-	}
-
-	if (initialized && oriented1 == 0) {
-		driveMotor(1, 1);
-		bool helping = hasChanged(resultCurrent, resultPrevious);
-		if (helping != 0) {
-			oriented1 = helping;
-			driveMotor(1, 0);
+	if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
+		if (oriented1 == 1) {
+			driveMotor(1, 1);
+		}
+		if (oriented2 == 1) {
+			driveMotor(2, 1);
+		}
+		if (oriented3 == 1) {
+			driveMotor(3, 1);
+		}
+		if (hasChanged(resultCurrent, resultPrevious)) {
+			resetCalibration();
 		}
 	}
-
-	if (oriented1 != 0 && oriented2 == 0) {
-		driveMotor(2, 1);
-		bool helping = hasChanged(resultCurrent, resultPrevious);
-		if (helping != 0) {
-			oriented2 = helping;
-			driveMotor(2, 0);
-		}
-	}
-
-	if (oriented2 != 0 && oriented3 == 0) {
-		driveMotor(3, 1);
-		bool helping = hasChanged(resultCurrent, resultPrevious);
-		if (helping != 0) {
-			oriented3 = helping;
-			driveMotor(3, 0);
-		}
-	}
-
-	
-
 
 	String packet = "";
 	packet += String(packetCount);
@@ -207,8 +174,6 @@ void loop() {
 	packet += String(orientEvent.orientation.z);
 	packet += ",";
 	packet += String(calibration);
-	packet += ",";
-	packet += String(pidOutput);
 	Serial.println(packet);
 
 	#ifdef USESD
@@ -224,32 +189,6 @@ void loop() {
 
 	resultPrevious = resultCurrent;
 	delay(SAMPLERATE_DELAY_MS);
-}
-
-
-
-uint16_t pidUpdate (double xorient, double zorient, uint32_t millis) {
-	double rorient = sqrt(pow((xorient), 2) + pow(zorient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO XORIENT FOR SLED CONFIGURATION
-
-	double dt = ((double)(millis - pidLastMillis))/1000.0;
-	
-	double error = targetPoint - rorient;
-	
-	errSum += (error * dt);
-	double dErr = (error - lastErr) / dt;
-	
-	//printf("P: = %f I: %f D: %f\n",kp*error, ki*errSum, kd*dErr);
-	output = kp*error + ki*errSum + kd*dErr;
-	
-	pidLastMillis = millis;
-	lastErr = error;
-
-	// return (uint16_t)(max(min(-output+500.0,1000.0), 0.0));
-	return (uint16_t)(rorient);
-}
-
-bool leveler (double result, int motorPin, uint32_t millis) {
-	
 }
 
 // Return 0 for no change
@@ -291,5 +230,53 @@ void driveMotor (int motorNumber, int direction) {
 	else if (direction == 2) {
 		digitalWrite(reversePin, HIGH);
 		digitalWrite(onPin, HIGH);
+	}
+}
+
+void resetCalibration() {
+	oriented1 = 0;
+	oriented2 = 0;
+	oriented3 = 0;
+
+	driveMotor(1, 0);
+	driveMotor(2, 0);
+	driveMotor(3, 0);
+}
+
+void calibrateLeveler() {
+	if (!calibrated && calibration >= 8) {
+		calibrated = true;
+	}
+
+	if (calibrated && !initialized) {
+		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
+		initialized = true;
+	}
+
+	if (initialized && oriented1 == 0) {
+		driveMotor(1, 1);
+		bool helping = hasChanged(resultCurrent, resultPrevious);
+		if (helping != 0) {
+			oriented1 = helping;
+			driveMotor(1, 0);
+		}
+	}
+
+	if (oriented1 != 0 && oriented2 == 0) {
+		driveMotor(2, 1);
+		bool helping = hasChanged(resultCurrent, resultPrevious);
+		if (helping != 0) {
+			oriented2 = helping;
+			driveMotor(2, 0);
+		}
+	}
+
+	if (oriented2 != 0 && oriented3 == 0) {
+		driveMotor(3, 1);
+		bool helping = hasChanged(resultCurrent, resultPrevious);
+		if (helping != 0) {
+			oriented3 = helping;
+			driveMotor(3, 0);
+		}
 	}
 }
