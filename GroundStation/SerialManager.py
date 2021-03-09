@@ -36,17 +36,21 @@ class MySerial(QObject):
 
 
 
+
+
 class SerialProcess(QObject):
     ## Instance Vars
-    isLogLocal = isLogGlobal
+    isLogLocal = False
 
     dataBuffer = QByteArray()
     device = None
     serial = None
-    watchdog = QTimer()
+    watchdog = None
     receivedBytes = 0
     numImagesReceived = 0
-    frameTimer = QTimer()
+    frameTimer = None
+    lockWhile = False
+    lockRead = False
     ########################################################
     
 
@@ -77,19 +81,23 @@ class SerialProcess(QObject):
     
     def __init__(self):
         super(SerialProcess,self).__init__()
-        LOG("Serial Manager Initialized",self.isLogLocal)
-        self.setWatchdogInterval(15)
         self.serial = MySerial()
         self.device = self.serial.openSerialPort()
+        self.watchdog=   QTimer(self)
+        self.frameTimer = QTimer(self)
 
-        self.frameTimer.setInterval(100.0)
+
+        self.setWatchdogInterval(15)
+       
+        self.frameTimer.setInterval(1000.0)
         self.frameTimer.setTimerType(Qt.PreciseTimer)
         self.frameTimer.timeout.connect(self.readFrames)
         self.frameTimer.start()
 
         self.imageReceived.connect(self.receiveImage)
         self.telemetryReceived.connect(self.receiveTelemetry)
-
+        time.sleep(0.1)
+        self.connectDevice()
 
     def deviceAvailable(self):
         return self.device is not None
@@ -113,7 +121,16 @@ class SerialProcess(QObject):
         return bytes
     ## Slots
     ########################################################
+    
+    @pyqtSlot()
+    def startReading(self):
+        LOG("Serial Manager Initialized",self.isLogLocal)
 
+
+
+        #self.watchdog.moveToThread(QThread.currentThread())
+        #self.frameTimer.moveToThread(QThread.currentThread())
+    
     @pyqtSlot()
     def connectDevice(self):
         #self.disconnectDevice()
@@ -207,17 +224,27 @@ class SerialProcess(QObject):
 
     @pyqtSlot()
     def readFrames(self):
-        #LOG("ReadFrames",self.isLogLocal)
+
+        LOG("ReadFrames",self.isLogLocal)
+
+
+
+        #
         startNormal = "UAH Charger RocketWorks"
         endNormal = "UAH Charger RocketWorks End"
 
         startImg = bytes("Image",'utf-8')
         endImg = bytes("Image End",'utf-8')
-
+        
+       
         strBuff = str(self.dataBuffer)
+        #strBuff = ",,ImageII*\x00\x08\x00\x00\x00\n\x00\x00\x01\x04\x00\x01\x00\x00\x00-\x03\x00\x00\x01\x01\x04\x00\x01\x00\x00\x00b\x02\x00\x00\x02\x01\x03\x00\x03\x00\x00\x00\x86\x00\x00\x00\x03\x01\x03\x00\x01\x00\x00\x00\x01\x00\x00\x00\x06\x01\x03\x00\x01\x00\x00\x00\x02\x00\x00\x00\x11\x01\x04\x00\x01\x00\x00\x00\x8c\x00\x00\x00\x15\x01\x03\x00\x01\x00\x00\x00\x03\x00\x00\x00\x16\x01\x04\x00\x01\x00\x00\x00b\x02\x00\x00\x17\x01\x04\x00\x01\x00\x00\x00\xae\xb3\x16\x00\x1c\x01\x03\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x08\x00\x08\x00\x08\x00L\x87\xd5L\x87\xd5L\x87\xd5N\x89\xd7L\x8a\xd7L\x8a\xd7K\x89\xd6J\x88\xd5K\x89\xd6L\x8a\xd7K\x89\xd6J\x88\xd5L\x87\xd5M\x88\xd6N\x89\xd7N\x89\xd7M\x88\xd6N\x89\xd7N\x89\xd7N\x89\xd7N\x89\xd7O\x8a\xd8O\x8a\xd8N\x89\xd7N\x89\xd7N\x89\xd7N\x89\xd7O\x8a\xd8O\x8a\xd8N\x89\xd7N\x89\xd7P\O\x8a\xd8O\x8a\xd8N\x89\xd7N\x89\xd7P\x8b\xd9N\x87\xd6N\x87\xd6O\x88\xd7P\x89\xd8P\x89\xd8O\x88\xd7N\x89\xd7M\x88\xd6N\x89\xd7O\x8a\9P\x8b\xd9O\x8a\xd8N\x89\xd5P\x8b\xd7Qxd8O\x8a\xd8N\x89\xd7N\x89\xd7P\x8b\xd9P\x8b\xd9O\x8a\xd8N\x89\xd5P\x8b\xd7Q\x8c\xd8Q\x8c\xd8Q\x8a\xd7P\x89\xd6P\x89\xd6Q\x8a\xd7O\x2176,4.876302361532091,-4.48723729265888\xd5P\x89\xd6Q\x8a\xd7Q\x8a,UAH Charger RocketWorks,22.0,5,0,5.354944287012176,4.876302361532091,-4.487237292658957,0.032817569596944287012176,4.876302361532091,-4.487278448,0.0065896653801972415,0.03238312012398757,UAH Charger RocketWorks End,UAH Charger RocketWorks,22.5,5,0,5.354944287012176,4.876,0,5.354944287012176,4.876302361532091302361532091,-4.487237292658957,0.03281756959678448,0.0065896653801972415,0.03238312012398757,UAH Charger RocketWorks End,UAH Charges,23.5,5,0,5.354944287012176,4.8763023r RocketWorks,23.0,5,0,5.354944287012176,4.876302361532091,-4.487237292658957,0.03281756959678448,0.0065896653801972415,0.0323831201cketWorks,24.0,5,0,5.3549442870'      2398757,UAH Charger RocketWorks End,UAH Charger RocketWorks,23.5,5,0,5.354944287012176,4.876302361532091,-4.487237292658957,0.03281756959678448,0.0065896653801972415,0.03238312012398757,UAH Charger RocketWorks End,UAH Charger RocketWorks,24.0,5,0,5.3549442870"
+        #strBuff = strBuff[3:-1]
         while((startNormal in strBuff) and (endNormal in strBuff)):
+           #self.feedWatchdog()
+            #print("ORIGINAL BUFFER: " + strBuff + "\n")
             buffer = strBuff
-            sIndex = strBuff.index(startNormal)
+            sIndex = buffer.index(startNormal)
 
             buffer = buffer[sIndex+len(startNormal)+1:]
             LOG("Buffer1: " + buffer,self.isLogLocal)
@@ -228,14 +255,20 @@ class SerialProcess(QObject):
             buffer = buffer[0:fIndex-1]
             LOG("Buffer2: " + buffer,self.isLogLocal)
             if(buffer != ""):
+                LOG("SIndex:  " + str(sIndex))
                 self.telemetryReceived.emit(buffer)
-                self.dataBuffer = self.dataBuffer[0:sIndex-1]+self.dataBuffer[fIndex+len(endNormal)+sIndex+len(startNormal)+1:]
+                self.dataBuffer = self.dataBuffer[0:sIndex-2]+self.dataBuffer[fIndex+len(endNormal)+sIndex+len(startNormal):]
+                
                 strBuff = str(self.dataBuffer)
                 LOG(self.dataBuffer,self.isLogLocal)
                 print("")
-
-
+                #print(str(self.dataBuffer[0:sIndex-2]+self.dataBuffer[fIndex+len(endNormal)+sIndex+len(startNormal):]))
+                print(sIndex)
+                print(fIndex)
+                print("")
+            #strBuff = str(self.dataBuffer)
         while((self.dataBuffer.contains(startImg)) and (self.dataBuffer.contains(endImg))):
+            self.feedWatchdog()
             buffer = self.dataBuffer
             sIndex = self.dataBuffer.indexOf(startImg)
 
@@ -250,18 +283,21 @@ class SerialProcess(QObject):
             if(buffer != ""):
                 self.imageReceived.emit(buffer)
                 self.dataBuffer = self.dataBuffer[0:sIndex-1]+self.dataBuffer[fIndex+len(endImg)+sIndex+len(startImg)+1:]
-                #(self.dataBuffer,self.isLogLocal)
+                #LOG(self.dataBuffer,self.isLogLocal)
 
-        
+
+
 
 
     @pyqtSlot()
     def feedWatchdog(self):
         self.watchdog.stop()
         self.watchdog.start()
+        #print("Timer Thread: " + str(int(QThread.currentThreadId())))
 
     @pyqtSlot()
     def onDataReceived(self):
+
         #if(self.device == None):
          #   self.disconnectDevice()
         
@@ -271,17 +307,20 @@ class SerialProcess(QObject):
         self.feedWatchdog()
         
         s = data
+    
 
         self.dataBuffer.append(s)
 
         self.receivedBytes += byt
 
+        
         self.receivedBytesChanged.emit()
         self.dataReceived.emit(data)
         self.rx.emit()
-        print("Received Data:   " + str(s))
-        print("")
-        print("")
+       # print("Received Data:   " + str(s))
+        #print("")
+       # print("")
+
 
     @pyqtSlot()
     def clearTempBuffer(self):
@@ -298,3 +337,45 @@ class SerialProcess(QObject):
         self.deviceChanged.emit()
     
     
+class SerialManager(QObject):
+    runSerialProcess = pyqtSignal()
+    telemetryProcessed = pyqtSignal([list])
+    missionTimeUpdated = pyqtSignal(['QString'])
+    imageProcessed = pyqtSignal(['QPixmap'])
+
+    def __init__(self,port):
+        super(SerialManager,self).__init__()
+        self.serP = SerialProcess()
+         
+
+
+        self.thread = QThread()
+        self.serP.moveToThread(self.thread)
+        
+
+        self.serP.serial.port = port
+        self.serP.telemetryProcessed.connect(self.receiveTelemetryFromSerial,type=Qt.DirectConnection)
+        self.serP.imageProcessed.connect(self.receiveImageFromSerial,type=Qt.DirectConnection)
+        self.serP.missionTimeUpdated.connect(self.passOnMissionTime,type=Qt.DirectConnection)
+        self.runSerialProcess.connect(self.serP.startReading,type=Qt.DirectConnection)
+        
+        self.thread.start()
+        self.runSerialProcess.emit()
+       
+
+
+    @pyqtSlot('QPixmap')
+    def receiveImageFromSerial(self,image):
+        self.image = image
+        self.imageProcessed.emit(self.image)
+
+
+    @pyqtSlot(list)
+    def receiveTelemetryFromSerial(self,telList):
+        self.telList = telList
+        self.telemetryProcessed.emit(telList)
+
+
+    @pyqtSlot('QString')
+    def passOnMissionTime(self,time):
+        self.missionTimeUpdated.emit(time)

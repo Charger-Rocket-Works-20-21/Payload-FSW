@@ -2,7 +2,7 @@ from GlobalHeader import *
 
 
 from CSVManager import CSVFileManager
-from SerialManager import SerialProcess
+from SerialManager import SerialProcess,SerialManager
 
 
 
@@ -28,14 +28,17 @@ class window(QMainWindow):
 
       self.csvFile = CSVFileManager()
       
-      self.ser = SerialProcess()
-      self.ser.serial.port = "COM1"
-      self.ser.connectDevice()
+      
+      self.ser = SerialManager("COM1")
+      
+     
 
       self.ser.telemetryProcessed.connect(self.csvFile.writeLine)
 
       self.ser.missionTimeUpdated.connect(self.missionTime.setText)
       self.ser.imageProcessed.connect(self.image.setPixmap)
+
+      print("Main Thread: " + str(int(QThread.currentThreadId())))
 
       if(isSimulateSerial):
           self.p = QProcess()
