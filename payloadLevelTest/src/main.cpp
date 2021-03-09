@@ -1,4 +1,3 @@
-#include <vector>
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -7,17 +6,17 @@
 #include <SoftwareSerial.h>
 #include <utility/imumaths.h>
 
-#define USESD
+//#define USESD
 
 #ifdef USESD
 #include <SD.h>
 #endif
 
-#define SAMPLERATE_DELAY_MS 200
+#define SAMPLERATE_DELAY_MS 1000
 
-#define MOTOR1 14
-#define MOTOR2 15
-#define MOTOR3 18
+#define MOTOR1 8//14
+#define MOTOR2 9//15
+#define MOTOR3 10//18
 #define MOTOR1R 19
 #define MOTOR2R 20
 #define MOTOR3R 21
@@ -45,9 +44,10 @@ double initialOrientation;
 double radialOrient;
 double tangentialOrient;
 
-bool calibrated, initialized;
+bool calibrated, initialized, calibrating;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 double resultCurrent, resultPrevious;
+double tolerance = 5.0;
 
 int hasChanged (double currentOrient, double initialOrient);
 void driveMotor (int motorNumber, int direction);
@@ -66,6 +66,10 @@ void setup() {
 	pinMode(MOTOR1, OUTPUT);
 	pinMode(MOTOR2, OUTPUT);
 	pinMode(MOTOR3, OUTPUT);
+
+	driveMotor(1, 1);
+	driveMotor(2, 1);
+	driveMotor(3, 1);
 
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected...");
@@ -99,6 +103,10 @@ void setup() {
 		digitalWrite(LED_BUILTIN, LOW);
 		delay(100);
 	}
+	
+	driveMotor(1, 0);
+	driveMotor(2, 0);
+	driveMotor(3, 0);
 }
 
 void loop() {
@@ -139,21 +147,28 @@ void loop() {
 	tangentialOrient = smoothOrientation.z;
 	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 	
-	calibrateLeveler();
+	if (resultCurrent >= 5.0) {
+		calibrateLeveler();
 
-	if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
-		if (oriented1 == 1) {
-			driveMotor(1, 1);
+		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
+			if (oriented1 == 1) {
+				driveMotor(1, 1);
+			}
+			if (oriented2 == 1) {
+				driveMotor(2, 1);
+			}
+			if (oriented3 == 1) {
+				driveMotor(3, 1);
+			}
+			if (hasChanged(resultCurrent, resultPrevious) != 1) {
+				resetCalibration();
+			}
 		}
-		if (oriented2 == 1) {
-			driveMotor(2, 1);
-		}
-		if (oriented3 == 1) {
-			driveMotor(3, 1);
-		}
-		if (hasChanged(resultCurrent, resultPrevious)) {
-			resetCalibration();
-		}
+	}
+	else {
+		driveMotor(1, 0);
+		driveMotor(2, 0);
+		driveMotor(3, 0);
 	}
 
 	String packet = "";
@@ -174,7 +189,23 @@ void loop() {
 	packet += String(orientEvent.orientation.z);
 	packet += ",";
 	packet += String(calibration);
+	packet += ",";
+	packet += String(resultCurrent);
 	Serial.println(packet);
+
+	String debugPacket = "";
+	debugPacket += String(calibrated);
+	debugPacket += ",";
+	debugPacket += String(initialized);
+	debugPacket += ",";
+	debugPacket += String(oriented1);
+	debugPacket += ",";
+	debugPacket += String(oriented2);
+	debugPacket += ",";
+	debugPacket += String(oriented3);
+	debugPacket += ",";
+	debugPacket += String(resultPrevious);
+	Serial.println(debugPacket);
 
 	#ifdef USESD
 	File dataFile = SD.open("datalog.txt", FILE_WRITE);
@@ -195,10 +226,10 @@ void loop() {
 // Return 1 for good change
 // Return 2 for bad change
 int hasChanged (double currentOrient, double previousOrient) {
-	if (previousOrient - currentOrient > 0.25) {
+	if (previousOrient - currentOrient > tolerance) {
 		return 1;
 	}
-	else if (previousOrient - currentOrient < -0.25) {
+	else if (previousOrient - currentOrient < -tolerance) {
 		return 2;
 	}
 	else {
@@ -262,7 +293,7 @@ void calibrateLeveler() {
 		}
 	}
 
-	if (oriented1 != 0 && oriented2 == 0) {
+	else if (oriented1 != 0 && oriented2 == 0) {
 		driveMotor(2, 1);
 		bool helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
@@ -271,7 +302,7 @@ void calibrateLeveler() {
 		}
 	}
 
-	if (oriented2 != 0 && oriented3 == 0) {
+	else if (oriented2 != 0 && oriented3 == 0) {
 		driveMotor(3, 1);
 		bool helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
