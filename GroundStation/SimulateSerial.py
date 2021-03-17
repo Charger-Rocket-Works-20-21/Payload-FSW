@@ -50,7 +50,7 @@ def level(rotx,roty,rotz):
 
 
     return rotx,roty,rotz   
-
+    self.watchdog.slee
 
 def generateImage():
     
@@ -113,14 +113,14 @@ for i in range(500):
         hex_data = output.getvalue()
         
         count = 0
-
+        #time.sleep(5)
         for i in range(len(hex_data)):
-            if(i%1000 == 0):
-                if(i +1000>=len(hex_data)):
+            if(i%500 == 0):
+                if(i +500>=len(hex_data)):
                     ser2.writeData(hex_data[i:])
                 else:
-                    ser2.writeData(hex_data[i:i+1000])
-                time.sleep(0.000000000000000001)
+                    ser2.writeData(hex_data[i:i+500])
+                #time.sleep(0.01)
         
         time.sleep(0.1)
         #for i in img:

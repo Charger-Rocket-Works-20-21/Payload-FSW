@@ -31,7 +31,7 @@ class CSVFileManager(QObject):
             writer = csv.writer(csvfile, delimiter=',',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(lineList)
-
+            print(str(lineList))
 
     
 if __name__ == "__main__":
