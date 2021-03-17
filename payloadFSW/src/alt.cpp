@@ -25,7 +25,7 @@ bool altInit(Adafruit_BMP3XX* sensor){
 	return true;
 }
 
-double getSmoothTemp(double smoothingFactor, double smoothTemp) {
+double getSmoothBmpTemp(double smoothingFactor, double smoothTemp) {
 	double newTemp = bmp.readTemperature();
 	return smoothingFactor * newTemp + (1 - smoothingFactor) * smoothTemp;
 }

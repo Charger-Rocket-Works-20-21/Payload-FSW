@@ -30,8 +30,8 @@
 #include "imu.h"
 #include "thermistor.h"
 #include "FlightStates.h"
-#include "pid.h"
-#include "rangefinder.h"
+#include "level.h"
+#include "detach.h"
 
 // #include <utility/imumaths.h> Giving an error?
 #include "RingBuffer.h" //Giving errors?
@@ -42,7 +42,18 @@
 
 #define THERMISTORPIN A9
 
-#define DROPTEST
+#define MOTOR1 8//14
+#define MOTOR2 9//15
+#define MOTOR3 10//18
+#define MOTOR1R 19
+#define MOTOR2R 20
+#define MOTOR3R 21
+#define RELEASE 36
 
 // Global Variables
+struct gyroStruct {
+	float x;
+	float y;
+	float z;
+};
 #endif /* SYSTEM_H_ */

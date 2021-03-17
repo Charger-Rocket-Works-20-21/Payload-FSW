@@ -1,6 +1,6 @@
-#include "rangefinder.h"
+#include "detach.h"
 
-bool rangefinderInit(SFEVL53L1X distanceSensor) {
+bool rangefinderInit() {
     if (distanceSensor.begin() != 0) { //Begin returns 0 on a good init
 		Serial.println("Sensor failed to begin. Please check wiring. Freezing...");
         return false;
@@ -9,7 +9,7 @@ bool rangefinderInit(SFEVL53L1X distanceSensor) {
     return true;
 }
 
-double getDistance(SFEVL53L1X distanceSensor) {
+double getSmoothDistance(double smoothingFactor, double smoothDistance) {
     distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
 	while (!distanceSensor.checkForDataReady()) {
 		delay(1);
@@ -20,5 +20,15 @@ double getDistance(SFEVL53L1X distanceSensor) {
 
 	double distanceInches = distance * 0.0393701;
 	double distanceFeet = distanceInches / 12.0;
-    return distanceFeet;
+
+    return smoothingFactor * distanceFeet + (1 - smoothingFactor) * smoothDistance;
+}
+
+void actuateServo(bool locked) {
+	if (locked) {
+		analogWrite(RELEASE, 255);
+	}
+	else {
+		analogWrite(RELEASE, 0);
+	}
 }

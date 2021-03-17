@@ -12,8 +12,8 @@ public:
 	void unarmed();
 	void standby(double altitude, double initialAltitude, double velocity);
 	void ascent(double altitude, double initialAltitude, double velocity);
-	void descent(double velocity, std::vector<double> accel);
-	void levelling(double xorient, double zorient, uint32_t timems);
+	void descent(double altitude, double velocity, gyroStruct accel, double distance);
+	void levelling(double radialOrient, double tangentialOrient);
     void finished();
 
 private:

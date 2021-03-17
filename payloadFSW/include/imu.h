@@ -11,7 +11,8 @@ sensors_event_t orientEvent;
 
 // Functions
 bool imuInit(Adafruit_BNO055* sensor);
-std::vector<double> getSmoothAccel(double smoothingFactor, std::vector<double> smoothAcceleration);
-std::vector<double> getSmoothOrient(double smoothingFactor, std::vector<double> smoothOrientation);
+gyroStruct getSmoothAccel(double smoothingFactor, gyroStruct smoothAcceleration);
+gyroStruct getSmoothOrient(double smoothingFactor, gyroStruct smoothOrientation);
+uint8_t getCalibration();
 
 #endif /* IMU_H_ */

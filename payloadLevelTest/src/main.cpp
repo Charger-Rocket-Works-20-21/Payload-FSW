@@ -31,14 +31,14 @@ uint16_t blinkRate;
 double smoothingFactor = 0.5;
 // std::vector<double> smoothOrientation;
 // std::vector<double> initialOrientation;
-struct orientStruct
+struct gyroStruct
 {
 	float x;
 	float y;
 	float z;
 };
 
-struct orientStruct smoothOrientation;
+struct gyroStruct smoothOrientation;
 
 double initialOrientation;
 double radialOrient;

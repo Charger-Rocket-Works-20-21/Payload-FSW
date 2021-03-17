@@ -26,30 +26,37 @@ double initialTemp;
 double initialPres;
 double initialAlt;
 
-double smoothingFactor = 0.5;
+double smoothingFactor = 0.75;
+double smoothingFactorDistance = 0.90;
 double smoothTemperature;					// Degrees Celsius
 double smoothPressure;						// Pascals
 double smoothAltitude;						// Meters
 double smoothVelocity;						// Meters/Second
-std::vector<double> smoothAcceleration;		// Meters/Second/Second
-std::vector<double> smoothOrientation;		// Degrees
+struct gyroStruct smoothAcceleration;		// Meters/Second/Second
+struct gyroStruct smoothOrientation;		// Degrees
+uint8_t calibration;
+double smoothDistance;
 
 double currentTime;
 double pastTime;
 double diffTime;
 
-const char * file;
-
 bool ledOn;
-int ledPin = 13;
+uint16_t blinkRate;
 
 void fileNamer();
 void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
 
 void setup() {
 //--Initialize Board
-	pinMode(ledPin, OUTPUT);
-	digitalWrite(ledPin, HIGH);
+	pinMode(LED_BUILTIN, OUTPUT);
+	pinMode(MOTOR1, OUTPUT);
+	pinMode(MOTOR2, OUTPUT);
+	pinMode(MOTOR3, OUTPUT);
+	pinMode(MOTOR1R, OUTPUT);
+	pinMode(MOTOR2R, OUTPUT);
+	pinMode(MOTOR3R, OUTPUT);
+	digitalWrite(LED_BUILTIN, HIGH);
 	delay(2000);
 	ledOn = true;
 	Serial.begin(115200);
@@ -72,16 +79,23 @@ void setup() {
 
 //--Initialize Sensors
 	if(!imuInit(&bno)) { // Initialize IMU
-		dataFile = SD.open(file, FILE_WRITE);
+		dataFile = SD.open("datalog.txt", FILE_WRITE);
 		if (dataFile) {
-			dataFile.println("BNO055 Not Detected");
+			dataFile.println("BNO055 Failed to Initialize");
 			dataFile.close();
 		}
 	} 
 	if(!altInit(&bmp)) { // Initialize Altimeter
-		dataFile = SD.open(file, FILE_WRITE);
+		dataFile = SD.open("datalog.txt", FILE_WRITE);
 		if (dataFile) {
-			dataFile.println("BMP388 Not Detected");
+			dataFile.println("BMP388 Failed to Initialize");
+			dataFile.close();
+		}
+	}
+	if (distanceSensor.begin() != 0) { // Initialize Rangefinder
+		dataFile = SD.open("datalog.txt", FILE_WRITE);
+		if (dataFile) {
+			dataFile.println("Rangefinder Failed to Initialize");
 			dataFile.close();
 		}
 	}
@@ -109,15 +123,26 @@ void setup() {
 	initParams += ",";
 	Serial.println(initParams);
 
-//--Initialize PID
-	pidInit(10.0, 0.1, 3.0, 0.0);
-
 	Serial.println("End of Setup");
 }
 
 void loop() {
-	toBlinkOrNotToBlink(packetCount, ledOn);
-
+	if (calibration >= 8) {
+		blinkRate = 2;
+	}
+	else {
+		blinkRate = 20;
+	}
+	if (packetCount % blinkRate == 0) {
+		if (ledOn) {
+			ledOn = false;
+			digitalWrite(LED_BUILTIN, LOW);
+		}
+		else {
+			ledOn = true;
+			digitalWrite(LED_BUILTIN, HIGH);
+		}
+	}
 	packetCount++;
 	currentTime = millis();
 
@@ -140,6 +165,10 @@ void loop() {
 	smoothAcceleration = getSmoothAccel(smoothingFactor, smoothAcceleration);
 	Serial.print("Reading Orientation... ");
 	smoothOrientation = getSmoothOrient(smoothingFactor, smoothOrientation);
+	calibration = getCalibration();
+
+	// Read Distance from Rangefinder
+	smoothDistance = getSmoothDistance(smoothingFactorDistance, smoothDistance);
 
 	Serial.println("Finished Polling Sensors.");
 
@@ -157,24 +186,24 @@ void loop() {
 	packet += ",";
 	packet += String(smoothVelocity);
 	packet += ",";
-	packet += String(smoothAcceleration.at(0));
+	packet += String(smoothAcceleration.x);
 	packet += ",";
-	packet += String(smoothAcceleration.at(1));
+	packet += String(smoothAcceleration.y);
 	packet += ",";
-	packet += String(smoothAcceleration.at(2));
+	packet += String(smoothAcceleration.z);
 	packet += ",";
-	packet += String(smoothOrientation.at(0));
+	packet += String(smoothOrientation.x);
 	packet += ",";
-	packet += String(smoothOrientation.at(1));
+	packet += String(smoothOrientation.y);
 	packet += ",";
-	packet += String(smoothOrientation.at(2));
+	packet += String(smoothOrientation.z);
 	packet += ",";
 	packet += String(currentFS);
 
 	Serial.println(packet);
 
 	// Writing Packet to SD Card
-	File dataFile = SD.open(file, FILE_WRITE);
+	File dataFile = SD.open("datalog.txt", FILE_WRITE);
 	if (dataFile) {
 		dataFile.println(packet);
 		dataFile.close();
@@ -193,10 +222,10 @@ void loop() {
 		states.ascent(smoothAltitude, initialAlt, smoothVelocity);
 		break;
 	case DESCENT:
-		states.descent(smoothVelocity, smoothAcceleration);
+		states.descent(smoothAltitude, smoothVelocity, smoothAcceleration, smoothDistance);
 		break;
 	case LEVELLING:
-		states.levelling(smoothOrientation.at(0), smoothOrientation.at(2), currentTime); // Uses sensor X and Z vectors
+		states.levelling(smoothOrientation.x, smoothOrientation.y); // Uses sensor X and Z vectors
 		break;
 	case FINISHED:
 		states.finished();
@@ -206,17 +235,4 @@ void loop() {
 	diffTime = currentTime - pastTime;
 	pastTime = currentTime;
 	delay(50);
-}
-
-void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn) {
-	if (packetNumber % 100 == 0) {
-		if (lightsOn) {
-			lightsOn = false;
-			digitalWrite(13, LOW);
-		}
-		else {
-			lightsOn = true;
-			digitalWrite(13, HIGH);
-		}
-	}
 }
