@@ -11,7 +11,7 @@ SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
 
 // Functions
 bool rangefinderInit();
-double getDistance(double smoothingFactor, double smoothDistance);
+double getSmoothDistance(double smoothingFactor, double smoothDistance);
 void actuateServo(bool locked);
 
 #endif /* RANGEFINDER_H_ */

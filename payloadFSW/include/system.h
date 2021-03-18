@@ -25,8 +25,10 @@
 #include <SparkFun_VL53L1X.h>
 #include <vl53l1x_class.h>
 #include <vl53l1_error_codes.h>
+#include "memorysaver.h"
 
 #include "alt.h"
+#include "camera.h"
 #include "imu.h"
 #include "thermistor.h"
 #include "FlightStates.h"
