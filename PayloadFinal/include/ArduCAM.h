@@ -100,7 +100,10 @@
 
 #ifndef ArduCAM_H
 #define ArduCAM_H
-#include "system.h"
+
+#include <Arduino.h>
+#include <Wire.h>
+#include <SPI.h>
 
 #if defined (__AVR__)
 #define cbi(reg, bitmask) *reg &= ~bitmask
