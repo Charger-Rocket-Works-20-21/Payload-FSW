@@ -8,6 +8,11 @@
 #include <utility/imumaths.h>
 #include <SD.h>
 #include <Softwire.h>
+#include <ComponentObject.h>
+#include <RangeSensor.h>
+#include <SparkFun_VL53L1X.h>
+#include <vl53l1x_class.h>
+#include <vl53l1_error_codes.h>
 
 #include "FlightStates.h"
 
@@ -18,12 +23,15 @@
 #define BNO_ADDRESS 0x29
 #define BMP_ADDRESS 0x76
 
+#define SHUTDOWN_PIN 2
+#define INTERRUPT_PIN 3
+
 #define SEALEVELPRESSURE_HPA 1013.25
 
 States states;
 Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO_ADDRESS);
 Adafruit_BMP3XX bmp;
-SoftWire WireS(SDA_PIN, SCL_PIN);
+SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
 AsyncDelay readInterval;
 SoftwareSerial XBee(2,3);
 
@@ -52,27 +60,35 @@ void readCommand();
 void setup() {
   	// put your setup code here, to run once:
 	Serial.begin(115200);
-	XBee.begin(9600);
+	XBee.begin(115200);
 	delay(1000);
 	Serial.println("Beginning Payload Autogyro Drop Test...");
 	pinMode(LED_BUILTIN, OUTPUT);
+	pinMode(RELEASE_POWER, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH);
+	digitalWrite(RELEASE_POWER, HIGH);
 	delay(500);
 	ledOn = true;
 
 	SD.begin(BUILTIN_SDCARD);
 
 	if (!bmp.begin_I2C(BMP_ADDRESS, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
-		Serial.println("Could not find a valid BMP3 sensor, check wiring!");
+		Serial.println("BMP388 Not Detected");
   	}
 	else {
 		Serial.println("BMP388 Detected");
 	}
 	if (!bno.begin()) {
-		Serial.println("BNO055 Not Detected...");
+		Serial.println("BNO055 Not Detected");
 	}
 	else {
 		Serial.println("BNO055 Detected");
+	}
+	if (distanceSensor.begin() != 0) {
+		Serial.println("Rangefinder Not Detected");
+	}
+	else {
+		Serial.println("Rangefinder Detected");
 	}
 	
 	delay(1000);
@@ -198,6 +214,12 @@ void loop() {
 		states.ascent(altitude, initialAlt, velocity);
 		break;
 	case DESCENT:
+		distanceSensor.startRanging();
+		while (!distanceSensor.checkForDataReady()) {delay(1);}
+		distance = distanceSensor.getDistance();
+		distanceSensor.clearInterrupt();
+		distanceSensor.stopRanging();
+		distance = distance * 0.0032808417;
 		states.descent(altitude, velocity, accelx, accely, accelz, distance);
 		break;
 	case LEVELLING:
@@ -214,20 +236,30 @@ void loop() {
 void readCommand() {
 	if (XBee.available()) {
 		String command = XBee.readString();
-		if (command.equalsIgnoreCase("RST")){
+		if (command.equalsIgnoreCase("RST")) {
 			// Reset Teensy
 		}
-		else if (command.equalsIgnoreCase("LVL")){
+		else if (command.equalsIgnoreCase("LVL")) {
 			// Restart Levelling process
 		}
-		else if (command.equalsIgnoreCase("PIC")){
+		else if (command.equalsIgnoreCase("PIC")) {
 			// Retake Picture
 		}
-		else if (command.equalsIgnoreCase("RSD")){
+		else if (command.equalsIgnoreCase("RSD")) {
 			// Resend Picture
 		}
-		else if (command.equalsIgnoreCase("CAL")){
-			// Recalibrate payload altitude
+		else if (command.equalsIgnoreCase("CAL")) {
+			// Recalibrate payload initial altitude
+		}
+		else if (command.equalsIgnoreCase("REL")) {
+			// Release Detach Mechanism
+			states.actuateServo(false);
+		}
+		else if (command.equalsIgnoreCase("LCK")) {
+			// Lock Detach Mechanism
+			states.actuateServo(true);
 		}
 	}
 }
+
+

@@ -32,7 +32,7 @@ void States::descent(double altitude, double velocity, double accelx, double acc
 
 	if (altitude < 100) {
 		if (distance < 4.0) {
-			//actuateServo(false);
+			actuateServo(false);
 		}
 	}
 	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 10.0 && altitude < 50) {
@@ -46,27 +46,27 @@ void States::levelling(double radialOrient, double tangentialOrient) {
 	double resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 	
 	if (resultCurrent >= 5.0) {
-		//calibrateLeveler(radialOrient, tangentialOrient);
+		calibrateLeveler(radialOrient, tangentialOrient);
 
 		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
 			if (oriented1 == 1) {
-				// driveMotor(1, 1);
+				driveMotor(1, 1);
 			}
 			if (oriented2 == 1) {
-				// driveMotor(2, 1);
+				driveMotor(2, 1);
 			}
 			if (oriented3 == 1) {
-				// driveMotor(3, 1);
+				driveMotor(3, 1);
 			}
-			// if (hasChanged(resultCurrent, resultPrevious) != 1) {
-			// 	resetCalibration();
-			// }
+			if (hasChanged(resultCurrent, resultPrevious) != 1) {
+				resetCalibration();
+			}
 		}
 	}
 	else {
-		// driveMotor(1, 0);
-		// driveMotor(2, 0);
-		// driveMotor(3, 0);
+		driveMotor(1, 0);
+		driveMotor(2, 0);
+		driveMotor(3, 0);
 	}
 
 	// If Levelled:
@@ -80,6 +80,15 @@ void States::finished() {
 	currentFS = FINISHED;
 	//Decrease transmission rate
 	//Run until powered off
+}
+
+void States::actuateServo(bool locked) {
+	if (locked) {
+		analogWrite(RELEASE_PWM, 255);
+	}
+	else {
+		analogWrite(RELEASE_PWM, 0);
+	}
 }
 
 /*void States::whichState(flightState newState) {
