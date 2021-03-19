@@ -5,8 +5,6 @@
 
 // All included files
 
-#define DEBUG
-
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 
@@ -25,15 +23,18 @@
 #include <SparkFun_VL53L1X.h>
 #include <vl53l1x_class.h>
 #include <vl53l1_error_codes.h>
-#include "memorysaver.h"
+// #include "memorysaver.h"
+// #include "HardwareSerial.h"
+// #include <pins_arduino.h>
 
 #include "alt.h"
+//#include "ArduCAM.h"
 #include "camera.h"
-#include "imu.h"
-#include "thermistor.h"
-#include "FlightStates.h"
-#include "level.h"
 #include "detach.h"
+#include "FlightStates.h"
+#include "imu.h"
+#include "level.h"
+#include "thermistor.h"
 
 // #include <utility/imumaths.h> Giving an error?
 #include "RingBuffer.h" //Giving errors?
@@ -53,9 +54,5 @@
 #define RELEASE 36
 
 // Global Variables
-struct gyroStruct {
-	float x;
-	float y;
-	float z;
-};
+
 #endif /* SYSTEM_H_ */

@@ -4,6 +4,11 @@
  */
 #include "imu.h"
 
+// Globals
+Adafruit_BNO055 bno;
+sensors_event_t accelEvent;
+sensors_event_t orientEvent;
+
 // ------------------- Functions -----------------------
 
 /*
@@ -23,25 +28,34 @@ bool imuInit(Adafruit_BNO055* sensor){
 	return true;
 }
 
-gyroStruct getSmoothAccel(double smoothingFactor, gyroStruct smoothAcceleration) {
+std::vector<double> getSmoothAccel(double smoothingFactor, std::vector<double> smoothAcceleration) {
 	bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+	Serial.print(accelEvent.acceleration.x);
+	Serial.print(accelEvent.acceleration.y);
+	Serial.println(accelEvent.acceleration.z);
+	std::vector<double> resultantVector;
+	double accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * smoothAcceleration.at(0);
+	double accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * smoothAcceleration.at(1);
+	double accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * smoothAcceleration.at(2);
 
-	gyroStruct resultantVector;
-	resultantVector.x = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * smoothAcceleration.x;
-	resultantVector.y = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * smoothAcceleration.y;
-	resultantVector.z = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * smoothAcceleration.z;
-
+	resultantVector.push_back(accelx);
+	resultantVector.push_back(accely);
+	resultantVector.push_back(accelz);
 	return resultantVector;
 }
 
-gyroStruct getSmoothOrient(double smoothingFactor, gyroStruct smoothOrientation) {
+std::vector<double> getSmoothOrient(double smoothingFactor, std::vector<double> smoothOrientation) {
 	bno.getEvent(&orientEvent);
 
-	gyroStruct resultantVector;
-	resultantVector.x = smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * smoothOrientation.x;
-	resultantVector.y = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * smoothOrientation.y;
-	resultantVector.z = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * smoothOrientation.z;
+	std::vector<double> resultantVector;
+	double orientx = smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * smoothOrientation.at(0);
+	double orienty = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * smoothOrientation.at(1);
+	double orientz = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * smoothOrientation.at(2);
 
+	resultantVector.push_back(orientx);
+	resultantVector.push_back(orienty);
+	resultantVector.push_back(orientz);
+	return resultantVector;
 	return resultantVector;
 }
 

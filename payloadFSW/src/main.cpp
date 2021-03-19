@@ -18,7 +18,6 @@ States states;
 extern Adafruit_BMP3XX bmp;
 extern flightState currentFS;
 extern Adafruit_BNO055 bno;
-extern SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
 
 uint16_t packetCount = 0;
 
@@ -32,8 +31,8 @@ double smoothTemperature;					// Degrees Celsius
 double smoothPressure;						// Pascals
 double smoothAltitude;						// Meters
 double smoothVelocity;						// Meters/Second
-struct gyroStruct smoothAcceleration;		// Meters/Second/Second
-struct gyroStruct smoothOrientation;		// Degrees
+std::vector<double> smoothAcceleration;		// Meters/Second/Second
+std::vector<double> smoothOrientation;		// Degrees
 uint8_t calibration;
 double smoothDistance;
 
@@ -92,13 +91,13 @@ void setup() {
 			dataFile.close();
 		}
 	}
-	if (distanceSensor.begin() != 0) { // Initialize Rangefinder
-		dataFile = SD.open("datalog.txt", FILE_WRITE);
-		if (dataFile) {
-			dataFile.println("Rangefinder Failed to Initialize");
-			dataFile.close();
-		}
-	}
+	// if (distanceSensor.begin() != 0) { // Initialize Rangefinder
+	// 	dataFile = SD.open("datalog.txt", FILE_WRITE);
+	// 	if (dataFile) {
+	// 		dataFile.println("Rangefinder Failed to Initialize");
+	// 		dataFile.close();
+	// 	}
+	// }
 	
 //--Initialize Ground Parameters
 	Serial.println("Declaring Initial Parameters");
@@ -168,7 +167,7 @@ void loop() {
 	calibration = getCalibration();
 
 	// Read Distance from Rangefinder
-	smoothDistance = getSmoothDistance(smoothingFactorDistance, smoothDistance);
+	// smoothDistance = getSmoothDistance(smoothingFactorDistance, smoothDistance);
 
 	Serial.println("Finished Polling Sensors.");
 
@@ -186,17 +185,17 @@ void loop() {
 	packet += ",";
 	packet += String(smoothVelocity);
 	packet += ",";
-	packet += String(smoothAcceleration.x);
+	packet += String(smoothAcceleration.at(0));
 	packet += ",";
-	packet += String(smoothAcceleration.y);
+	packet += String(smoothAcceleration.at(1));
 	packet += ",";
-	packet += String(smoothAcceleration.z);
+	packet += String(smoothAcceleration.at(2));
 	packet += ",";
-	packet += String(smoothOrientation.x);
+	packet += String(smoothOrientation.at(0));
 	packet += ",";
-	packet += String(smoothOrientation.y);
+	packet += String(smoothOrientation.at(1));
 	packet += ",";
-	packet += String(smoothOrientation.z);
+	packet += String(smoothOrientation.at(2));
 	packet += ",";
 	packet += String(currentFS);
 
@@ -225,7 +224,7 @@ void loop() {
 		states.descent(smoothAltitude, smoothVelocity, smoothAcceleration, smoothDistance);
 		break;
 	case LEVELLING:
-		states.levelling(smoothOrientation.x, smoothOrientation.y); // Uses sensor X and Z vectors
+		states.levelling(smoothOrientation.at(0), smoothOrientation.at(1)); // Uses sensor X and Z vectors
 		break;
 	case FINISHED:
 		states.finished();

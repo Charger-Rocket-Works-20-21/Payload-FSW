@@ -1,13 +1,12 @@
 #include "FlightStates.h"
 
-using namespace std;
+// using namespace std;
 
 flightState currentFS = UNARMED;
 
 void States::unarmed() {
 	currentFS = UNARMED;
 	//Hard lock on doing nothing - transmits sensor stuff and that's it
-	
 }
 
 void States::standby(double altitude, double initialAltitude, double velocity) {
@@ -29,7 +28,7 @@ void States::ascent(double altitude, double initialAltitude, double velocity) {
 	
 }
 
-void States::descent(double altitude, double velocity, gyroStruct accel, double distance) {
+void States::descent(double altitude, double velocity, std::vector<double> accel, double distance) {
 	currentFS = DESCENT;
 	//Perform Descent Operations
 
@@ -38,7 +37,7 @@ void States::descent(double altitude, double velocity, gyroStruct accel, double 
 			actuateServo(false);
 		}
 	}
-	if (fabs(velocity) <= 5 && (accel.x + accel.y + accel.z) < 10.0 && altitude < 50) {
+	if (fabs(velocity) <= 5 && (accel.at(0) + accel.at(1) + accel.at(2)) < 10.0 && altitude < 50) {
 		currentFS = LEVELLING;
 	}
 }

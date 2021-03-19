@@ -1,5 +1,10 @@
 #include "level.h"
 
+double tolerance = 5.0;
+bool calibrated, initialized;
+int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
+double resultCurrent, resultPrevious, resultInitial;
+
 // Return 0 for no change
 // Return 1 for good change
 // Return 2 for bad change
@@ -25,7 +30,7 @@ void driveMotor (int motorNumber, int direction) {
 		onPin = MOTOR2;
 		reversePin = MOTOR2R;
 	}
-	else if (motorNumber == 3) {
+	else { // (motorNumber == 3)
 		onPin = MOTOR3;
 		reversePin = MOTOR3R;
 	}
@@ -42,7 +47,7 @@ void driveMotor (int motorNumber, int direction) {
 	}
 }
 
-void resetCalibration(double radialOrient, double tangentialOrient) {
+void resetCalibration() {
 	oriented1 = 0;
 	oriented2 = 0;
 	oriented3 = 0;

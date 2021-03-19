@@ -43,14 +43,12 @@ void setup() {
 
 	if (!bmp.begin_I2C(0x77, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
 		Serial.println("Could not find a valid BMP3 sensor, check wiring!");
-		while (1);
   	}
 	else {
 		Serial.println("BMP388 Detected");
 	}
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected...");
-		while(1);
 	}
 	else {
 		Serial.println("BNO055 Detected");

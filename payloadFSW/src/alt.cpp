@@ -5,13 +5,15 @@
 
 #include "alt.h"
 
+Adafruit_BMP3XX bmp;
+
 // ------------------- Functions -----------------------
 
 /*
  * Atmospheric Pressure Sensor Inititialization
  */
 bool altInit(Adafruit_BMP3XX* sensor){
-	if (!sensor->begin_I2C()) {
+	if (!sensor->begin_I2C(0x77, &Wire1)) {
 		Serial.println("BMP388 Not Detected");
     	return false;
 	}

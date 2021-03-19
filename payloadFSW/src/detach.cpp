@@ -1,5 +1,7 @@
 #include "detach.h"
 
+SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
+
 bool rangefinderInit() {
     if (distanceSensor.begin() != 0) { //Begin returns 0 on a good init
 		Serial.println("Sensor failed to begin. Please check wiring. Freezing...");

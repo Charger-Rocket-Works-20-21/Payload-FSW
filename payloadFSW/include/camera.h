@@ -3,6 +3,6 @@
 
 #include "system.h"
 
-
+// Do something eventually here
 
 #endif /* CAMERA_H_ */
