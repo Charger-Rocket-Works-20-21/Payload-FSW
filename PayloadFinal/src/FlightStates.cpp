@@ -43,7 +43,7 @@ void States::descent(double altitude, double velocity, double accelx, double acc
 void States::levelling(double radialOrient, double tangentialOrient) {
     currentFS = LEVELLING;
 	//Perform Levelling Operations
-	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
+	double resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 	
 	if (resultCurrent >= 5.0) {
 		//calibrateLeveler(radialOrient, tangentialOrient);

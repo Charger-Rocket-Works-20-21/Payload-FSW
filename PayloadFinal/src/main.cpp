@@ -7,18 +7,24 @@
 #include <SoftwareSerial.h>
 #include <utility/imumaths.h>
 #include <SD.h>
+#include <Softwire.h>
 
 #include "FlightStates.h"
 
 #define SAMPLERATE_DELAY_MS 50
 
-// #define BMP_SCL 16
-// #define BMP_SDI 17
+#define SDA_PIN 16
+#define SCL_PIN 17
+#define BNO_ADDRESS 0x29
+#define BMP_ADDRESS 0x76
 
 #define SEALEVELPRESSURE_HPA 1013.25
 
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+States states;
+Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO_ADDRESS);
 Adafruit_BMP3XX bmp;
+SoftWire WireS(SDA_PIN, SCL_PIN);
+AsyncDelay readInterval;
 SoftwareSerial XBee(2,3);
 
 uint16_t packetCount = 0;
@@ -26,6 +32,7 @@ double currentTime;
 bool ledOn;
 uint16_t blinkRate;
 
+double initialAlt;
 double temperature;
 double pressure;
 double altitude;
@@ -37,6 +44,7 @@ double orientx;
 double orienty;
 double orientz;
 uint8_t calibration;
+double distance;
 
 //void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
 void readCommand();
@@ -54,7 +62,7 @@ void setup() {
 
 	SD.begin(BUILTIN_SDCARD);
 
-	if (!bmp.begin_I2C(0x77, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
+	if (!bmp.begin_I2C(BMP_ADDRESS, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
 		Serial.println("Could not find a valid BMP3 sensor, check wiring!");
   	}
 	else {
@@ -84,6 +92,8 @@ void setup() {
 	else {
 		Serial.println("Could not open datalog.txt");
 	}
+
+	initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
 
 	for (int i = 0; i < 10; i++) {
 		digitalWrite(LED_BUILTIN, HIGH);
@@ -119,20 +129,24 @@ void loop() {
 	if (!bmp.performReading()) {
 		Serial.println("Failed To Perform Reading");
 	}
+	temperature = bmp.temperature;
+	pressure = bmp.pressure;
+	altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
 
-  temperature = bmp.temperature;
-  pressure = bmp.pressure;
-  altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
 	// Read Accelerometer and Magnetometer data from IMU
 	sensors_event_t accelEvent;
 	sensors_event_t orientEvent;
 	bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
 	bno.getEvent(&orientEvent);
+	accelx = accelEvent.acceleration.x;
+	accely = accelEvent.acceleration.y;
+	accelz = accelEvent.acceleration.z;
+	orientx = orientEvent.orientation.x;
+	orienty = orientEvent.orientation.y;
+	orientz = orientEvent.orientation.z;
 	uint8_t sys, gyro, accel, mag = 0;
 	bno.getCalibration(&sys, &gyro, &accel, &mag);
 	calibration = sys + gyro + accel + mag;
-
-
 
 	String packet = "";
 	packet += String(packetCount);
@@ -145,17 +159,17 @@ void loop() {
 	packet += ",";
 	packet += String(altitude);
 	packet += ",";
-	packet += String(accelEvent.acceleration.x);
+	packet += String(accelx);
 	packet += ",";
-	packet += String(accelEvent.acceleration.y);
+	packet += String(accely);
 	packet += ",";
-	packet += String(accelEvent.acceleration.z);
+	packet += String(accelz);
 	packet += ",";
-	packet += String(orientEvent.orientation.x);
+	packet += String(orientx);
 	packet += ",";
-	packet += String(orientEvent.orientation.y);
+	packet += String(orienty);
 	packet += ",";
-	packet += String(orientEvent.orientation.z);
+	packet += String(orientz);
 	packet += ",";
 	packet += String(calibration);
 	Serial.println(packet);
@@ -171,28 +185,28 @@ void loop() {
 
 	XBee.println(packet);
 
-  // // Determining current Flight State, including logic to go to the next state
-	// Serial.println(states.currentState);
-	// switch (states.currentState) {
-	// case UNARMED:
-	// 	states.unarmed();
-	// 	break;
-	// case STANDBY:
-	// 	states.standby(smoothAltitude, initialAlt, smoothVelocity);
-	// 	break;
-	// case ASCENT:
-	// 	states.ascent(smoothAltitude, initialAlt, smoothVelocity);
-	// 	break;
-	// case DESCENT:
-	// 	states.descent(smoothAltitude, smoothVelocity, smoothAcceleration, smoothDistance);
-	// 	break;
-	// case LEVELLING:
-	// 	states.levelling(smoothOrientation.at(0), smoothOrientation.at(1)); // Uses sensor X and Z vectors
-	// 	break;
-	// case FINISHED:
-	// 	states.finished();
-	// 	break;
-	// }
+  	// Determining current Flight State, including logic to go to the next state
+	Serial.println(states.currentState);
+	switch (states.currentState) {
+	case UNARMED:
+		states.unarmed();
+		break;
+	case STANDBY:
+		states.standby(altitude, initialAlt, velocity);
+		break;
+	case ASCENT:
+		states.ascent(altitude, initialAlt, velocity);
+		break;
+	case DESCENT:
+		states.descent(altitude, velocity, accelx, accely, accelz, distance);
+		break;
+	case LEVELLING:
+		states.levelling(orientx, orienty); // Uses sensor X and Z vectors
+		break;
+	case FINISHED:
+		states.finished();
+		break;
+	}
 
 	delay(SAMPLERATE_DELAY_MS);
 }
