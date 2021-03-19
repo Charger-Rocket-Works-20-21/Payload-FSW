@@ -8,6 +8,8 @@
 #include <utility/imumaths.h>
 #include <SD.h>
 
+#include "FlightStates.h"
+
 #define SAMPLERATE_DELAY_MS 50
 
 // #define BMP_SCL 16
@@ -22,8 +24,19 @@ SoftwareSerial XBee(2,3);
 uint16_t packetCount = 0;
 double currentTime;
 bool ledOn;
-uint8_t calibration;
 uint16_t blinkRate;
+
+double temperature;
+double pressure;
+double altitude;
+double velocity;
+double accelx;
+double accely;
+double accelz;
+double orientx;
+double orienty;
+double orientz;
+uint8_t calibration;
 
 //void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
 void readCommand();
@@ -107,6 +120,9 @@ void loop() {
 		Serial.println("Failed To Perform Reading");
 	}
 
+  temperature = bmp.temperature;
+  pressure = bmp.pressure;
+  altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
 	// Read Accelerometer and Magnetometer data from IMU
 	sensors_event_t accelEvent;
 	sensors_event_t orientEvent;
@@ -116,16 +132,18 @@ void loop() {
 	bno.getCalibration(&sys, &gyro, &accel, &mag);
 	calibration = sys + gyro + accel + mag;
 
+
+
 	String packet = "";
 	packet += String(packetCount);
 	packet += ",";
 	packet += String(currentTime);
 	packet += ",";
-	packet += String(bmp.temperature);
+	packet += String(temperature);
 	packet += ",";
-	packet += String(bmp.pressure);
+	packet += String(pressure);
 	packet += ",";
-	packet += String(bmp.readAltitude(SEALEVELPRESSURE_HPA));
+	packet += String(altitude);
 	packet += ",";
 	packet += String(accelEvent.acceleration.x);
 	packet += ",";
@@ -153,6 +171,29 @@ void loop() {
 
 	XBee.println(packet);
 
+  // // Determining current Flight State, including logic to go to the next state
+	// Serial.println(states.currentState);
+	// switch (states.currentState) {
+	// case UNARMED:
+	// 	states.unarmed();
+	// 	break;
+	// case STANDBY:
+	// 	states.standby(smoothAltitude, initialAlt, smoothVelocity);
+	// 	break;
+	// case ASCENT:
+	// 	states.ascent(smoothAltitude, initialAlt, smoothVelocity);
+	// 	break;
+	// case DESCENT:
+	// 	states.descent(smoothAltitude, smoothVelocity, smoothAcceleration, smoothDistance);
+	// 	break;
+	// case LEVELLING:
+	// 	states.levelling(smoothOrientation.at(0), smoothOrientation.at(1)); // Uses sensor X and Z vectors
+	// 	break;
+	// case FINISHED:
+	// 	states.finished();
+	// 	break;
+	// }
+
 	delay(SAMPLERATE_DELAY_MS);
 }
 
@@ -176,18 +217,3 @@ void readCommand() {
 		}
 	}
 }
-
-
-// void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn) {
-// 	if (packetNumber % 4 == 0) {
-// 		Serial.println("Blinking");
-// 		if (lightsOn) {
-// 			lightsOn = false;
-// 			digitalWrite(LED_BUILTIN, LOW);
-// 		}
-// 		else {
-// 			lightsOn = true;
-// 			digitalWrite(LED_BUILTIN, HIGH);
-// 		}
-// 	}
-// }

@@ -28,7 +28,7 @@
 // #include <pins_arduino.h>
 
 #include "alt.h"
-//#include "ArduCAM.h"
+#include "ArduCAM.h"
 #include "camera.h"
 #include "detach.h"
 #include "FlightStates.h"
@@ -37,22 +37,24 @@
 #include "thermistor.h"
 
 // #include <utility/imumaths.h> Giving an error?
-#include "RingBuffer.h" //Giving errors?
+// #include "RingBuffer.h" //Giving errors?
 
 // Constant Definitions
 #define SEALEVELPRESSURE     1013.25   // hPa
-#define SEALEVELTEMPERATRE   273.15    // Kelvin
+#define SEALEVELTEMPERATURE  273.15    // Kelvin
 
 #define THERMISTORPIN A9
 
-#define MOTOR1 8//14
-#define MOTOR2 9//15
-#define MOTOR3 10//18
+#define MOTOR1 14
+#define MOTOR2 15
+#define MOTOR3 18
 #define MOTOR1R 19
 #define MOTOR2R 20
 #define MOTOR3R 21
 #define RELEASE 36
 
 // Global Variables
+// extern Adafruit_BMP3XX bmp;
+// extern Adafruit_BNO055 bno;
 
 #endif /* SYSTEM_H_ */

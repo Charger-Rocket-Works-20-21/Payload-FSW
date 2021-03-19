@@ -5,10 +5,10 @@
 #include "system.h"
 
 // Functions
-bool altInit(Adafruit_BMP3XX*);
-double getSmoothTemp(double smoothingFactor, double smoothTemp);
-double getSmoothPres(double smoothingFactor, double smoothPres);
-double getSmoothAlt(double smoothingFactor, double smoothAlt);
+bool altInit(Adafruit_BMP3XX* sensor);
+double getSmoothBmpTemp(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothTemp);
+double getSmoothPres(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothPres);
+double getSmoothAlt(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothAlt);
 double getSmoothVel(double smoothingFactor, double smoothVel, double smoothAlt, double pastTime, double currentTime);
 
 #endif /* ALT_H_ */

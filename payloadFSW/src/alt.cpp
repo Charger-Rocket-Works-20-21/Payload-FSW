@@ -5,7 +5,6 @@
 
 #include "alt.h"
 
-Adafruit_BMP3XX bmp;
 
 // ------------------- Functions -----------------------
 
@@ -27,23 +26,26 @@ bool altInit(Adafruit_BMP3XX* sensor){
 	return true;
 }
 
-double getSmoothBmpTemp(double smoothingFactor, double smoothTemp) {
-	double newTemp = bmp.readTemperature();
+double getSmoothBmpTemp(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothTemp) {
+	double newTemp = sensor->readTemperature();
+	Serial.println(newTemp);
 	return smoothingFactor * newTemp + (1 - smoothingFactor) * smoothTemp;
 }
 
-double getSmoothPres(double smoothingFactor, double smoothPres) {
-	double newPres = bmp.readPressure();
+double getSmoothPres(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothPres) {
+	double newPres = sensor->readPressure();
+	Serial.println(newPres);
 	return smoothingFactor * newPres + (1 - smoothingFactor) * smoothPres;
 }
 
-double getSmoothAlt(double smoothingFactor, double smoothAlt) {
-	double newAlt = bmp.readAltitude(SEALEVELPRESSURE);
+double getSmoothAlt(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothAlt) {
+	double newAlt = sensor->readAltitude(SEALEVELPRESSURE);
+	Serial.println(newAlt);
 	return smoothingFactor * newAlt + (1 - smoothingFactor) * smoothAlt;
 }
 
-double getSmoothVel(double smoothingFactor, double smoothVel, double smoothAlt, double pastTime, double currentTime) {
-	double newAlt = getSmoothAlt(smoothingFactor, smoothAlt);
+double getSmoothVel(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothVel, double smoothAlt, double pastTime, double currentTime) {
+	double newAlt = getSmoothAlt(sensor, smoothingFactor, smoothAlt);
 	double newVel = (newAlt - smoothAlt) / (currentTime - pastTime);
 	return smoothingFactor * newVel + (1 - smoothingFactor) * smoothVel;
 }
