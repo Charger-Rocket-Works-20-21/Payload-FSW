@@ -17,7 +17,7 @@ import numpy as np
 
 
 isLogGlobal = True
-isSimulateSerial = False
+isSimulateSerial = True
 
 def LOG(message, isLogEnabled=True):
     if(isLogEnabled):
