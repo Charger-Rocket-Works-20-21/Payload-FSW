@@ -7,6 +7,7 @@ import numpy as np
 import io
 ser2 = SerialProcess()
 ser2.serial.port = "COM2"
+ser2.serial.setBaud(115200)
 
 ser2.connectDevice()
 
@@ -14,7 +15,7 @@ ser2.connectDevice()
 
 teamName = "UAH Charger RocketWorks"
 missionTime = 0
-timeStep = 0.5
+timeStep = 0.25
 flightState = 0
 
 def integrate(dx,x0, timestep):
@@ -52,9 +53,9 @@ def level(rotx,roty,rotz):
     return rotx,roty,rotz   
     self.watchdog.slee
 
-def generateImage():
+def generateImage(path):
     
-    tempImg = Image.open("huntsville_color.jpg")
+    tempImg = Image.open(path)
     matImg = np.asarray(tempImg)
     x,y,colors = matImg.shape
     imgVect = matImg.ravel()
@@ -64,11 +65,11 @@ def generateImage():
     return tempImg,x,y,colors
 
 #flightState = 4
-time.sleep(0.5)
-for i in range(500):
+time.sleep(3)
+for i in range(10000):
     
-    if(xz < 5 and flightState ==0):
-        az = 10
+    if(xz < 25 and flightState ==0):
+        az = 1
     elif(flightState==0):
         az = -9.8
         flightState = 1
@@ -77,7 +78,7 @@ for i in range(500):
     if(vz <= 0 and flightState ==1):
         flightState = 2
     
-    if(xz<=1 and missionTime >5 and flightState == 2):
+    if(xz<=1 and missionTime >1 and flightState >= 1 and flightState < 5):
             flightState = 3
             xz = 0
 
@@ -85,9 +86,9 @@ for i in range(500):
             flightState = 4      
 
     if(flightState < 3):
-        ax = ax+random.random()
-        ay = ay+random.random()
-        az = az+random.random()
+        ax = ax+ (random.random()*2-1)
+        ay = ay+ (random.random()*2-1)
+        az = az
 
         ## Integrate things
         vx = integrate(ax,vx,timeStep)
@@ -101,10 +102,47 @@ for i in range(500):
     if(flightState == 3):
         [rotx,roty,rotz] = level(rotx,roty,rotz)
 
+        ax = 0
+        ay = 0
+        az = 0
+        vx = 0
+        vy = 0
+        vz = 0
+
 
     #Transmit Image
     if(flightState == 4):
-        img,x,y,colors = generateImage()
+        ##
+        img,x,y,colors = generateImage("TestImg.png")
+        listOfVars = ["Image"]
+        strList = turnToStringList(listOfVars)
+        ser2.writeData(bytes(strList,'utf-8'))
+        output = io.BytesIO()
+        img.save(output,format='TIFF')
+        hex_data = output.getvalue()
+        
+        count = 0
+        #time.sleep(5)
+        for i in range(len(hex_data)):
+            if(i%5 == 0):
+                if(i +5>=len(hex_data)):
+                    ser2.writeData(hex_data[i:])
+                else:
+                    ser2.writeData(hex_data[i:i+5])
+                #time.sleep(0.001)
+        
+        #time.sleep(0.1)
+        #for i in img:
+        #    temp = "," + str(i)
+        #    ser2.writeData(bytes(temp,'utf-8'))
+        #    time.sleep(0.01)
+        temp2 = ",Image End"
+        ser2.writeData(bytes(temp2,'utf-8'))
+        #3
+
+        
+        time.sleep(5)
+        img,x,y,colors = generateImage("al_color.jpg")
         listOfVars = ["Image"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
@@ -120,7 +158,7 @@ for i in range(500):
                     ser2.writeData(hex_data[i:])
                 else:
                     ser2.writeData(hex_data[i:i+500])
-                #time.sleep(0.01)
+                #time.sleep(0.001)
         
         time.sleep(0.1)
         #for i in img:
@@ -129,6 +167,35 @@ for i in range(500):
         #    time.sleep(0.01)
         temp2 = ",Image End"
         ser2.writeData(bytes(temp2,'utf-8'))
+
+        
+        time.sleep(5)
+        img,x,y,colors = generateImage("uah_color.jpg")
+        listOfVars = ["Image"]
+        strList = turnToStringList(listOfVars)
+        ser2.writeData(bytes(strList,'utf-8'))
+        output = io.BytesIO()
+        img.save(output,format='TIFF')
+        hex_data = output.getvalue()
+        
+        count = 0
+        #time.sleep(5)
+        for i in range(len(hex_data)):
+            if(i%5 == 0):
+                if(i +5>=len(hex_data)):
+                    ser2.writeData(hex_data[i:])
+                else:
+                    ser2.writeData(hex_data[i:i+5])
+                #time.sleep(0.001)
+        
+        #time.sleep(0.1)
+        #for i in img:
+        #    temp = "," + str(i)
+        #    ser2.writeData(bytes(temp,'utf-8'))
+        #    time.sleep(0.01)
+        temp2 = ",Image End"
+        ser2.writeData(bytes(temp2,'utf-8'))
+
         flightState = 5
     else:
 
