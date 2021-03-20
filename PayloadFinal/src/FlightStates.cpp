@@ -1,7 +1,5 @@
 #include "FlightStates.h"
 
-// using namespace std;
-
 flightState currentFS = UNARMED;
 
 void States::unarmed() {
@@ -28,7 +26,7 @@ void States::ascent(double altitude, double initialAltitude, double velocity) {
 	
 }
 
-void States::descent(double altitude, double velocity, std::vector<double> accel, double distance) {
+void States::descent(double altitude, double velocity, double accelx, double accely, double accelz, double distance) {
 	currentFS = DESCENT;
 	//Perform Descent Operations
 
@@ -37,7 +35,7 @@ void States::descent(double altitude, double velocity, std::vector<double> accel
 			actuateServo(false);
 		}
 	}
-	if (fabs(velocity) <= 5 && (accel.at(0) + accel.at(1) + accel.at(2)) < 10.0 && altitude < 50) {
+	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 10.0 && altitude < 50) {
 		currentFS = LEVELLING;
 	}
 }
@@ -45,7 +43,7 @@ void States::descent(double altitude, double velocity, std::vector<double> accel
 void States::levelling(double radialOrient, double tangentialOrient) {
     currentFS = LEVELLING;
 	//Perform Levelling Operations
-	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
+	double resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 	
 	if (resultCurrent >= 5.0) {
 		calibrateLeveler(radialOrient, tangentialOrient);
@@ -82,6 +80,15 @@ void States::finished() {
 	currentFS = FINISHED;
 	//Decrease transmission rate
 	//Run until powered off
+}
+
+void States::actuateServo(bool locked) {
+	if (locked) {
+		analogWrite(RELEASE_PWM, 255);
+	}
+	else {
+		analogWrite(RELEASE_PWM, 0);
+	}
 }
 
 /*void States::whichState(flightState newState) {

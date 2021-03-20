@@ -4,14 +4,10 @@
 // Necessary Includes
 #include "system.h"
 
-// Globals
-Adafruit_BNO055 bno;
-sensors_event_t accelEvent;
-sensors_event_t orientEvent;
-
 // Functions
 bool imuInit(Adafruit_BNO055* sensor);
 std::vector<double> getSmoothAccel(double smoothingFactor, std::vector<double> smoothAcceleration);
 std::vector<double> getSmoothOrient(double smoothingFactor, std::vector<double> smoothOrientation);
+uint8_t getCalibration();
 
 #endif /* IMU_H_ */

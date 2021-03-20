@@ -10,8 +10,8 @@
 
 #define SAMPLERATE_DELAY_MS 50
 
-#define BMP_SCL 16
-#define BMP_SDI 17
+// #define BMP_SCL 16
+// #define BMP_SDI 17
 
 #define SEALEVELPRESSURE_HPA 1013.25
 
@@ -43,14 +43,12 @@ void setup() {
 
 	if (!bmp.begin_I2C(0x77, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
 		Serial.println("Could not find a valid BMP3 sensor, check wiring!");
-		while (1);
   	}
 	else {
 		Serial.println("BMP388 Detected");
 	}
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected...");
-		while(1);
 	}
 	else {
 		Serial.println("BNO055 Detected");
@@ -104,10 +102,10 @@ void loop() {
 	packetCount++;
 	currentTime = millis()/1000.0;
 
-	// // Read Temperature, Pressure, and Altitude from Barometer
-	// if (!bmp.performReading()) {
-	// 	Serial.println("Failed To Perform Reading");
-	// }
+	// Read Temperature, Pressure, and Altitude from Barometer
+	if (!bmp.performReading()) {
+		Serial.println("Failed To Perform Reading");
+	}
 
 	// Read Accelerometer and Magnetometer data from IMU
 	sensors_event_t accelEvent;
@@ -154,32 +152,6 @@ void loop() {
 	}
 
 	XBee.println(packet);
-
-	// Serial.print(F("Acceleration: "));
-	// Serial.print((float)accelEvent.acceleration.x);
-	// Serial.print(F(" "));
-	// Serial.print((float)accelEvent.acceleration.y);
-	// Serial.print(F(" "));
-	// Serial.print((float)accelEvent.acceleration.z);
-	// Serial.println(F(""));
-
-	// Serial.print(F("Orientation: "));
-	// Serial.print((float)orientEvent.orientation.x);
-	// Serial.print(F(" "));
-	// Serial.print((float)orientEvent.orientation.y);
-	// Serial.print(F(" "));
-	// Serial.print((float)orientEvent.orientation.z);
-	// Serial.println(F(""));
-
-	
-	// Serial.print(F("Calibration: "));
-	// Serial.print(sys, DEC);
-	// Serial.print(F(" "));
-	// Serial.print(gyro, DEC);
-	// Serial.print(F(" "));
-	// Serial.print(accel, DEC);
-	// Serial.print(F(" "));
-	// Serial.println(mag, DEC);
 
 	delay(SAMPLERATE_DELAY_MS);
 }

@@ -1,7 +1,12 @@
 #ifndef _FLIGHTSTATES_H
 #define _FLIGHTSTATES_H
 
-#include "system.h"
+#include <math.h>
+#include <Arduino.h>
+#include "level.h"
+
+#define RELEASE_POWER 36
+#define RELEASE_PWM	2
 
 enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED };
 
@@ -15,14 +20,15 @@ public:
 	void unarmed();
 	void standby(double altitude, double initialAltitude, double velocity);
 	void ascent(double altitude, double initialAltitude, double velocity);
-	void descent(double altitude, double velocity, std::vector<double> accel, double distance);
+	void descent(double altitude, double velocity, double accelx, double accely, double accelz, double distance);
 	void levelling(double radialOrient, double tangentialOrient);
     void finished();
+	void actuateServo(bool locked);	
 
 	flightState currentState;
 private:
 	// double oldAlt = 0;
-	// double currentAlt = 0;	
+	// double currentAlt = 0;
 };
 
 
