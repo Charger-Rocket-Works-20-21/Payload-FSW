@@ -83,11 +83,20 @@ void States::finished() {
 }
 
 void States::actuateServo(bool locked) {
+	Servo release1;
+	Servo release2;
 	if (locked) {
-		analogWrite(RELEASE_PWM, 255);
+		release1.detach();
+		release2.detach();
 	}
 	else {
-		analogWrite(RELEASE_PWM, 0);
+		release1.attach(RELEASE1);
+		release2.attach(RELEASE2);
+		release1.write(160);
+		release2.write(160);
+		delay(100);
+		release1.detach();
+		release2.detach();
 	}
 }
 

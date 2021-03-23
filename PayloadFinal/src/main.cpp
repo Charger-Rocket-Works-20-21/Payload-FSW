@@ -6,13 +6,14 @@
 #include <Adafruit_BMP3XX.h>
 #include <SoftwareSerial.h>
 #include <utility/imumaths.h>
-//#include <SD.h>
+#include <SD.h>
 #include <Softwire.h>
 #include <ComponentObject.h>
 #include <RangeSensor.h>
 #include <SparkFun_VL53L1X.h>
 #include <vl53l1x_class.h>
 #include <vl53l1_error_codes.h>
+#include <gp20u7.h>
 
 #include "FlightStates.h"
 
@@ -20,7 +21,7 @@
 
 #define SDA_PIN 16
 #define SCL_PIN 17
-#define BNO_ADDRESS 0x28
+#define BNO_ADDRESS 0x29
 #define BMP_ADDRESS 0x76
 
 #define SHUTDOWN_PIN 2
@@ -31,11 +32,12 @@
 #define SCB_AIRCR (*(volatile uint32_t *)0xE000ED0C) // Application Interrupt and Reset Control location
 
 States states;
-Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO_ADDRESS);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO_ADDRESS, &Wire1);
 Adafruit_BMP3XX bmp;
-// SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
+SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
 AsyncDelay readInterval;
-SoftwareSerial XBee(2,3);
+SoftwareSerial XBee(28,29);
+GP20U7 gps = GP20U7(Serial);
 
 uint16_t packetCount = 0;
 double currentTime;
@@ -56,60 +58,68 @@ double orientz;
 uint8_t calibration;
 double distance;
 
-//void toBlinkOrNotToBlink(uint16_t packetNumber, bool lightsOn);
+Geolocation currentLocation;
+
 void readCommand();
 
 void setup() {
   	// put your setup code here, to run once:
-	Serial.begin(9600);
+	Serial.begin(115200);
 	XBee.begin(115200);
-	delay(1000);
-	Serial.println("Beginning Payload Autogyro Drop Test...");
+	delay(5000);
+	Serial.println("Beginning Payload Flight Software...");
 	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(RELEASE_POWER, OUTPUT);
+	pinMode(MOTOR1, OUTPUT);
+	pinMode(MOTOR2, OUTPUT);
+	pinMode(MOTOR3, OUTPUT);
+	pinMode(MOTOR1R, OUTPUT);
+	pinMode(MOTOR2R, OUTPUT);
+	pinMode(MOTOR3R, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH);
 	digitalWrite(RELEASE_POWER, HIGH);
 	delay(500);
 	ledOn = true;
 
-	// SD.begin(BUILTIN_SDCARD);
+	SD.begin(BUILTIN_SDCARD);
 
-	// if (!bmp.begin_I2C(BMP_ADDRESS, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
-	// 	Serial.println("BMP388 Not Detected");
-  	// }
-	// else {
-	// 	Serial.println("BMP388 Detected");
-	// }
+	if (!bmp.begin_I2C(BMP_ADDRESS, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
+		Serial.println("BMP388 Not Detected");
+  	}
+	else {
+		Serial.println("BMP388 Detected");
+	}
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected");
 	}
 	else {
 		Serial.println("BNO055 Detected");
 	}
-	// if (distanceSensor.begin() != 0) {
-	// 	Serial.println("Rangefinder Not Detected");
-	// }
-	// else {
-	// 	Serial.println("Rangefinder Detected");
-	// }
+	if (distanceSensor.begin() != 0) {
+		Serial.println("Rangefinder Not Detected");
+	}
+	else {
+		Serial.println("Rangefinder Detected");
+	}
+	// gps.begin(); // Freezes Code if included, will need to fix
 	
 	delay(1000);
 	bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-	bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);
+	bmp.setPressureOversampling(BMP3_OVERSAMPLING_8X);
 	bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
 	bmp.setOutputDataRate(BMP3_ODR_50_HZ);
 	bno.setExtCrystalUse(true);
 
-	// File dataFile = SD.open("datalog.txt", FILE_WRITE);
-	// if (dataFile) {
-	// 	dataFile.println("DROPTEST FSW INITIALIZED");
-	// 	dataFile.println(" , , , , , Acceleration, , , Orientation, ");
-	// 	dataFile.println("Packet, Time, Temp, Pressure, Altitude, x, y, z, x, y, z");
-	// 	dataFile.close();
-	// }
-	// else {
-	// 	Serial.println("Could not open datalog.txt");
-	// }
+	File dataFile = SD.open("datalog.txt", FILE_WRITE);
+	if (dataFile) {
+		dataFile.println("DROPTEST FSW INITIALIZED");
+		dataFile.println(" , , , , , Acceleration, , , Orientation, ");
+		dataFile.println("Packet, Time, Temp, Pressure, Altitude, x, y, z, x, y, z");
+		dataFile.close();
+	}
+	else {
+		Serial.println("Could not open datalog.txt");
+	}
 
 	initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
 
@@ -122,7 +132,7 @@ void setup() {
 }
 
 void loop() {
-	if (calibration >= 10) {
+	if (calibration >= 8) {
 		blinkRate = 5;
 	}
 	else {
@@ -167,13 +177,13 @@ void loop() {
 	calibration = sys + gyro + accel + mag;
 
 	String packet = "";
+	packet += "UAH Charger RocketWorks";
+	packet += ",";
 	packet += String(packetCount);
 	packet += ",";
 	packet += String(currentTime);
 	packet += ",";
-	packet += String(temperature);
-	packet += ",";
-	packet += String(pressure);
+	packet += String(states.currentState);
 	packet += ",";
 	packet += String(altitude);
 	packet += ",";
@@ -189,22 +199,21 @@ void loop() {
 	packet += ",";
 	packet += String(orientz);
 	packet += ",";
-	packet += String(calibration);
+	packet += "UAH Charger RocketWorks End";
 	Serial.println(packet);
 
-	// File dataFile = SD.open("datalog.txt", FILE_WRITE);
-	// if (dataFile) {
-	// 	dataFile.println(packet);
-	// 	dataFile.close();
-	// }
-	// else {
-	// 	Serial.println("Could not open datalog.txt");
-	// }
+	File dataFile = SD.open("datalog.txt", FILE_WRITE);
+	if (dataFile) {
+		dataFile.println(packet);
+		dataFile.close();
+	}
+	else {
+		Serial.println("Could not open datalog.txt");
+	}
 
 	XBee.println(packet);
 
   	// Determining current Flight State, including logic to go to the next state
-	Serial.println(states.currentState);
 	switch (states.currentState) {
 	case UNARMED:
 		states.unarmed();
@@ -245,6 +254,7 @@ void readCommand() {
 		}
 		else if (command.equalsIgnoreCase("LVL")) {
 			// Restart Levelling process
+			
 		}
 		else if (command.equalsIgnoreCase("PIC")) {
 			// Retake Picture
@@ -263,6 +273,15 @@ void readCommand() {
 		else if (command.equalsIgnoreCase("LCK")) {
 			// Lock Detach Mechanism
 			states.actuateServo(true);
+		}
+		else if (command.equalsIgnoreCase("BLK")) {
+			// Blink Onboard LED
+			for (int i = 0; i < 10; i++) {
+			digitalWrite(LED_BUILTIN, HIGH);
+			delay(100);
+			digitalWrite(LED_BUILTIN, LOW);
+			delay(100);
+	}
 		}
 	}
 }

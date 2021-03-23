@@ -6,7 +6,7 @@
 #include <SoftwareSerial.h>
 #include <utility/imumaths.h>
 
-//#define USESD
+#define USESD
 
 #ifdef USESD
 #include <SD.h>
@@ -14,21 +14,21 @@
 
 #define SAMPLERATE_DELAY_MS 1000
 
-#define MOTOR1 8//14
-#define MOTOR2 9//15
-#define MOTOR3 10//18
+#define MOTOR1 14
+#define MOTOR2 15
+#define MOTOR3 18
 #define MOTOR1R 19
 #define MOTOR2R 20
 #define MOTOR3R 21
 
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x29, &Wire1);
 
 uint16_t packetCount = 0;
 double currentTime;
 bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
-double smoothingFactor = 0.5;
+double smoothingFactor = 0.9;
 // std::vector<double> smoothOrientation;
 // std::vector<double> initialOrientation;
 struct gyroStruct
@@ -47,7 +47,7 @@ double tangentialOrient;
 bool calibrated, initialized, calibrating;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 double resultCurrent, resultPrevious;
-double tolerance = 5.0;
+double tolerance = 1.0;
 
 int hasChanged (double currentOrient, double initialOrient);
 void driveMotor (int motorNumber, int direction);
@@ -66,10 +66,6 @@ void setup() {
 	pinMode(MOTOR1, OUTPUT);
 	pinMode(MOTOR2, OUTPUT);
 	pinMode(MOTOR3, OUTPUT);
-
-	driveMotor(1, 1);
-	driveMotor(2, 1);
-	driveMotor(3, 1);
 
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected...");
@@ -103,10 +99,6 @@ void setup() {
 		digitalWrite(LED_BUILTIN, LOW);
 		delay(100);
 	}
-	
-	driveMotor(1, 0);
-	driveMotor(2, 0);
-	driveMotor(3, 0);
 }
 
 void loop() {
@@ -145,7 +137,7 @@ void loop() {
 
 	radialOrient = smoothOrientation.y;
 	tangentialOrient = smoothOrientation.z;
-	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
+	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient+90, 2)); // Resultant vector
 	
 	if (resultCurrent >= 5.0) {
 		calibrateLeveler();
@@ -280,7 +272,7 @@ void calibrateLeveler() {
 	}
 
 	if (calibrated && !initialized) {
-		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
+		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient+90, 2)); // Resultant vector
 		initialized = true;
 	}
 

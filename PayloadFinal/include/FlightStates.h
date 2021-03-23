@@ -3,10 +3,14 @@
 
 #include <math.h>
 #include <Arduino.h>
+#include <Servo.h>
 #include "level.h"
 
 #define RELEASE_POWER 36
 #define RELEASE_PWM	2
+
+#define RELEASE1 36
+#define RELEASE2 2
 
 enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED };
 
