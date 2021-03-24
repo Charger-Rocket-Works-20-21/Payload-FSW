@@ -22,6 +22,7 @@
 #define SDA_PIN 16
 #define SCL_PIN 17
 #define BNO_ADDRESS 0x29
+#define BNO_ADD_SEL 40
 #define BMP_ADDRESS 0x76
 
 #define SHUTDOWN_PIN 2
@@ -66,7 +67,7 @@ void setup() {
   	// put your setup code here, to run once:
 	Serial.begin(115200);
 	XBee.begin(115200);
-	delay(5000);
+	delay(1000);
 	Serial.println("Beginning Payload Flight Software...");
 	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(RELEASE_POWER, OUTPUT);
@@ -76,8 +77,10 @@ void setup() {
 	pinMode(MOTOR1R, OUTPUT);
 	pinMode(MOTOR2R, OUTPUT);
 	pinMode(MOTOR3R, OUTPUT);
+	pinMode(BNO_ADD_SEL, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH);
 	digitalWrite(RELEASE_POWER, HIGH);
+	digitalWrite(BNO_ADD_SEL, HIGH);
 	delay(500);
 	ledOn = true;
 
@@ -129,6 +132,8 @@ void setup() {
 		digitalWrite(LED_BUILTIN, LOW);
 		delay(100);
 	}
+
+	delay(2000);
 }
 
 void loop() {
@@ -277,11 +282,29 @@ void readCommand() {
 		else if (command.equalsIgnoreCase("BLK")) {
 			// Blink Onboard LED
 			for (int i = 0; i < 10; i++) {
-			digitalWrite(LED_BUILTIN, HIGH);
-			delay(100);
-			digitalWrite(LED_BUILTIN, LOW);
-			delay(100);
-	}
+				digitalWrite(LED_BUILTIN, HIGH);
+				delay(100);
+				digitalWrite(LED_BUILTIN, LOW);
+				delay(100);
+			}
+		}
+		else if (command.equalsIgnoreCase("FS0")) {
+			states.currentState = UNARMED;
+		}
+		else if (command.equalsIgnoreCase("FS1")) {
+			states.currentState = STANDBY;
+		}
+		else if (command.equalsIgnoreCase("FS2")) {
+			states.currentState = ASCENT;
+		}
+		else if (command.equalsIgnoreCase("FS3")) {
+			states.currentState = DESCENT;
+		}
+		else if (command.equalsIgnoreCase("FS4")) {
+			states.currentState = LEVELLING;
+		}
+		else if (command.equalsIgnoreCase("FS5")) {
+			states.currentState = FINISHED;
 		}
 	}
 }

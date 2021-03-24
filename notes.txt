@@ -1,0 +1,16 @@
+USB - No Radio - Works
+USB - No Radio - BNO not detected
+USB - No Radio - Works
+USB - No Radio - Works
+USB - Radio - 0.00
+USB - Radio - 0.00
+USB - No Radio - BNO not detected
+USB - No Radio - Works
+Batteries - 0.00
+Batteries - Works
+Batteries - 0.00
+Batteries - 0.00
+Batteries - 0.00
+USB - Radio - Works		Changed Address select to high
+USB - Radio - 0.00
+USB - Radio - 0.00

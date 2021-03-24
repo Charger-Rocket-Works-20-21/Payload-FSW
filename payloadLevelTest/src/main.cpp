@@ -12,7 +12,7 @@
 #include <SD.h>
 #endif
 
-#define SAMPLERATE_DELAY_MS 1000
+#define SAMPLERATE_DELAY_MS 100
 
 #define MOTOR1 14
 #define MOTOR2 15
@@ -31,14 +31,18 @@ uint16_t blinkRate;
 double smoothingFactor = 0.9;
 // std::vector<double> smoothOrientation;
 // std::vector<double> initialOrientation;
-struct gyroStruct
-{
-	float x;
-	float y;
-	float z;
-};
+// struct gyroStruct
+// {
+// 	float x;
+// 	float y;
+// 	float z;
+// };
 
-struct gyroStruct smoothOrientation;
+// struct gyroStruct smoothOrientation;
+
+double orientx;
+double orienty;
+double orientz;
 
 double initialOrientation;
 double radialOrient;
@@ -66,7 +70,7 @@ void setup() {
 	pinMode(MOTOR1, OUTPUT);
 	pinMode(MOTOR2, OUTPUT);
 	pinMode(MOTOR3, OUTPUT);
-
+	
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected...");
 		while(1);
@@ -131,12 +135,12 @@ void loop() {
 	bno.getCalibration(&sys, &gyro, &accel, &mag);
 	calibration = sys + gyro + accel + mag;
 
-	smoothOrientation.x = smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * smoothOrientation.x;
-	smoothOrientation.y = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * smoothOrientation.y;
-	smoothOrientation.z = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * smoothOrientation.z;
-
-	radialOrient = smoothOrientation.y;
-	tangentialOrient = smoothOrientation.z;
+	orientx = orientEvent.orientation.x;
+	orienty = orientEvent.orientation.y;
+	orientz = orientEvent.orientation.z;
+	
+	radialOrient = orienty;
+	tangentialOrient = orientz;
 	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient+90, 2)); // Resultant vector
 	
 	if (resultCurrent >= 5.0) {
