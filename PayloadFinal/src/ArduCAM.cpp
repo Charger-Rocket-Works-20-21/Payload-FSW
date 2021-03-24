@@ -93,11 +93,28 @@
   2017/07/07  V4.1.0  by Lee	Add support for ArduCAM_ESP32 paltform
   2017/07/25  V4.1.1  by Lee	Add support for MT9V034
   --------------------------------------*/
-#include "ArduCAM.h"
-#if defined(__SAM3X8E__)
-#define Wire Wire1
+#include "memorysaver.h"
+#if defined ( RASPBERRY_PI )
+	#include <string.h>
+	#include <time.h>
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <stdint.h>
+	#include <unistd.h>
+	#include <wiringPiI2C.h>
+	#include <wiringPi.h>
+	#include "ArduCAM.h"
+	#include "arducam_arch_raspberrypi.h"
+#else
+	#include "Arduino.h"
+	#include "ArduCAM.h"
+	#include <Wire.h>
+	#include <SPI.h>
+	#include "HardwareSerial.h"
+	#if defined(__SAM3X8E__)
+	#define Wire Wire1
+	#endif
 #endif
-
 
 
 ArduCAM::ArduCAM()

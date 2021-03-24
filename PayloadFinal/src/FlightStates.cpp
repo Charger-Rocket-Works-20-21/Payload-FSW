@@ -67,6 +67,11 @@ void States::levelling(double radialOrient, double tangentialOrient) {
 		driveMotor(1, 0);
 		driveMotor(2, 0);
 		driveMotor(3, 0);
+
+		if(CAM1_EXIST) {myCAMSaveToSDFile(myCAM1);}
+		if(CAM2_EXIST) {myCAMSaveToSDFile(myCAM2);}
+		if(CAM3_EXIST) {myCAMSaveToSDFile(myCAM3);}
+		delay(5000);
 	}
 
 	// If Levelled:
@@ -98,6 +103,84 @@ void States::actuateServo(bool locked) {
 		release1.detach();
 		release2.detach();
 	}
+}
+
+void States::myCAMSaveToSDFile(ArduCAM myCAM) {
+	char str[8];
+	byte buf[256];
+	static int i = 0;
+	static int k = 0;
+	uint8_t temp = 0,temp_last=0;
+	uint32_t length = 0;
+	bool is_header = false;
+	File outFile;
+	//Flush the FIFO
+	myCAM.flush_fifo();
+	//Clear the capture done flag
+	myCAM.clear_fifo_flag();
+	//Start capture
+	myCAM.start_capture();
+	Serial.println(F("start Capture"));
+	while(!myCAM.get_bit(ARDUCHIP_TRIG , CAP_DONE_MASK));
+	Serial.println(F("Capture Done."));  
+	length = myCAM.read_fifo_length();
+	Serial.print(F("The fifo length is :"));
+	Serial.println(length, DEC);
+	if (length >= MAX_FIFO_SIZE) { //8M
+		Serial.println(F("Over size."));
+		return;
+	}
+	if (length == 0 ) { //0 kb
+		Serial.println(F("Size is 0."));
+		return;
+	}
+	//Construct a file name
+	k = k + 1;
+	itoa(k, str, 10);
+	strcat(str, ".jpg");
+	//Open the new file
+	outFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
+	if(!outFile){
+		Serial.println(F("File open failed"));
+		return;
+	}
+	myCAM.CS_LOW();
+	myCAM.set_fifo_burst();
+	while ( length--) {
+		temp_last = temp;
+		temp =  SPI.transfer(0x00);
+		//Read JPEG data from FIFO
+		if ((temp == 0xD9) && (temp_last == 0xFF)) { //If find the end ,break while,
+			buf[i++] = temp;  //save the last  0XD9     
+			//Write the remain bytes in the buffer
+			myCAM.CS_HIGH();
+			outFile.write(buf, i);    
+			//Close the file
+			outFile.close();
+			Serial.println(F("Image save OK."));
+			is_header = false;
+			i = 0;
+		}  
+		if (is_header == true) { 
+			//Write image data to buffer if not full
+			if (i < 256)
+			buf[i++] = temp;
+			else {
+			//Write 256 bytes image data to file
+			myCAM.CS_HIGH();
+			outFile.write(buf, 256);
+			i = 0;
+			buf[i++] = temp;
+			myCAM.CS_LOW();
+			myCAM.set_fifo_burst();
+			}        
+		}
+		else if ((temp == 0xD8) & (temp_last == 0xFF)) {
+			is_header = true;
+			buf[i++] = temp_last;
+			buf[i++] = temp;   
+		} 
+	} 
 }
 
 /*void States::whichState(flightState newState) {

@@ -30,6 +30,8 @@
 
 #define SEALEVELPRESSURE_HPA 1013.25
 
+#define FRAMES_NUM 0x00
+
 #define SCB_AIRCR (*(volatile uint32_t *)0xE000ED0C) // Application Interrupt and Reset Control location
 
 States states;
@@ -39,6 +41,10 @@ SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
 AsyncDelay readInterval;
 SoftwareSerial XBee(28,29);
 GP20U7 gps = GP20U7(Serial);
+
+ArduCAM myCAM1(OV5642, states.CS1);
+ArduCAM myCAM2(OV5642, states.CS2);
+ArduCAM myCAM3(OV5642, states.CS3);
 
 uint16_t packetCount = 0;
 double currentTime;
@@ -62,6 +68,7 @@ double distance;
 Geolocation currentLocation;
 
 void readCommand();
+void initCameras();
 
 void setup() {
   	// put your setup code here, to run once:
@@ -78,11 +85,19 @@ void setup() {
 	pinMode(MOTOR2R, OUTPUT);
 	pinMode(MOTOR3R, OUTPUT);
 	pinMode(BNO_ADD_SEL, OUTPUT);
+	pinMode(states.CS1, OUTPUT);
+	pinMode(states.CS2, OUTPUT);
+	pinMode(states.CS3, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH);
 	digitalWrite(RELEASE_POWER, HIGH);
 	digitalWrite(BNO_ADD_SEL, HIGH);
+	digitalWrite(states.CS1, HIGH);
+	digitalWrite(states.CS2, HIGH);
+	digitalWrite(states.CS3, HIGH);
 	delay(500);
 	ledOn = true;
+
+	SPI.begin();
 
 	SD.begin(BUILTIN_SDCARD);
 
@@ -307,6 +322,109 @@ void readCommand() {
 			states.currentState = FINISHED;
 		}
 	}
+}
+
+void initCameras() {
+	uint8_t vid, pid;
+	uint8_t temp;
+
+	//Reset the CPLD
+	myCAM1.write_reg(0x07, 0x80);
+	delay(100);
+	myCAM1.write_reg(0x07, 0x00);
+	delay(100); 
+	myCAM2.write_reg(0x07, 0x80);
+	delay(100);
+	myCAM2.write_reg(0x07, 0x00);
+	delay(100); 
+	myCAM3.write_reg(0x07, 0x80);
+	delay(100);
+	myCAM3.write_reg(0x07, 0x00);
+	delay(100);
+
+	//Check if the 3 ArduCAM Mini 5MP PLus Cameras' SPI bus is OK
+	while(1) {
+		myCAM1.write_reg(ARDUCHIP_TEST1, 0x55);
+		temp = myCAM1.read_reg(ARDUCHIP_TEST1);
+		if(temp != 0x55)
+		{
+			Serial.println(F("SPI1 interface Error!"));
+		}else{
+			states.CAM1_EXIST = true;
+			Serial.println(F("SPI1 interface OK."));
+		}
+		myCAM2.write_reg(ARDUCHIP_TEST1, 0x55);
+		temp = myCAM2.read_reg(ARDUCHIP_TEST1);
+		if (temp != 0x55)
+		{
+			Serial.println(F("SPI2 interface Error!"));
+		} else {
+			states.CAM2_EXIST = true;
+			Serial.println(F("SPI2 interface OK."));
+		}
+		myCAM3.write_reg(ARDUCHIP_TEST1, 0x55);
+		temp = myCAM3.read_reg(ARDUCHIP_TEST1);
+		if(temp != 0x55) {
+			Serial.println(F("SPI3 interface Error!"));
+		} else {
+			states.CAM3_EXIST = true;
+			Serial.println(F("SPI3 interface OK."));
+		}
+		if (!(states.CAM1_EXIST||states.CAM2_EXIST||states.CAM3_EXIST)) {
+			delay(1000);
+			continue;
+		} else {
+			break;
+		}
+	}
+
+	#if defined (OV5640_MINI_5MP_PLUS)
+	while(1){
+		//Check if the camera module type is OV5640
+		myCAM1.rdSensorReg16_8(OV5640_CHIPID_HIGH, &vid);
+		myCAM1.rdSensorReg16_8(OV5640_CHIPID_LOW, &pid);
+		if ((vid != 0x56) || (pid != 0x40)){
+		Serial.println(F("Can't find OV5640 module!"));
+		delay(1000);continue;
+		}else{
+		Serial.println(F("OV5640 detected."));break;
+		}   
+	}
+	#else
+	while(1){
+		//Check if the camera module type is OV5642
+		myCAM1.rdSensorReg16_8(OV5642_CHIPID_HIGH, &vid);
+		myCAM1.rdSensorReg16_8(OV5642_CHIPID_LOW, &pid);
+		if ((vid != 0x56) || (pid != 0x42)) {
+			Serial.println(F("Can't find OV5642 module!"));
+			delay(1000);
+			continue;
+		} else {
+			Serial.println(F("OV5642 detected."));
+			break;
+		}  
+	}
+	#endif
+
+	//Change to JPEG capture mode and initialize the OV5640 module
+	myCAM1.set_format(JPEG);
+	myCAM1.InitCAM();
+	myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	myCAM1.clear_fifo_flag();
+	myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	myCAM3.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	#if defined (OV5640_MINI_5MP_PLUS)
+	myCAM1.OV5640_set_JPEG_size(OV5640_320x240);delay(1000);
+	#else
+	myCAM1.OV5642_set_JPEG_size(OV5642_320x240);delay(1000);
+	#endif
+	delay(1000);
+	myCAM1.clear_fifo_flag();
+	myCAM2.clear_fifo_flag();
+	myCAM3.clear_fifo_flag();
 }
 
 

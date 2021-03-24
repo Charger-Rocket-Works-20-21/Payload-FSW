@@ -100,10 +100,13 @@
 
 #ifndef ArduCAM_H
 #define ArduCAM_H
-
-#include <Arduino.h>
-#include <Wire.h>
-#include <SPI.h>
+#include "memorysaver.h"
+#if defined ( RASPBERRY_PI ) 
+#else
+	#include "Arduino.h"
+	#include <pins_arduino.h>
+	#include "memorysaver.h"
+#endif
 
 #if defined (__AVR__)
 #define cbi(reg, bitmask) *reg &= ~bitmask

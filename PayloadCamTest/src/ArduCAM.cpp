@@ -93,11 +93,28 @@
   2017/07/07  V4.1.0  by Lee	Add support for ArduCAM_ESP32 paltform
   2017/07/25  V4.1.1  by Lee	Add support for MT9V034
   --------------------------------------*/
-#include "ArduCAM.h"
-#if defined(__SAM3X8E__)
-#define Wire Wire1
+#include "memorysaver.h"
+#if defined ( RASPBERRY_PI )
+	#include <string.h>
+	#include <time.h>
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <stdint.h>
+	#include <unistd.h>
+	#include <wiringPiI2C.h>
+	#include <wiringPi.h>
+	#include "ArduCAM.h"
+	#include "arducam_arch_raspberrypi.h"
+#else
+	#include "Arduino.h"
+	#include "ArduCAM.h"
+	#include <Wire.h>
+	#include <SPI.h>
+	#include "HardwareSerial.h"
+	#if defined(__SAM3X8E__)
+	#define Wire Wire1
+	#endif
 #endif
-
 
 
 ArduCAM::ArduCAM()
@@ -909,7 +926,7 @@ void ArduCAM::OV2640_set_JPEG_size(uint8_t size)
 
 void ArduCAM::OV5642_set_RAW_size(uint8_t size)
 	{
-		#if defined(OV5642_CAM) || defined(OV5642_CAM_BIT_ROTATION_FIXED)|| defined(OV5642_MINI_5MP) || defined(OV5642_MINI_5MP_PLUS)		
+		#if defined(OV5642_CAM) || defined(OV5642_CAM_BIT_ROTATION_FIXED)|| defined(OV5642_MINI_5MP) || defined (OV5642_MINI_5MP_PLUS)		
 			switch (size)
 		  {
 				case OV5642_640x480:
