@@ -215,7 +215,7 @@ void loop() {
 	#endif
 
 	resultPrevious = resultCurrent;
-	delay(POLLRATE);
+	delay(SAMPLERATE_DELAY_MS);
 }
 
 // Return 0 for no change

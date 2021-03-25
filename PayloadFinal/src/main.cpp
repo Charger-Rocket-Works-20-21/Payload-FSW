@@ -277,7 +277,7 @@ void loop() {
 		distanceSensor.clearInterrupt();
 		distanceSensor.stopRanging();
 		distance = distance * 0.0032808417;
-		states.descent(altitude, velocity, accelx, accely, accelz, distance);
+		states.descent(altitude, initialAlt, velocity, accelx, accely, accelz, distance);
 		break;
 	case LEVELLING:
 		states.levelling(orientx, orienty); // Uses sensor X and Z vectors

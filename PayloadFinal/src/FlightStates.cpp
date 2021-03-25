@@ -26,11 +26,11 @@ void States::ascent(double altitude, double initialAltitude, double velocity) {
 	
 }
 
-void States::descent(double altitude, double velocity, double accelx, double accely, double accelz, double distance) {
+void States::descent(double altitude, double initialAltitude, double velocity, double accelx, double accely, double accelz, double distance) {
 	currentFS = DESCENT;
 	//Perform Descent Operations
 
-	if (altitude < 100) {
+	if (altitude - initialAltitude < 100) {
 		if (distance < 4.0) {
 			actuateServo(false);
 		}

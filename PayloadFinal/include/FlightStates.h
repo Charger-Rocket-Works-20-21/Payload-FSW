@@ -31,7 +31,7 @@ public:
 	void unarmed();
 	void standby(double altitude, double initialAltitude, double velocity);
 	void ascent(double altitude, double initialAltitude, double velocity);
-	void descent(double altitude, double velocity, double accelx, double accely, double accelz, double distance);
+	void descent(double altitude, double initialAltitude, double velocity, double accelx, double accely, double accelz, double distance);
 	void levelling(double radialOrient, double tangentialOrient);
     void finished();
 	void actuateServo(bool locked);
