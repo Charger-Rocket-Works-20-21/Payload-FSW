@@ -24,7 +24,7 @@
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x29, &Wire1);
 
 uint16_t packetCount = 0;
-double currentTime;
+double missionTime;
 bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
@@ -124,7 +124,7 @@ void loop() {
 	}
 	
 	packetCount++;
-	currentTime = millis()/1000.0;
+	missionTime = millis()/1000.0;
 
 	// Read Accelerometer and Magnetometer data from IMU
 	sensors_event_t accelEvent;
@@ -170,7 +170,7 @@ void loop() {
 	String packet = "";
 	packet += String(packetCount);
 	packet += ",";
-	packet += String(currentTime);
+	packet += String(missionTime);
 	packet += ",";
 	packet += String(accelEvent.acceleration.x);
 	packet += ",";
@@ -215,7 +215,7 @@ void loop() {
 	#endif
 
 	resultPrevious = resultCurrent;
-	delay(SAMPLERATE_DELAY_MS);
+	delay(POLLRATE);
 }
 
 // Return 0 for no change

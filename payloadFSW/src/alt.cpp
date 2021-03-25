@@ -44,9 +44,9 @@ double getSmoothAlt(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoo
 	return smoothingFactor * newAlt + (1 - smoothingFactor) * smoothAlt;
 }
 
-double getSmoothVel(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothVel, double smoothAlt, double pastTime, double currentTime) {
+double getSmoothVel(Adafruit_BMP3XX* sensor, double smoothingFactor, double smoothVel, double smoothAlt, double pastTime, double missionTime) {
 	double newAlt = getSmoothAlt(sensor, smoothingFactor, smoothAlt);
-	double newVel = (newAlt - smoothAlt) / (currentTime - pastTime);
+	double newVel = (newAlt - smoothAlt) / (missionTime - pastTime);
 	return smoothingFactor * newVel + (1 - smoothingFactor) * smoothVel;
 }
 

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+#include <EEPROM.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <Adafruit_BMP3XX.h>
@@ -17,7 +18,8 @@
 
 #include "FlightStates.h"
 
-#define SAMPLERATE_DELAY_MS 50
+#define POLLDELAY 50
+#define TRANSMITDELAY 1000
 
 #define SDA_PIN 16
 #define SCL_PIN 17
@@ -47,21 +49,18 @@ ArduCAM myCAM2(OV5642, states.CS2);
 ArduCAM myCAM3(OV5642, states.CS3);
 
 uint16_t packetCount = 0;
-double currentTime;
+double missionTime, previousTime, diffTime, previousXbeeTime;
 bool ledOn;
 uint16_t blinkRate;
 
 double initialAlt;
 double temperature;
 double pressure;
-double altitude;
+double altitude, previousAltitude;
 double velocity;
-double accelx;
-double accely;
-double accelz;
-double orientx;
-double orienty;
-double orientz;
+double accelx, accely, accelz;
+double orientx, orienty, orientz;
+double landedOrientx, landedOrienty, landedOrientz;
 uint8_t calibration;
 double distance;
 
@@ -139,7 +138,21 @@ void setup() {
 		Serial.println("Could not open datalog.txt");
 	}
 
-	initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+	// Record Initial Altitude and store it to EEPROM, if not already saved
+	if (EEPROM.read(0) != 0) {
+		initialAlt = EEPROM.read(0);
+	}
+	else {
+		initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+		EEPROM.update(0, initialAlt);
+	}
+
+	states.setCurrentState(EEPROM.read(1));
+	packetCount = EEPROM.read(2);
+	landedOrientx = EEPROM.read(3);
+	landedOrienty = EEPROM.read(4);
+	landedOrientz = EEPROM.read(5);
+
 
 	for (int i = 0; i < 10; i++) {
 		digitalWrite(LED_BUILTIN, HIGH);
@@ -152,6 +165,11 @@ void setup() {
 }
 
 void loop() {
+	readCommand();
+	packetCount++;
+	previousTime = missionTime;
+	missionTime = millis()/1000.0;
+	
 	if (calibration >= 8) {
 		blinkRate = 5;
 	}
@@ -168,10 +186,6 @@ void loop() {
 			digitalWrite(LED_BUILTIN, HIGH);
 		}
 	}
-	
-	readCommand();
-	packetCount++;
-	currentTime = millis()/1000.0;
 
 	// Read Temperature, Pressure, and Altitude from Barometer
 	if (!bmp.performReading()) {
@@ -179,7 +193,9 @@ void loop() {
 	}
 	temperature = bmp.temperature;
 	pressure = bmp.pressure;
+	previousAltitude = altitude;
 	altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+	velocity = (altitude - previousAltitude)/(missionTime - previousTime);
 
 	// Read Accelerometer and Magnetometer data from IMU
 	sensors_event_t accelEvent;
@@ -201,7 +217,7 @@ void loop() {
 	packet += ",";
 	packet += String(packetCount);
 	packet += ",";
-	packet += String(currentTime);
+	packet += String(missionTime);
 	packet += ",";
 	packet += String(states.currentState);
 	packet += ",";
@@ -231,7 +247,17 @@ void loop() {
 		Serial.println("Could not open datalog.txt");
 	}
 
-	XBee.println(packet);
+	if (millis() - previousXbeeTime >= 1000) {
+		XBee.println(packet);
+		if (states.currentState != 0) {
+			EEPROM.update(1, states.currentState);
+			EEPROM.update(2, packetCount);
+			EEPROM.update(3, landedOrientx);
+			EEPROM.update(4, landedOrienty);
+			EEPROM.update(5, landedOrientz);
+		}
+		previousXbeeTime = millis();
+	}
 
   	// Determining current Flight State, including logic to go to the next state
 	switch (states.currentState) {
@@ -245,12 +271,12 @@ void loop() {
 		states.ascent(altitude, initialAlt, velocity);
 		break;
 	case DESCENT:
-		// distanceSensor.startRanging();
-		// while (!distanceSensor.checkForDataReady()) {delay(1);}
-		// distance = distanceSensor.getDistance();
-		// distanceSensor.clearInterrupt();
-		// distanceSensor.stopRanging();
-		// distance = distance * 0.0032808417;
+		distanceSensor.startRanging();
+		while (!distanceSensor.checkForDataReady()) {delay(1);}
+		distance = distanceSensor.getDistance();
+		distanceSensor.clearInterrupt();
+		distanceSensor.stopRanging();
+		distance = distance * 0.0032808417;
 		states.descent(altitude, velocity, accelx, accely, accelz, distance);
 		break;
 	case LEVELLING:
@@ -261,7 +287,9 @@ void loop() {
 		break;
 	}
 
-	delay(SAMPLERATE_DELAY_MS);
+	diffTime = 1000*(millis()/1000.0 - missionTime);
+
+	delay(POLLDELAY-diffTime);
 }
 
 void readCommand() {
@@ -293,6 +321,12 @@ void readCommand() {
 		else if (command.equalsIgnoreCase("LCK")) {
 			// Lock Detach Mechanism
 			states.actuateServo(true);
+		}
+		else if (command.equalsIgnoreCase("CEE")) {
+			// Clear the EEPROM
+			for (int i = 0; i < EEPROM.length(); i++) {
+				EEPROM.update(i, 0);
+			}
 		}
 		else if (command.equalsIgnoreCase("BLK")) {
 			// Blink Onboard LED

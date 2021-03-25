@@ -21,6 +21,8 @@ enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED };
 extern bool calibrated, initialized;
 extern int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 extern double resultCurrent, resultPrevious, resultInitial;
+extern double orientx, orienty, orientz;
+extern double landedOrientx, landedOrienty, landedOrientz;
 extern ArduCAM myCAM1, myCAM2, myCAM3;
 
 class States {
@@ -35,6 +37,7 @@ public:
 	void actuateServo(bool locked);
 	void myCAMSaveToSDFile(ArduCAM myCAM);
 
+	void setCurrentState(uint8_t stateID);
 	flightState currentState;
 	// set pins 8, 9, 10 as the slave selects for SPI:
 	const int CS1 = 8;

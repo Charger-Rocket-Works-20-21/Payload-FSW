@@ -36,6 +36,9 @@ void States::descent(double altitude, double velocity, double accelx, double acc
 		}
 	}
 	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 10.0 && altitude < 50) {
+		landedOrientx = orientx;
+		landedOrienty = orienty;
+		landedOrientz = orientz;
 		currentFS = LEVELLING;
 	}
 }
@@ -63,7 +66,7 @@ void States::levelling(double radialOrient, double tangentialOrient) {
 			}
 		}
 	}
-	else {
+	else {	// If Levelled:
 		driveMotor(1, 0);
 		driveMotor(2, 0);
 		driveMotor(3, 0);
@@ -73,9 +76,6 @@ void States::levelling(double radialOrient, double tangentialOrient) {
 		if(CAM3_EXIST) {myCAMSaveToSDFile(myCAM3);}
 		delay(5000);
 	}
-
-	// If Levelled:
-	// Transmit Photos
 
 	// If recieve receipt confirmation:
 	currentFS = FINISHED;
@@ -181,6 +181,27 @@ void States::myCAMSaveToSDFile(ArduCAM myCAM) {
 			buf[i++] = temp;   
 		} 
 	} 
+}
+
+void States::setCurrentState(uint8_t stateID) {
+	if (stateID == 0) {
+		this->currentState = UNARMED;
+	} 
+	else if (stateID == 1) {
+		this->currentState = STANDBY;
+	}
+	else if (stateID == 2) {
+		this->currentState = ASCENT;
+	}
+	else if (stateID == 3) {
+		this->currentState = DESCENT;
+	}
+	else if (stateID == 4) {
+		this->currentState = LEVELLING;
+	}
+	else if (stateID == 5) {
+		this->currentState = FINISHED;
+	}
 }
 
 /*void States::whichState(flightState newState) {

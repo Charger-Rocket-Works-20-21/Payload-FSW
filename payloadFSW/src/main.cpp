@@ -44,7 +44,7 @@ uint16_t packetCount = 0;
 uint8_t calibration;
 // double smoothDistance;
 
-double currentTime;
+double missionTime;
 double pastTime;
 double diffTime;
 
@@ -173,7 +173,7 @@ void loop() {
 		}
 	}
 	packetCount++;
-	currentTime = millis()/1000;
+	missionTime = millis()/1000;
 
 //--Sensor Readings    
 	// Read Temperature, Pressure, and Altitude from Barometer
@@ -216,7 +216,7 @@ void loop() {
 	String packet = "";
 	packet += String(packetCount);
 	packet += ",";
-	packet += String(currentTime);
+	packet += String(missionTime);
 	packet += ",";
 	packet += String(bmp.temperature);
 	packet += ",";
@@ -291,5 +291,5 @@ void loop() {
 
 	// diffTime = currentTime - pastTime;
 	// pastTime = currentTime;
-	delay(SAMPLERATE_DELAY_MS);
+	delay(POLLRATE);
 }

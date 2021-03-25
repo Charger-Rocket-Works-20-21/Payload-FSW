@@ -20,7 +20,7 @@ Adafruit_BMP3XX bmp;
 SoftwareSerial XBee(2,3);
 
 uint16_t packetCount = 0;
-double currentTime;
+double missionTime;
 bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
@@ -100,7 +100,7 @@ void loop() {
 	
 	readCommand();
 	packetCount++;
-	currentTime = millis()/1000.0;
+	missionTime = millis()/1000.0;
 
 	// Read Temperature, Pressure, and Altitude from Barometer
 	if (!bmp.performReading()) {
@@ -119,7 +119,7 @@ void loop() {
 	String packet = "";
 	packet += String(packetCount);
 	packet += ",";
-	packet += String(currentTime);
+	packet += String(missionTime);
 	packet += ",";
 	packet += String(bmp.temperature);
 	packet += ",";
@@ -153,7 +153,7 @@ void loop() {
 
 	XBee.println(packet);
 
-	delay(SAMPLERATE_DELAY_MS);
+	delay(POLLRATE);
 }
 
 void readCommand() {
