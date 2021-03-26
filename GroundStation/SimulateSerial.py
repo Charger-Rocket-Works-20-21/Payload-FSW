@@ -5,8 +5,9 @@ import random
 from PIL import Image
 import numpy as np
 import io
+time.sleep(1)
 ser2 = SerialProcess()
-ser2.serial.port = "COM2"
+ser2.serial.port = "COM1"
 ser2.serial.setBaud(115200)
 
 ser2.connectDevice()
@@ -15,7 +16,7 @@ ser2.connectDevice()
 
 teamName = "UAH Charger RocketWorks"
 missionTime = 0
-timeStep = 0.25
+timeStep = 0.5
 flightState = 0
 
 def integrate(dx,x0, timestep):
@@ -30,9 +31,9 @@ vz = 0
 xx = 0
 xy = 0
 xz = 0
-rotx = random.random()*90.0
-roty = random.random()*90.0
-rotz = random.random()*90.0
+rotx = 0
+roty = 0
+rotz = 0
 
 
 def turnToStringList(listOfVars):
@@ -44,14 +45,14 @@ def turnToStringList(listOfVars):
 
 
 def level(rotx,roty,rotz):
-    if((rotx+roty+rotz) > 0.1):
+    if(abs(rotx+roty+rotz) > 0.01):
         rotx = rotx - rotx*0.5
         roty = roty - roty*0.5
         rotz = rotz - rotz*0.5
 
 
     return rotx,roty,rotz   
-    self.watchdog.slee
+    self.watchdog.sleep()
 
 def generateImage(path):
     
@@ -68,8 +69,8 @@ def generateImage(path):
 time.sleep(3)
 for i in range(10000):
     
-    if(xz < 25 and flightState ==0):
-        az = 1
+    if(xz < 30 and flightState ==0):
+        az = 2
     elif(flightState==0):
         az = -9.8
         flightState = 1
@@ -89,6 +90,14 @@ for i in range(10000):
         ax = ax+ (random.random()*2-1)
         ay = ay+ (random.random()*2-1)
         az = az
+
+        rotx = rotx + (random.random()*10-5)
+        roty = roty + (random.random()*10-5)
+        rotz = rotz + (random.random()*10-5)
+
+        #rotx = 0
+        #roty = 0
+        #rotz = 45
 
         ## Integrate things
         vx = integrate(ax,vx,timeStep)
@@ -113,7 +122,7 @@ for i in range(10000):
     #Transmit Image
     if(flightState == 4):
         ##
-        img,x,y,colors = generateImage("TestImg.png")
+        img,x,y,colors = generateImage("Test0.jpg")
         listOfVars = ["Image"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
@@ -124,11 +133,11 @@ for i in range(10000):
         count = 0
         #time.sleep(5)
         for i in range(len(hex_data)):
-            if(i%5 == 0):
-                if(i +5>=len(hex_data)):
+            if(i%10000 == 0):
+                if(i +10000>=len(hex_data)):
                     ser2.writeData(hex_data[i:])
                 else:
-                    ser2.writeData(hex_data[i:i+5])
+                    ser2.writeData(hex_data[i:i+10000])
                 #time.sleep(0.001)
         
         #time.sleep(0.1)
@@ -142,7 +151,7 @@ for i in range(10000):
 
         
         time.sleep(5)
-        img,x,y,colors = generateImage("al_color.jpg")
+        img,x,y,colors = generateImage("Test1.jpg")
         listOfVars = ["Image"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
@@ -153,11 +162,11 @@ for i in range(10000):
         count = 0
         #time.sleep(5)
         for i in range(len(hex_data)):
-            if(i%500 == 0):
-                if(i +500>=len(hex_data)):
+            if(i%10000 == 0):
+                if(i +5000>=len(hex_data)):
                     ser2.writeData(hex_data[i:])
                 else:
-                    ser2.writeData(hex_data[i:i+500])
+                    ser2.writeData(hex_data[i:i+10000])
                 #time.sleep(0.001)
         
         time.sleep(0.1)
@@ -170,7 +179,7 @@ for i in range(10000):
 
         
         time.sleep(5)
-        img,x,y,colors = generateImage("uah_color.jpg")
+        img,x,y,colors = generateImage("Test2.jpg")
         listOfVars = ["Image"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
@@ -181,11 +190,11 @@ for i in range(10000):
         count = 0
         #time.sleep(5)
         for i in range(len(hex_data)):
-            if(i%5 == 0):
-                if(i +5>=len(hex_data)):
+            if(i%10000 == 0):
+                if(i +10000>=len(hex_data)):
                     ser2.writeData(hex_data[i:])
                 else:
-                    ser2.writeData(hex_data[i:i+5])
+                    ser2.writeData(hex_data[i:i+10000])
                 #time.sleep(0.001)
         
         #time.sleep(0.1)
@@ -199,7 +208,7 @@ for i in range(10000):
         flightState = 5
     else:
 
-        listOfVars = [teamName,missionTime,flightState,xz,ax,ay,az,rotx,roty,rotz,teamName+" End"]
+        listOfVars = [teamName,i,missionTime,flightState,xz,ax,ay,az,rotx,roty,rotz,teamName+" End"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
 

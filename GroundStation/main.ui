@@ -37,13 +37,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
-    <item row="2" column="0">
-     <widget class="QLabel" name="missionTime">
-      <property name="text">
-       <string>T+ 0</string>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
@@ -60,17 +53,51 @@
         <string>Plots</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_4">
+        <item row="1" column="0">
+         <widget class="QWidget" name="widget_2" native="true"/>
+        </item>
         <item row="0" column="0">
          <widget class="QWidget" name="widget" native="true"/>
         </item>
         <item row="0" column="1">
          <widget class="QWidget" name="widget_3" native="true"/>
         </item>
-        <item row="1" column="0">
-         <widget class="QWidget" name="widget_2" native="true"/>
-        </item>
         <item row="1" column="1">
-         <widget class="QWidget" name="widget_4" native="true"/>
+         <widget class="QGroupBox" name="groupBox_4">
+          <property name="title">
+           <string>Orientation</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_6">
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QOpenGLWidget" name="openGLWidget">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>290</width>
+               <height>290</height>
+              </size>
+             </property>
+             <property name="baseSize">
+              <size>
+               <width>300</width>
+               <height>300</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -178,6 +205,74 @@
       </widget>
      </widget>
     </item>
+    <item row="2" column="0">
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>18</width>
+        <height>26</height>
+       </size>
+      </property>
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLabel" name="missionTime">
+         <property name="text">
+          <string>T+ 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="Packets_received_label">
+         <property name="text">
+          <string>Packets Received: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="Packets_lost_label">
+         <property name="text">
+          <string>Packets Lost: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RX">
+         <property name="text">
+          <string>RX</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="TX">
+         <property name="text">
+          <string>TX</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
     <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <property name="sizeConstraint">
@@ -197,9 +292,23 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEdit"/>
+       <widget class="QLineEdit" name="commandEdit"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="ButtonManualSend">
+        <property name="text">
+         <string>Send</string>
+        </property>
+       </widget>
       </item>
      </layout>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="GCSTimeLabel">
+      <property name="text">
+       <string>GCS Time: T+0</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -720,14 +829,53 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>179</width>
+            <width>209</width>
             <height>637</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
             <layout class="QGridLayout" name="gridLayout_2">
-             <item row="2" column="2">
+             <item row="1" column="0">
+              <widget class="QPushButton" name="connectButton">
+               <property name="toolTip">
+                <string>Connect to Serial Port with Current Settings</string>
+               </property>
+               <property name="toolTipDuration">
+                <number>-5</number>
+               </property>
+               <property name="text">
+                <string>Connect</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>Serial Port</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
               <widget class="QComboBox" name="comboBox_portList">
                <property name="minimumSize">
                 <size>
@@ -761,45 +909,6 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label">
-               <property name="text">
-                <string>Serial Port</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <spacer name="verticalSpacer">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="1" column="0">
-              <widget class="QPushButton" name="connectButton">
-               <property name="toolTip">
-                <string>Connect to Serial Port with Current Settings</string>
-               </property>
-               <property name="toolTipDuration">
-                <number>-5</number>
-               </property>
-               <property name="text">
-                <string>Connect</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="flat">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="0">
               <widget class="QLabel" name="label_2">
                <property name="text">
@@ -807,7 +916,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="2">
+             <item row="3" column="1">
               <widget class="QComboBox" name="comboBox_baud">
                <property name="toolTip">
                 <string>Select Baud Rate</string>

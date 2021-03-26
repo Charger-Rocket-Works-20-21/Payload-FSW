@@ -106,7 +106,7 @@ class SerialProcess(QObject):
 
         self.setWatchdogInterval(5)
        
-        self.frameTimer.setInterval(300.0)
+        self.frameTimer.setInterval(200.0)
         self.frameTimer.setTimerType(Qt.PreciseTimer)
         self.frameTimer.timeout.connect(self.readFrames)
         self.frameTimer.start()
@@ -128,19 +128,22 @@ class SerialProcess(QObject):
         return self.watchdog.interval()
 
     
+    @pyqtSlot('QString')
     def writeData(self,data):
-        bytes = 0
-        
-        bytes = self.device.write(data)
+        if(self.device):
+            byt = 0
+       
+            byt = self.device.write(data)
 
-        if(bytes>0):
-            self.tx.emit()
+            if(byt>0):
+                self.tx.emit()
+            
+            self.device.flush()
+            
         
-        self.device.flush()
-        
-    
-        self.device.waitForBytesWritten()
-        return bytes
+            self.device.waitForBytesWritten()
+            print(str(data))
+            return bytes
     ## Slots
     ########################################################
     
@@ -208,7 +211,7 @@ class SerialProcess(QObject):
     
     @pyqtSlot('QByteArray')
     def receiveImage(self,imageString):
-        try:
+        #try:
             s = imageString
         
             im = Image.open(io.BytesIO(s))
@@ -217,27 +220,69 @@ class SerialProcess(QObject):
             im.save("image" + str(self.numImagesReceived)+".png")
             MatImg = np.array(im)
             qimage = QImage()
+
+
+
+            dtype = 'linear'
+            format = 'fullframe'
+            fov = 120
+            pfov = 120
+            #impath = "image" + str(self.numImagesReceived)+".png"
+            #obj = Defisheye(impath, dtype=dtype, format=format, fov=fov, pfov=pfov)
+            #obj.convert(impath)
+
             qimage.load("image" + str(self.numImagesReceived)+".png",format='PNG')
             #qimage.save("QIMAGE.png")
             pixm = QPixmap.fromImage(qimage)
+
+
+
             self.imageProcessed.emit(pixm)
             self.numImagesReceived = self.numImagesReceived +1
-            if(self.numImagesReceived ==3):
-                im0 = Image.open("image0.png")
-                im1 = Image.open("image1.png")
-                im2 = im
-                
-                im0_size = im0.size
-                im1_size = im1.size
-                im2_size = im2.size
 
-                pan_w = im0_size[0] + im1_size[0] + im2_size[0]
-                pan_h = max(im0_size[1], im1_size[1], im2_size[1])
-                panorama = Image.new('RGB',(pan_w,pan_h),(250,250,250))
-                panorama.paste(im0,(0,0))
-                panorama.paste(im1,(im0_size[0],0))
-                panorama.paste(im2,(im0_size[0]+im1_size[0],0))
-                panorama.save("panorama.png")
+            
+
+            if(self.numImagesReceived ==3):
+                
+                images = []
+                im0 = cv2.imread("image0.png")
+                images.append(im0)
+                im1 = cv2.imread("image1.png")
+                images.append(im1)
+                im2 = cv2.imread("image2.png")
+                images.append(im2)
+
+                stitcher = cv2.createStitch() if imutils.is_cv3() else cv2.Stitcher_create()
+                (status,stitched) = stitcher.stitch(images)
+
+                if status == 0:
+                    cv2.imwrite("panorama.png",stitched)
+
+                    
+                else:
+                    LOG("Panorama processing failed, defaulting to failsafe method")
+                    LOG(status)
+
+                    im0 = Image.open("image0.png")
+                    im1 = Image.open("image1.png")
+                    im2 = im
+                    
+                    im0_size = im0.size
+                    im1_size = im1.size
+                    im2_size = im2.size
+
+                    pan_w = im0_size[0] + im1_size[0] + im2_size[0]
+                    pan_h = max(im0_size[1], im1_size[1], im2_size[1])
+                    panorama = Image.new('RGB',(pan_w,pan_h),(250,250,250))
+                    panorama.paste(im0,(0,0))
+                    panorama.paste(im1,(im0_size[0],0))
+                    panorama.paste(im2,(im0_size[0]+im1_size[0],0))
+                    panorama.save("panorama.png")
+                    """
+
+
+                """
+
                 qimage2 = QImage()
                 qimage2.load("panorama.png",format='PNG')
             
@@ -245,9 +290,10 @@ class SerialProcess(QObject):
                 self.imageProcessed.emit(pixm2)
 
 
-        except:
-            LOG("IMAGE RECEIVE FAILED, UNABLE TO PROCESS",True)
-            self.imageFailed.emit()
+       #except:
+        #    LOG("IMAGE RECEIVE FAILED, UNABLE TO PROCESS",True)
+            
+        #    self.imageFailed.emit()
 
     @pyqtSlot('QString')
     def receiveTelemetry(self,telemetryString):
@@ -264,7 +310,7 @@ class SerialProcess(QObject):
             self.telemetryProcessed.emit(tel)
 
 
-            mt = "T+ " + str(tel[0])
+            mt = "T+ " + str(tel[1])
             self.missionTimeUpdated.emit(mt)
         except:
             LOG("PACKET DROPPED, UNABLE TO PROCESS",True)
@@ -289,6 +335,7 @@ class SerialProcess(QObject):
         #LOG(self.dataBuffer.contains(endImg))
         #self.dataBuffer = self.dataBuffer
         while((self.dataBuffer.contains(startImg)) and (self.dataBuffer.contains(endImg))):
+            
             #self.feedWatchdog()
             buffer = self.dataBuffer
             sIndex = self.dataBuffer.indexOf(startImg)
@@ -302,12 +349,13 @@ class SerialProcess(QObject):
             buffer = buffer[0:fIndex]
             LOG("Buffer2: " + str(buffer) + "\n",self.isLogLocal)
             if(buffer != ""):
+                self.isLogLocal = True
                 temp = QByteArray(buffer)
                 time.sleep(0.1)
                 self.imageReceived.emit(temp)
                 self.dataBuffer = self.dataBuffer[0:sIndex-1]+self.dataBuffer[fIndex+len(endImg)+sIndex+len(startImg)+1:]
                 LOG(self.dataBuffer,self.isLogLocal)
-       
+                self.isLogLocal = False
 
        
         strBuff = str(self.dataBuffer)
@@ -363,7 +411,7 @@ class SerialProcess(QObject):
         self.dataBuffer.append(s)
 
         self.receivedBytes += byt
-
+        #print(str(s))
         self.receivedBytesChanged.emit()
         self.dataReceived.emit(data)
         self.rx.emit()
