@@ -68,6 +68,7 @@ Geolocation currentLocation;
 
 void readCommand();
 void initCameras();
+void sendPhotos(char str[8]);
 
 void setup() {
   	// put your setup code here, to run once:
@@ -247,18 +248,20 @@ void loop() {
 		Serial.println("Could not open datalog.txt");
 	}
 
-	if (millis() - previousXbeeTime >= 1000) {
-		XBee.println(packet);
-		if (states.currentState != 0) {
-			EEPROM.update(1, states.currentState);
-			EEPROM.update(2, packetCount);
-			EEPROM.update(3, landedOrientx);
-			EEPROM.update(4, landedOrienty);
-			EEPROM.update(5, landedOrientz);
+	if (states.currentState != 5) {
+		if (millis() - previousXbeeTime >= 1000) {
+			XBee.println(packet);
+			if (states.currentState != 0) {
+				EEPROM.update(1, states.currentState);
+				EEPROM.update(2, packetCount);
+				EEPROM.update(3, landedOrientx);
+				EEPROM.update(4, landedOrienty);
+				EEPROM.update(5, landedOrientz);
+			}
+			previousXbeeTime = millis();
 		}
-		previousXbeeTime = millis();
 	}
-
+	
   	// Determining current Flight State, including logic to go to the next state
 	switch (states.currentState) {
 	case UNARMED:
@@ -283,6 +286,9 @@ void loop() {
 		states.levelling(orientx, orienty); // Uses sensor X and Z vectors
 		break;
 	case FINISHED:
+		sendPhotos("cam1");
+		sendPhotos("cam2");
+		sendPhotos("cam3");
 		states.finished();
 		break;
 	}
@@ -305,10 +311,16 @@ void readCommand() {
 			
 		}
 		else if (command.equalsIgnoreCase("PIC")) {
-			// Retake Picture
+			// Retake Pictures
+			states.myCAMSaveToSDFile(myCAM1, "cam1");
+			states.myCAMSaveToSDFile(myCAM2, "cam2");
+			states.myCAMSaveToSDFile(myCAM3, "cam3");
 		}
 		else if (command.equalsIgnoreCase("RSD")) {
-			// Resend Picture
+			// Resend Pictures
+			sendPhotos("cam1");
+			sendPhotos("cam2");
+			sendPhotos("cam3");
 		}
 		else if (command.equalsIgnoreCase("CAL")) {
 			// Calibrate Initial Altitude
@@ -328,15 +340,15 @@ void readCommand() {
 				EEPROM.update(i, 0);
 			}
 		}
-		else if (command.equalsIgnoreCase("BLK")) {
-			// Blink Onboard LED
-			for (int i = 0; i < 10; i++) {
-				digitalWrite(LED_BUILTIN, HIGH);
-				delay(100);
-				digitalWrite(LED_BUILTIN, LOW);
-				delay(100);
-			}
-		}
+		// else if (command.equalsIgnoreCase("BLK")) {
+		// 	// Blink Onboard LED
+		// 	for (int i = 0; i < 10; i++) {
+		// 		digitalWrite(LED_BUILTIN, HIGH);
+		// 		delay(100);
+		// 		digitalWrite(LED_BUILTIN, LOW);
+		// 		delay(100);
+		// 	}
+		// }
 		else if (command.equalsIgnoreCase("FS0")) {
 			states.currentState = UNARMED;
 		}
@@ -354,6 +366,18 @@ void readCommand() {
 		}
 		else if (command.equalsIgnoreCase("FS5")) {
 			states.currentState = FINISHED;
+		}
+	}
+	if (Serial.available()) {
+		String command = Serial.readString();
+		if (command.equalsIgnoreCase("BLK")) {
+			// Blink Onboard LED
+			for (int i = 0; i < 10; i++) {
+				digitalWrite(LED_BUILTIN, HIGH);
+				delay(100);
+				digitalWrite(LED_BUILTIN, LOW);
+				delay(100);
+			}
 		}
 	}
 }
@@ -461,4 +485,27 @@ void initCameras() {
 	myCAM3.clear_fifo_flag();
 }
 
+void sendPhotos(char str[8]) {
+	byte buf[256];
+	uint32_t length = 0;
+	File photoFile;
+	strcat(str, ".jpg");
+	photoFile = SD.open(str, O_READ);
+	if (!photoFile) {
+		Serial.print("Failed to open ");
+		Serial.println(str);
+	}
 
+	length = photoFile.size();
+	XBee.print("Image,");
+
+	// Send Image
+	// while (length--) {
+	// 	photoFile.readBytes(buf, )
+	// }
+	while (photoFile.available()) {
+		XBee.print(photoFile.read());
+	}
+
+	XBee.println(",Image End");
+}

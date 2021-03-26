@@ -2,6 +2,9 @@
 
 flightState currentFS = UNARMED;
 
+double transitionTime;
+double minTimes[] = {10.0, };
+
 void States::unarmed() {
 	currentFS = UNARMED;
 	//Hard lock on doing nothing - transmits sensor stuff and that's it
@@ -71,14 +74,12 @@ void States::levelling(double radialOrient, double tangentialOrient) {
 		driveMotor(2, 0);
 		driveMotor(3, 0);
 
-		if(CAM1_EXIST) {myCAMSaveToSDFile(myCAM1);}
-		if(CAM2_EXIST) {myCAMSaveToSDFile(myCAM2);}
-		if(CAM3_EXIST) {myCAMSaveToSDFile(myCAM3);}
-		delay(5000);
-	}
-
-	// If recieve receipt confirmation:
-	currentFS = FINISHED;
+		if(CAM1_EXIST) {myCAMSaveToSDFile(myCAM1, "cam1");}
+		if(CAM2_EXIST) {myCAMSaveToSDFile(myCAM2, "cam2");}
+		if(CAM3_EXIST) {myCAMSaveToSDFile(myCAM3, "cam3");}
+		delay(1000);
+		currentFS = FINISHED;
+	}	
 }
 
 void States::finished() {
@@ -105,8 +106,7 @@ void States::actuateServo(bool locked) {
 	}
 }
 
-void States::myCAMSaveToSDFile(ArduCAM myCAM) {
-	char str[8];
+void States::myCAMSaveToSDFile(ArduCAM myCAM, char str[8]) {
 	byte buf[256];
 	static int i = 0;
 	static int k = 0;
@@ -135,8 +135,6 @@ void States::myCAMSaveToSDFile(ArduCAM myCAM) {
 		return;
 	}
 	//Construct a file name
-	k = k + 1;
-	itoa(k, str, 10);
 	strcat(str, ".jpg");
 	//Open the new file
 	outFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);

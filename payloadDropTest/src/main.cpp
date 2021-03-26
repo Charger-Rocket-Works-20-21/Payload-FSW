@@ -15,7 +15,7 @@
 
 #define SEALEVELPRESSURE_HPA 1013.25
 
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28, &Wire1);
 Adafruit_BMP3XX bmp;
 SoftwareSerial XBee(2,3);
 
@@ -41,7 +41,7 @@ void setup() {
 
 	SD.begin(BUILTIN_SDCARD);
 
-	if (!bmp.begin_I2C(0x77, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
+	if (!bmp.begin_I2C(0x76, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
 		Serial.println("Could not find a valid BMP3 sensor, check wiring!");
   	}
 	else {
@@ -153,7 +153,7 @@ void loop() {
 
 	XBee.println(packet);
 
-	delay(POLLRATE);
+	delay(SAMPLERATE_DELAY_MS);
 }
 
 void readCommand() {
