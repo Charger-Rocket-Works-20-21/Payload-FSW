@@ -52,6 +52,8 @@ uint16_t packetCount = 0;
 double missionTime, previousTime, diffTime, previousXbeeTime;
 bool ledOn;
 uint16_t blinkRate;
+bool transmitAllowed = true;
+bool sentPhotos = false;
 
 double initialAlt;
 double temperature;
@@ -66,6 +68,10 @@ double distance;
 
 Geolocation currentLocation;
 
+char cam1String[8] = {'c', 'a', 'm', '1'};
+char cam2String[8] = {'c', 'a', 'm', '2'};
+char cam3String[8] = {'c', 'a', 'm', '3'};
+
 void readCommand();
 void initCameras();
 void sendPhotos(char str[8]);
@@ -73,6 +79,7 @@ void sendPhotos(char str[8]);
 void setup() {
   	// put your setup code here, to run once:
 	Serial.begin(115200);
+	Serial7.begin(115200);
 	XBee.begin(115200);
 	delay(1000);
 	Serial.println("Beginning Payload Flight Software...");
@@ -139,20 +146,20 @@ void setup() {
 		Serial.println("Could not open datalog.txt");
 	}
 
-	// Record Initial Altitude and store it to EEPROM, if not already saved
-	if (EEPROM.read(0) != 0) {
-		initialAlt = EEPROM.read(0);
-	}
-	else {
-		initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
-		EEPROM.update(0, initialAlt);
-	}
+	// // Record Initial Altitude and store it to EEPROM, if not already saved
+	// if (EEPROM.read(0) != 0) {
+	// 	initialAlt = EEPROM.read(0);
+	// }
+	// else {
+	// 	initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+	// 	EEPROM.update(0, initialAlt);
+	// }
 
-	states.setCurrentState(EEPROM.read(1));
-	packetCount = EEPROM.read(2);
-	landedOrientx = EEPROM.read(3);
-	landedOrienty = EEPROM.read(4);
-	landedOrientz = EEPROM.read(5);
+	// states.setCurrentState(EEPROM.read(1));
+	// packetCount = EEPROM.read(2);
+	// landedOrientx = EEPROM.read(3);
+	// landedOrienty = EEPROM.read(4);
+	// landedOrientz = EEPROM.read(5);
 
 
 	for (int i = 0; i < 10; i++) {
@@ -166,13 +173,12 @@ void setup() {
 }
 
 void loop() {
-	readCommand();
 	packetCount++;
 	previousTime = missionTime;
 	missionTime = millis()/1000.0;
 	
 	if (calibration >= 8) {
-		blinkRate = 5;
+		blinkRate = 20;
 	}
 	else {
 		blinkRate = 30;
@@ -248,9 +254,11 @@ void loop() {
 		Serial.println("Could not open datalog.txt");
 	}
 
-	if (states.currentState != 5) {
-		if (millis() - previousXbeeTime >= 1000) {
-			XBee.println(packet);
+	if (millis() - previousXbeeTime >= 990) {
+		readCommand();
+		if (transmitAllowed) {
+			// XBee.println(packet);
+			Serial7.println(packet);
 			if (states.currentState != 0) {
 				EEPROM.update(1, states.currentState);
 				EEPROM.update(2, packetCount);
@@ -258,9 +266,10 @@ void loop() {
 				EEPROM.update(4, landedOrienty);
 				EEPROM.update(5, landedOrientz);
 			}
-			previousXbeeTime = millis();
 		}
+		previousXbeeTime = millis();
 	}
+	
 	
   	// Determining current Flight State, including logic to go to the next state
 	switch (states.currentState) {
@@ -286,90 +295,94 @@ void loop() {
 		states.levelling(orientx, orienty); // Uses sensor X and Z vectors
 		break;
 	case FINISHED:
-		sendPhotos("cam1");
-		sendPhotos("cam2");
-		sendPhotos("cam3");
+		if (!sentPhotos) {
+			transmitAllowed = false;
+			sendPhotos(cam1String);
+			sendPhotos(cam2String);
+			sendPhotos(cam3String);
+			transmitAllowed = true;
+			sentPhotos = true;
+		}
 		states.finished();
 		break;
 	}
 
 	diffTime = 1000*(millis()/1000.0 - missionTime);
-
 	delay(POLLDELAY-diffTime);
 }
 
 void readCommand() {
-	if (XBee.available()) {
-		String command = XBee.readString();
-		if (command.equalsIgnoreCase("RST")) {
-			// Reset Teensy
-			Serial.end();
-			SCB_AIRCR = 0x5FA0004; // Write Value for Restart
-		}
-		else if (command.equalsIgnoreCase("LVL")) {
-			// Restart Levelling process
+	// if (XBee.available()) {
+	// 	String command = XBee.readString();
+	// 	if (command.equalsIgnoreCase("RST")) {
+	// 		// Reset Teensy
+	// 		Serial.end();
+	// 		SCB_AIRCR = 0x5FA0004; // Write Value for Restart
+	// 	}
+	// 	else if (command.equalsIgnoreCase("LVL")) {
+	// 		// Restart Levelling process
 			
-		}
-		else if (command.equalsIgnoreCase("PIC")) {
-			// Retake Pictures
-			states.myCAMSaveToSDFile(myCAM1, "cam1");
-			states.myCAMSaveToSDFile(myCAM2, "cam2");
-			states.myCAMSaveToSDFile(myCAM3, "cam3");
-		}
-		else if (command.equalsIgnoreCase("RSD")) {
-			// Resend Pictures
-			sendPhotos("cam1");
-			sendPhotos("cam2");
-			sendPhotos("cam3");
-		}
-		else if (command.equalsIgnoreCase("CAL")) {
-			// Calibrate Initial Altitude
-			initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
-		}
-		else if (command.equalsIgnoreCase("REL")) {
-			// Release Detach Mechanism
-			states.actuateServo(false);
-		}
-		else if (command.equalsIgnoreCase("LCK")) {
-			// Lock Detach Mechanism
-			states.actuateServo(true);
-		}
-		else if (command.equalsIgnoreCase("CEE")) {
-			// Clear the EEPROM
-			for (int i = 0; i < EEPROM.length(); i++) {
-				EEPROM.update(i, 0);
-			}
-		}
-		// else if (command.equalsIgnoreCase("BLK")) {
-		// 	// Blink Onboard LED
-		// 	for (int i = 0; i < 10; i++) {
-		// 		digitalWrite(LED_BUILTIN, HIGH);
-		// 		delay(100);
-		// 		digitalWrite(LED_BUILTIN, LOW);
-		// 		delay(100);
-		// 	}
-		// }
-		else if (command.equalsIgnoreCase("FS0")) {
-			states.currentState = UNARMED;
-		}
-		else if (command.equalsIgnoreCase("FS1")) {
-			states.currentState = STANDBY;
-		}
-		else if (command.equalsIgnoreCase("FS2")) {
-			states.currentState = ASCENT;
-		}
-		else if (command.equalsIgnoreCase("FS3")) {
-			states.currentState = DESCENT;
-		}
-		else if (command.equalsIgnoreCase("FS4")) {
-			states.currentState = LEVELLING;
-		}
-		else if (command.equalsIgnoreCase("FS5")) {
-			states.currentState = FINISHED;
-		}
-	}
-	if (Serial.available()) {
-		String command = Serial.readString();
+	// 	}
+	// 	else if (command.equalsIgnoreCase("PIC")) {
+	// 		// Retake Pictures
+	// 		states.myCAMSaveToSDFile(myCAM1, cam1String);
+	// 		states.myCAMSaveToSDFile(myCAM2, cam2String);
+	// 		states.myCAMSaveToSDFile(myCAM3, cam3String);
+	// 	}
+	// 	else if (command.equalsIgnoreCase("RSD")) {
+	// 		// Resend Pictures
+	// 		sendPhotos(cam1String);
+	// 		sendPhotos(cam2String);
+	// 		sendPhotos(cam3String);
+	// 	}
+	// 	else if (command.equalsIgnoreCase("CAL")) {
+	// 		// Calibrate Initial Altitude
+	// 		initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+	// 	}
+	// 	else if (command.equalsIgnoreCase("REL")) {
+	// 		// Release Detach Mechanism
+	// 		states.actuateServo(false);
+	// 	}
+	// 	else if (command.equalsIgnoreCase("LCK")) {
+	// 		// Lock Detach Mechanism
+	// 		states.actuateServo(true);
+	// 	}
+	// 	else if (command.equalsIgnoreCase("CEE")) {
+	// 		// Clear the EEPROM
+	// 		for (int i = 0; i < EEPROM.length(); i++) {
+	// 			EEPROM.update(i, 0);
+	// 		}
+	// 	}
+	// 	// else if (command.equalsIgnoreCase("BLK")) {
+	// 	// 	// Blink Onboard LED
+	// 	// 	for (int i = 0; i < 10; i++) {
+	// 	// 		digitalWrite(LED_BUILTIN, HIGH);
+	// 	// 		delay(100);
+	// 	// 		digitalWrite(LED_BUILTIN, LOW);
+	// 	// 		delay(100);
+	// 	// 	}
+	// 	// }
+	// 	else if (command.equalsIgnoreCase("FS0")) {
+	// 		states.currentState = UNARMED;
+	// 	}
+	// 	else if (command.equalsIgnoreCase("FS1")) {
+	// 		states.currentState = STANDBY;
+	// 	}
+	// 	else if (command.equalsIgnoreCase("FS2")) {
+	// 		states.currentState = ASCENT;
+	// 	}
+	// 	// else if (command.equalsIgnoreCase("FS3")) {
+	// 	// 	states.currentState = DESCENT;
+	// 	// }
+	// 	else if (command.equalsIgnoreCase("FS4")) {
+	// 		states.currentState = LEVELLING;
+	// 	}
+	// 	else if (command.equalsIgnoreCase("FS5")) {
+	// 		states.currentState = FINISHED;
+	// 	}
+	// }
+	if (Serial7.available()) {
+		String command = Serial7.readString();
 		if (command.equalsIgnoreCase("BLK")) {
 			// Blink Onboard LED
 			for (int i = 0; i < 10; i++) {
@@ -377,6 +390,13 @@ void readCommand() {
 				delay(100);
 				digitalWrite(LED_BUILTIN, LOW);
 				delay(100);
+			}
+		}
+		else if (command.equalsIgnoreCase("FS3")) {
+			states.currentState = DESCENT;
+			for (int k = 0; k < 10; k++) {
+				Serial.println("SETTING FLIGHT STATE TO DESCENT");
+				delay(50);
 			}
 		}
 	}
@@ -486,8 +506,8 @@ void initCameras() {
 }
 
 void sendPhotos(char str[8]) {
-	byte buf[256];
-	uint32_t length = 0;
+	// byte buf[256];
+	// uint32_t length = 0;
 	File photoFile;
 	strcat(str, ".jpg");
 	photoFile = SD.open(str, O_READ);
@@ -496,7 +516,7 @@ void sendPhotos(char str[8]) {
 		Serial.println(str);
 	}
 
-	length = photoFile.size();
+	// length = photoFile.size();
 	XBee.print("Image,");
 
 	// Send Image
