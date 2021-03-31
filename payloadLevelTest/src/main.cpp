@@ -21,14 +21,14 @@
 #define MOTOR2R 20
 #define MOTOR3R 21
 
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x29, &Wire1);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28, &Wire1);
 
 uint16_t packetCount = 0;
 double missionTime;
 bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
-double smoothingFactor = 0.9;
+double smoothingFactor = 0.75;
 // std::vector<double> smoothOrientation;
 // std::vector<double> initialOrientation;
 // struct gyroStruct
@@ -40,6 +40,9 @@ double smoothingFactor = 0.9;
 
 // struct gyroStruct smoothOrientation;
 
+double accelx;
+double accely;
+double accelz;
 double orientx;
 double orienty;
 double orientz;
@@ -51,7 +54,7 @@ double tangentialOrient;
 bool calibrated, initialized, calibrating;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 double resultCurrent, resultPrevious;
-double tolerance = 1.0;
+double tolerance = 0.05;
 
 int hasChanged (double currentOrient, double initialOrient);
 void driveMotor (int motorNumber, int direction);
@@ -71,6 +74,11 @@ void setup() {
 	pinMode(MOTOR2, OUTPUT);
 	pinMode(MOTOR3, OUTPUT);
 	
+	// digitalWrite(MOTOR1, HIGH);
+	// digitalWrite(MOTOR2, HIGH);
+	// digitalWrite(MOTOR3, HIGH);
+	// while(1);
+
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected...");
 		while(1);
@@ -135,26 +143,38 @@ void loop() {
 	bno.getCalibration(&sys, &gyro, &accel, &mag);
 	calibration = sys + gyro + accel + mag;
 
+	accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * accelx;
+	accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * accely;
+	accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * accelz;
 	orientx = orientEvent.orientation.x;
 	orienty = orientEvent.orientation.y;
 	orientz = orientEvent.orientation.z;
+
+	radialOrient = accely;
+	tangentialOrient = accelz;
+	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector
 	
-	radialOrient = orienty;
-	tangentialOrient = orientz;
-	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient+90, 2)); // Resultant vector
-	
-	if (resultCurrent >= 5.0) {
+	if (resultCurrent >= 1.0) { // while the resultant acceleration is greater than 1.0 m/s^2. This is over estimate, 5 degrees seems to be closer to 1.75 m/s^2
 		calibrateLeveler();
 
 		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
 			if (oriented1 == 1) {
 				driveMotor(1, 1);
 			}
+			else if (oriented1 == 2) {
+				driveMotor(1, 2);
+			}
 			if (oriented2 == 1) {
 				driveMotor(2, 1);
 			}
+			else if (oriented2 == 2) {
+				driveMotor(2, 2);
+			}
 			if (oriented3 == 1) {
 				driveMotor(3, 1);
+			}
+			else if (oriented3 == 2) {
+				driveMotor(3, 2);
 			}
 			if (hasChanged(resultCurrent, resultPrevious) != 1) {
 				resetCalibration();
@@ -210,7 +230,7 @@ void loop() {
 		dataFile.close();
 	}
 	else {
-		Serial.println("Could not open datalog.txt");
+		//Serial.println("Could not open datalog.txt");
 	}
 	#endif
 
@@ -273,10 +293,13 @@ void resetCalibration() {
 void calibrateLeveler() {
 	if (!calibrated && calibration >= 8) {
 		calibrated = true;
+		digitalWrite(LED_BUILTIN, HIGH);
+		delay(5000);
+		digitalWrite(LED_BUILTIN, LOW);
 	}
 
 	if (calibrated && !initialized) {
-		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient+90, 2)); // Resultant vector
+		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector
 		initialized = true;
 	}
 

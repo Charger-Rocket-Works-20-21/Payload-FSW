@@ -1,0 +1,38 @@
+UPDATES TO SOP:
+
+Don't open the payload up, everything is already connected. Get the ground station setup, then turn the payload on and make sure you're recieving data (should take between 7 and 15 seconds to start transmitting). If not, then carefully open the lid a bit, not pulling too hard, so that you can access the top of the batteries. With the switch on, test the voltage with one lead on the top of the battery connected to the lid, and the other lead on the outside of teensy's usb port. If this has power (>7.4V), then something's most likely wrong with the ground station. Try opening XCTU and doing it that way.
+Once you've got data to the ground station, wiggle the whole payload around gently in a kind of figure 8. You don't need to worry about making sure the lights are blinking in the correct way. Turn the switch back off until you're ready to put the payload in the rocket. 
+Don't forget to remove zip ties and camera lens caps. Once you've got it on and transmitting, tape the switch in the on position.
+Cameras... The cameras probably won't work. They work when I'm testing just them, they don't work when I add it in to the rest of the code. Probably something about the other sensors using the I2C line, but not sure. When it gets to the pictures point, after leveling, don't be surprised if you don't get pictures. There's a slim chance it works, it can be weird sometimes. Once you've started getting data again after leveling is complete, and you didn't get pictures, try taking and sending them again. If that doesn't work, then it's not going to.
+
+
+
+Ground Station info:
+
+Follow SOP to set up the ground station and ensure you're recieving data.
+
+Commands:
+	RST	-	Reset the Teensy (shouldn't ever need this only if the teensy seems to stay frozen for a very long time)
+	PIC	-	Retake pictures, use if photos are bad or missing after multiple resends
+	CAL	-	Recalibrate initial altitude, shouldn't really ever need to do this unless the altitude readings are way off even when not moving up or down
+	REL	-	Release Detach mechanism, shouldn't need to do this unless testing detach on the spot
+	CEE	-	Clear the EEPROM, only do this if the wrong flight state is set for some reason
+	FS0	-	Go to state 0 (UNARMED). This will do nothing and never change states on its own
+	FS1	-	Go to state 1 (STANDBY). If you for whatever reason put it into FS0, you'll need to change it to this before launch.
+	FS2	-	Go to state 2 (ASCENT). Shouldn't need this, and probably won't have time to use it. I guess use this if you notice it's still in standby after burn phase, but make sure you do it before apogee.
+	FS3	-	Go to state 3 (DESCENT). Only use this if it's still in Standby or Ascent while coming back down.
+	FS4	-	Go to state 4 (LEVELLING). Use this if it's landed and still in Standby, Ascent, or Descent. This starts the leveling process and takes pictures after leveling.
+	FS5	-	Go to state 5 (FINISHED). This is after leveling, and when it sends images initially. If the images were already sent (or attempted to send) it won't resend. You'll have to resend them manually.
+
+On the plots tab, there's Flight State, Acceleration, Altitude, and Orientation. At the bottom of the window is where you type your command and hit "Send"
+On the images tab, you can see each image individually along with the stitched panorama. If any of the three aren't working, just hit its respective "Request Resend" button.
+
+
+
+Troubleshooting:
+
+If you're not getting correct data (but you are getting packets of useless data), restart the payload (not the ground station)
+In the command prompt window you should be able to see the raw packets coming in, they'll be in brackets []. You might have to look around the error messages, Nathan says those are fine and don't affect the functionality. The order of the packet is Packet Number, Time (s), Flight State, Altitude (meters), Accelx, y, z, Orientationx, y, z. 
+If your altitude reads 44,000 or something like that, the altimeter didn't initialize properly or couldn't be read. Turn the payload off and back on again. 
+If your acceleration reads -0.01, -0.01, -0.01, -0.06, -0.06, -0.06 or something like that your bno isn't working. Try turning it off and back on again, and if that doesn't work, open the lid a crack to see if the breakout board is still soldered to the teensy with all 4 wires.
+Beyond this, I think call if you have any questions. (813) 727-4447. If it's ground station specific, probably message nathan first on discord

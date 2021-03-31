@@ -12,9 +12,9 @@
 #define SD_CS 9
 
 // set pin 4,5,6,7 as the slave select for SPI:
-const int CS1 = 10;
-const int CS2 = 5;
-const int CS3 = 6;
+const int CS1 = 8;
+const int CS2 = 9;
+const int CS3 = 10;
 bool CAM1_EXIST = false; 
 bool CAM2_EXIST = false;
 bool CAM3_EXIST = false;
@@ -36,7 +36,7 @@ void setup() {
 	delay(1000);
 	uint8_t vid, pid;
 	uint8_t temp;
-	Wire.begin(); 
+	Wire1.begin(); 
 	Serial.begin(115200);
 	Serial.println(F("ArduCAM Start!")); 
 	// set the CS output:
@@ -46,23 +46,30 @@ void setup() {
 	digitalWrite(CS2, HIGH);
 	pinMode(CS3, OUTPUT);
 	digitalWrite(CS3, HIGH);
+	pinMode(7, OUTPUT);
+	digitalWrite(7, OUTPUT);
 	// initialize SPI:
+	Serial.println("Starting SPI");
 	SPI.begin(); 
 	//Reset the CPLD
+	Serial.println("Resetting CPLD 1");
 	myCAM1.write_reg(0x07, 0x80);
 	delay(100);
 	myCAM1.write_reg(0x07, 0x00);
 	delay(100); 
+	Serial.println("Resetting CPLD 2");
 	myCAM2.write_reg(0x07, 0x80);
 	delay(100);
 	myCAM2.write_reg(0x07, 0x00);
 	delay(100); 
+	Serial.println("Resetting CPLD 3");
 	myCAM3.write_reg(0x07, 0x80);
 	delay(100);
 	myCAM3.write_reg(0x07, 0x00);
 	delay(100);  
 
 	//Check if the 3 ArduCAM Mini 5MP PLus Cameras' SPI bus is OK
+	Serial.println("Checking Buses");
 	while(1) {
 		myCAM1.write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = myCAM1.read_reg(ARDUCHIP_TEST1);
@@ -102,52 +109,58 @@ void setup() {
 		Serial.println(F("SD Card Error"));delay(1000);
 	}
 	Serial.println(F("SD Card detected."));
-	// #if defined (OV5640_MINI_5MP_PLUS)
-	// while(1){
-	// 	//Check if the camera module type is OV5640
-	// 	myCAM1.rdSensorReg16_8(OV5640_CHIPID_HIGH, &vid);
-	// 	myCAM1.rdSensorReg16_8(OV5640_CHIPID_LOW, &pid);
-	// 	if ((vid != 0x56) || (pid != 0x40)){
-	// 	Serial.println(F("Can't find OV5640 module!"));
-	// 	delay(1000);continue;
-	// 	}else{
-	// 	Serial.println(F("OV5640 detected."));break;
-	// 	}   
-	// }
-	// #else
-	// while(1){
-	// 	//Check if the camera module type is OV5642
-	// 	myCAM1.rdSensorReg16_8(OV5642_CHIPID_HIGH, &vid);
-	// 	myCAM1.rdSensorReg16_8(OV5642_CHIPID_LOW, &pid);
-	// 	if ((vid != 0x56) || (pid != 0x42)) {
-	// 		Serial.println(F("Can't find OV5642 module!"));
-	// 		delay(1000);
-	// 		continue;
-	// 	} else {
-	// 		Serial.println(F("OV5642 detected."));
-	// 		break;
-	// 	}  
-	// }
-	// #endif
+	#if defined (OV5640_MINI_5MP_PLUS)
+	while(1){
+		//Check if the camera module type is OV5640
+		myCAM1.rdSensorReg16_8(OV5640_CHIPID_HIGH, &vid);
+		myCAM1.rdSensorReg16_8(OV5640_CHIPID_LOW, &pid);
+		if ((vid != 0x56) || (pid != 0x40)){
+		Serial.println(F("Can't find OV5640 module!"));
+		delay(1000);continue;
+		}else{
+		Serial.println(F("OV5640 detected."));break;
+		}   
+	}
+	#else
+	while(1){
+		//Check if the camera module type is OV5642
+		myCAM1.rdSensorReg16_8(OV5642_CHIPID_HIGH, &vid);
+		myCAM1.rdSensorReg16_8(OV5642_CHIPID_LOW, &pid);
+		if ((vid != 0x56) || (pid != 0x42)) {
+			Serial.println(F("Can't find OV5642 module!"));
+			delay(1000);
+			continue;
+		} else {
+			Serial.println(F("OV5642 detected."));
+			break;
+		}  
+	}
+	#endif
 	//Change to JPEG capture mode and initialize the OV5640 module
+	Serial.println("Setting Format");
 	myCAM1.set_format(JPEG);
+	Serial.println("Initializing Cam 1");
 	myCAM1.InitCAM();
+	Serial.println("Setting VSYNC");
 	myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
 	myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
 	myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
 	myCAM1.clear_fifo_flag();
+	Serial.println("Setting Frames Count");
 	myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
 	myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
 	myCAM3.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
 	#if defined (OV5640_MINI_5MP_PLUS)
 	myCAM1.OV5640_set_JPEG_size(OV5640_320x240);delay(1000);
 	#else
+	Serial.println("Setting Resolution");
 	myCAM1.OV5642_set_JPEG_size(OV5642_320x240);delay(1000);
 	#endif
 	delay(1000);
 	myCAM1.clear_fifo_flag();
 	myCAM2.clear_fifo_flag();
 	myCAM3.clear_fifo_flag();
+	Serial.println("End Setup");
 }
 
 

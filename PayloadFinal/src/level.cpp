@@ -1,6 +1,6 @@
 #include "level.h"
 
-double tolerance = 5.0;
+double tolerance = 0.05;
 bool calibrated, initialized;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 double resultCurrent, resultPrevious, resultInitial;
@@ -58,11 +58,7 @@ void resetCalibration() {
 }
 
 void calibrateLeveler(double radialOrient, double tangentialOrient) {
-	if (!calibrated && calibration >= 8) {
-		calibrated = true;
-	}
-
-	if (calibrated && !initialized) {
+	if (!initialized) {
 		resultInitial = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 		initialized = true;
 	}

@@ -23,9 +23,10 @@
 
 #define SDA_PIN 16
 #define SCL_PIN 17
-#define BNO_ADDRESS 0x29
+#define BNO_ADDRESS 0x28
 #define BNO_ADD_SEL 40
 #define BMP_ADDRESS 0x76
+#define BSIZE  20
 
 #define SHUTDOWN_PIN 2
 #define INTERRUPT_PIN 3
@@ -39,7 +40,7 @@
 States states;
 Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO_ADDRESS, &Wire1);
 Adafruit_BMP3XX bmp;
-SFEVL53L1X distanceSensor(Wire2, SHUTDOWN_PIN, INTERRUPT_PIN);
+SFEVL53L1X distanceSensor(Wire1, SHUTDOWN_PIN, INTERRUPT_PIN);
 AsyncDelay readInterval;
 SoftwareSerial XBee(28,29);
 GP20U7 gps = GP20U7(Serial);
@@ -49,11 +50,15 @@ ArduCAM myCAM2(OV5642, states.CS2);
 ArduCAM myCAM3(OV5642, states.CS3);
 
 uint16_t packetCount = 0;
+double smoothingFactor = 0.75;
 double missionTime, previousTime, diffTime, previousXbeeTime;
 bool ledOn;
 uint16_t blinkRate;
 bool transmitAllowed = true;
 bool sentPhotos = false;
+bool rangefinderInit = false;
+char buf[BSIZE];
+int buf_pos = 0;
 
 double initialAlt;
 double temperature;
@@ -63,6 +68,7 @@ double velocity;
 double accelx, accely, accelz;
 double orientx, orienty, orientz;
 double landedOrientx, landedOrienty, landedOrientz;
+double leveledx, leveledy, leveledz;
 uint8_t calibration;
 double distance;
 
@@ -84,7 +90,6 @@ void setup() {
 	delay(1000);
 	Serial.println("Beginning Payload Flight Software...");
 	pinMode(LED_BUILTIN, OUTPUT);
-	pinMode(RELEASE_POWER, OUTPUT);
 	pinMode(MOTOR1, OUTPUT);
 	pinMode(MOTOR2, OUTPUT);
 	pinMode(MOTOR3, OUTPUT);
@@ -92,12 +97,15 @@ void setup() {
 	pinMode(MOTOR2R, OUTPUT);
 	pinMode(MOTOR3R, OUTPUT);
 	pinMode(BNO_ADD_SEL, OUTPUT);
+	pinMode(7, OUTPUT);
+	pinMode(RELEASE_POWER1, OUTPUT);
+	pinMode(RELEASE_POWER2, OUTPUT);
 	pinMode(states.CS1, OUTPUT);
 	pinMode(states.CS2, OUTPUT);
 	pinMode(states.CS3, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH);
-	digitalWrite(RELEASE_POWER, HIGH);
 	digitalWrite(BNO_ADD_SEL, HIGH);
+	digitalWrite(7, HIGH);
 	digitalWrite(states.CS1, HIGH);
 	digitalWrite(states.CS2, HIGH);
 	digitalWrite(states.CS3, HIGH);
@@ -110,21 +118,28 @@ void setup() {
 
 	if (!bmp.begin_I2C(BMP_ADDRESS, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
 		Serial.println("BMP388 Not Detected");
+		XBee.println("BMP388 Not Detected");
   	}
 	else {
 		Serial.println("BMP388 Detected");
+		XBee.println("BMP388 Detected");
 	}
 	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected");
+		XBee.println("BNO055 Not Detected");
 	}
 	else {
 		Serial.println("BNO055 Detected");
+		XBee.println("BNO055 Detected");
 	}
 	if (distanceSensor.begin() != 0) {
 		Serial.println("Rangefinder Not Detected");
+		XBee.println("Rangefinder Not Detected");
 	}
 	else {
 		Serial.println("Rangefinder Detected");
+		XBee.println("Rangefinder Detected");
+		rangefinderInit = true;
 	}
 	// gps.begin(); // Freezes Code if included, will need to fix
 	
@@ -137,7 +152,7 @@ void setup() {
 
 	File dataFile = SD.open("datalog.txt", FILE_WRITE);
 	if (dataFile) {
-		dataFile.println("DROPTEST FSW INITIALIZED");
+		dataFile.println("CRW PAYLOAD FSW INITIALIZED");
 		dataFile.println(" , , , , , Acceleration, , , Orientation, ");
 		dataFile.println("Packet, Time, Temp, Pressure, Altitude, x, y, z, x, y, z");
 		dataFile.close();
@@ -146,20 +161,20 @@ void setup() {
 		Serial.println("Could not open datalog.txt");
 	}
 
-	// // Record Initial Altitude and store it to EEPROM, if not already saved
-	// if (EEPROM.read(0) != 0) {
-	// 	initialAlt = EEPROM.read(0);
-	// }
-	// else {
-	// 	initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
-	// 	EEPROM.update(0, initialAlt);
-	// }
+	// Record Initial Altitude and store it to EEPROM, if not already saved
+	if (EEPROM.read(0) != 0) {
+		initialAlt = EEPROM.read(0);
+	}
+	else {
+		initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+		EEPROM.update(0, initialAlt);
+	}
 
-	// states.setCurrentState(EEPROM.read(1));
-	// packetCount = EEPROM.read(2);
-	// landedOrientx = EEPROM.read(3);
-	// landedOrienty = EEPROM.read(4);
-	// landedOrientz = EEPROM.read(5);
+	states.setCurrentState(EEPROM.read(1));
+	packetCount = EEPROM.read(2);
+	landedOrientx = EEPROM.read(3);
+	landedOrienty = EEPROM.read(4);
+	landedOrientz = EEPROM.read(5);
 
 
 	for (int i = 0; i < 10; i++) {
@@ -169,6 +184,7 @@ void setup() {
 		delay(100);
 	}
 
+	noInterrupts();
 	delay(2000);
 }
 
@@ -209,9 +225,9 @@ void loop() {
 	sensors_event_t orientEvent;
 	bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
 	bno.getEvent(&orientEvent);
-	accelx = accelEvent.acceleration.x;
-	accely = accelEvent.acceleration.y;
-	accelz = accelEvent.acceleration.z;
+	accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * accelx;
+	accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * accely;
+	accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * accelz;
 	orientx = orientEvent.orientation.x;
 	orienty = orientEvent.orientation.y;
 	orientz = orientEvent.orientation.z;
@@ -283,16 +299,22 @@ void loop() {
 		states.ascent(altitude, initialAlt, velocity);
 		break;
 	case DESCENT:
-		distanceSensor.startRanging();
-		while (!distanceSensor.checkForDataReady()) {delay(1);}
-		distance = distanceSensor.getDistance();
-		distanceSensor.clearInterrupt();
-		distanceSensor.stopRanging();
-		distance = distance * 0.0032808417;
+		if (rangefinderInit) {
+			distanceSensor.startRanging();
+			while (!distanceSensor.checkForDataReady()) {delay(1);}
+			distance = distanceSensor.getDistance();
+			distanceSensor.clearInterrupt();
+			distanceSensor.stopRanging();
+			distance = distance * 0.0032808417;
+			Serial.print(distance);
+		}
+		else {
+			distance = 20;
+		}
 		states.descent(altitude, initialAlt, velocity, accelx, accely, accelz, distance);
 		break;
 	case LEVELLING:
-		states.levelling(orientx, orienty); // Uses sensor X and Z vectors
+		states.levelling(accely, accelz); // Uses sensor X and Z vectors
 		break;
 	case FINISHED:
 		if (!sentPhotos) {
@@ -312,78 +334,56 @@ void loop() {
 }
 
 void readCommand() {
-	// if (XBee.available()) {
-	// 	String command = XBee.readString();
-	// 	if (command.equalsIgnoreCase("RST")) {
-	// 		// Reset Teensy
-	// 		Serial.end();
-	// 		SCB_AIRCR = 0x5FA0004; // Write Value for Restart
-	// 	}
-	// 	else if (command.equalsIgnoreCase("LVL")) {
-	// 		// Restart Levelling process
+	if (XBee.available()) {
+		String command = XBee.readString();
+		if (command.equalsIgnoreCase("RST")) {
+			// Reset Teensy
+			Serial.end();
+			SCB_AIRCR = 0x5FA0004; // Write Value for Restart
+		}
+		else if (command.equalsIgnoreCase("LVL")) {
+			// Restart Levelling process
 			
-	// 	}
-	// 	else if (command.equalsIgnoreCase("PIC")) {
-	// 		// Retake Pictures
-	// 		states.myCAMSaveToSDFile(myCAM1, cam1String);
-	// 		states.myCAMSaveToSDFile(myCAM2, cam2String);
-	// 		states.myCAMSaveToSDFile(myCAM3, cam3String);
-	// 	}
-	// 	else if (command.equalsIgnoreCase("RSD")) {
-	// 		// Resend Pictures
-	// 		sendPhotos(cam1String);
-	// 		sendPhotos(cam2String);
-	// 		sendPhotos(cam3String);
-	// 	}
-	// 	else if (command.equalsIgnoreCase("CAL")) {
-	// 		// Calibrate Initial Altitude
-	// 		initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
-	// 	}
-	// 	else if (command.equalsIgnoreCase("REL")) {
-	// 		// Release Detach Mechanism
-	// 		states.actuateServo(false);
-	// 	}
-	// 	else if (command.equalsIgnoreCase("LCK")) {
-	// 		// Lock Detach Mechanism
-	// 		states.actuateServo(true);
-	// 	}
-	// 	else if (command.equalsIgnoreCase("CEE")) {
-	// 		// Clear the EEPROM
-	// 		for (int i = 0; i < EEPROM.length(); i++) {
-	// 			EEPROM.update(i, 0);
-	// 		}
-	// 	}
-	// 	// else if (command.equalsIgnoreCase("BLK")) {
-	// 	// 	// Blink Onboard LED
-	// 	// 	for (int i = 0; i < 10; i++) {
-	// 	// 		digitalWrite(LED_BUILTIN, HIGH);
-	// 	// 		delay(100);
-	// 	// 		digitalWrite(LED_BUILTIN, LOW);
-	// 	// 		delay(100);
-	// 	// 	}
-	// 	// }
-	// 	else if (command.equalsIgnoreCase("FS0")) {
-	// 		states.currentState = UNARMED;
-	// 	}
-	// 	else if (command.equalsIgnoreCase("FS1")) {
-	// 		states.currentState = STANDBY;
-	// 	}
-	// 	else if (command.equalsIgnoreCase("FS2")) {
-	// 		states.currentState = ASCENT;
-	// 	}
-	// 	// else if (command.equalsIgnoreCase("FS3")) {
-	// 	// 	states.currentState = DESCENT;
-	// 	// }
-	// 	else if (command.equalsIgnoreCase("FS4")) {
-	// 		states.currentState = LEVELLING;
-	// 	}
-	// 	else if (command.equalsIgnoreCase("FS5")) {
-	// 		states.currentState = FINISHED;
-	// 	}
-	// }
-	if (Serial7.available()) {
-		String command = Serial7.readString();
-		if (command.equalsIgnoreCase("BLK")) {
+		}
+		else if (command.equalsIgnoreCase("PIC")) {
+			// Retake Pictures
+			bno.enterSuspendMode();
+			states.myCAMSaveToSDFile(myCAM1, cam1String);
+			states.myCAMSaveToSDFile(myCAM2, cam2String);
+			states.myCAMSaveToSDFile(myCAM3, cam3String);
+			bno.enterNormalMode();
+		}
+		else if (command.equalsIgnoreCase("I1")) {
+			// Resend Image 1
+			sendPhotos(cam1String);
+		}
+		else if (command.equalsIgnoreCase("I2")) {
+			// Resend Image 2
+			sendPhotos(cam2String);
+		}
+		else if (command.equalsIgnoreCase("I3")) {
+			// Resend Image 3
+			sendPhotos(cam3String);
+		}
+		else if (command.equalsIgnoreCase("CAL")) {
+			// Calibrate Initial Altitude
+			initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+		}
+		else if (command.equalsIgnoreCase("REL")) {
+			// Release Detach Mechanism
+			states.actuateServo(false);
+		}
+		else if (command.equalsIgnoreCase("LCK")) {
+			// Lock Detach Mechanism
+			states.actuateServo(true);
+		}
+		else if (command.equalsIgnoreCase("CEE")) {
+			// Clear the EEPROM
+			for (int i = 0; i < EEPROM.length(); i++) {
+				EEPROM.update(i, 0);
+			}
+		}
+		else if (command.equalsIgnoreCase("BLK")) {
 			// Blink Onboard LED
 			for (int i = 0; i < 10; i++) {
 				digitalWrite(LED_BUILTIN, HIGH);
@@ -392,14 +392,66 @@ void readCommand() {
 				delay(100);
 			}
 		}
+		// else if (command.equalsIgnoreCase("FS0")) {
+		// 	states.currentState = UNARMED;
+		// }
+		else if (command.equalsIgnoreCase("FS1")) {
+			states.currentState = STANDBY;
+		}
+		else if (command.equalsIgnoreCase("FS2")) {
+			states.currentState = ASCENT;
+		}
 		else if (command.equalsIgnoreCase("FS3")) {
 			states.currentState = DESCENT;
-			for (int k = 0; k < 10; k++) {
-				Serial.println("SETTING FLIGHT STATE TO DESCENT");
-				delay(50);
-			}
+		}
+		else if (command.equalsIgnoreCase("FS4")) {
+			states.currentState = LEVELLING;
+		}
+		else if (command.equalsIgnoreCase("FS5")) {
+			states.currentState = FINISHED;
 		}
 	}
+	// if (Serial7.available()) {
+	// 	String command = Serial7.readString();
+	// 	// if (command.equalsIgnoreCase("BLK")) {
+	// 	// 	// Blink Onboard LED
+	// 	// 	for (int i = 0; i < 10; i++) {
+	// 	// 		digitalWrite(LED_BUILTIN, HIGH);
+	// 	// 		delay(100);
+	// 	// 		digitalWrite(LED_BUILTIN, LOW);
+	// 	// 		delay(100);
+	// 	// 	}
+	// 	// }
+	// 	if (command.equalsIgnoreCase("FS3")) {
+	// 		states.currentState = DESCENT;
+	// 		for (int k = 0; k < 10; k++) {
+	// 			Serial.println("SETTING FLIGHT STATE TO DESCENT");
+	// 			delay(50);
+	// 		}
+	// 	}
+	// 	char c = Serial7.read();
+
+	// 	if (c == '\n') {
+	// 		if (String(buf) == "BLK") {
+	// 			// Blink Onboard LED
+	// 			for (int i = 0; i < 10; i++) {
+	// 				digitalWrite(LED_BUILTIN, HIGH);
+	// 				delay(100);
+	// 				digitalWrite(LED_BUILTIN, LOW);
+	// 				delay(100);
+	// 			}
+	// 		}
+	// 		 //Serial.println(buf);
+	// 		for (int i = 0; i < BSIZE; i++) buf[i] = 0;
+	// 		buf_pos = 0;
+	// 		//Serial.println(buf);
+	// 	}
+	// 	else {
+	// 		buf[buf_pos] = c;
+	// 		buf_pos = (buf_pos + 1) % BSIZE;
+	// 		//Serial.println(buf);
+	// 	}
+	// }
 }
 
 void initCameras() {

@@ -10,11 +10,12 @@
 #include "level.h"
 #include "ArduCAM.h"
 
-#define RELEASE_POWER 36
+#define RELEASE_POWER1 36
+#define RELEASE_POWER2 32
 #define RELEASE_PWM	2
 
-#define RELEASE1 36
-#define RELEASE2 2
+#define RELEASE1 2
+#define RELEASE2 4
 
 enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED };
 
@@ -23,6 +24,7 @@ extern int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 f
 extern double resultCurrent, resultPrevious, resultInitial;
 extern double orientx, orienty, orientz;
 extern double landedOrientx, landedOrienty, landedOrientz;
+extern double leveledx, leveledy, leveledz;
 extern ArduCAM myCAM1, myCAM2, myCAM3;
  
 

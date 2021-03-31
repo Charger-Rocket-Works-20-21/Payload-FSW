@@ -771,6 +771,7 @@ uint8_t ArduCAM::get_bit(uint8_t addr, uint8_t bit)
 {
   uint8_t temp;
   temp = read_reg(addr);
+  Serial.println(temp);
   temp = temp & bit;
   return temp;
 }
@@ -3137,11 +3138,20 @@ byte ArduCAM::wrSensorReg16_8(int regID, int regDat)
 		arducam_i2c_word_write(regID, regDat);
 		arducam_delay_ms(1);
 	#else
-		Wire.beginTransmission(sensor_addr >> 1);
-	  Wire.write(regID >> 8);            // sends instruction byte, MSB first
-	  Wire.write(regID & 0x00FF);
-	  Wire.write(regDat & 0x00FF);
-	  if (Wire.endTransmission())
+	// 	Wire.beginTransmission(sensor_addr >> 1);
+	//   Wire.write(regID >> 8);            // sends instruction byte, MSB first
+	//   Wire.write(regID & 0x00FF);
+	//   Wire.write(regDat & 0x00FF);
+	//   if (Wire.endTransmission())
+	//   {
+	//     return 0;
+	//   }
+	//   delay(1);
+		Wire1.beginTransmission(sensor_addr >> 1);
+	  Wire1.write(regID >> 8);            // sends instruction byte, MSB first
+	  Wire1.write(regID & 0x00FF);
+	  Wire1.write(regDat & 0x00FF);
+	  if (Wire1.endTransmission())
 	  {
 	    return 0;
 	  }
@@ -3154,14 +3164,25 @@ byte ArduCAM::rdSensorReg16_8(uint16_t regID, uint8_t* regDat)
 	#if defined (RASPBERRY_PI) 
 		arducam_i2c_word_read(regID, regDat );
 	#else
-		Wire.beginTransmission(sensor_addr >> 1);
-	  Wire.write(regID >> 8);
-	  Wire.write(regID & 0x00FF);
-	  Wire.endTransmission();
-	  Wire.requestFrom((sensor_addr >> 1), 1);
-	  if (Wire.available())
+	// 	Wire.beginTransmission(sensor_addr >> 1);
+	//   Wire.write(regID >> 8);
+	//   Wire.write(regID & 0x00FF);
+	//   Wire.endTransmission();
+	//   Wire.requestFrom((sensor_addr >> 1), 1);
+	//   if (Wire.available())
+	//   {
+	//     *regDat = Wire.read();
+	//   }
+	//   delay(1);
+		Serial.println("HERE");
+	  Wire1.beginTransmission(sensor_addr >> 1);
+	  Wire1.write(regID >> 8);
+	  Wire1.write(regID & 0x00FF);
+	  Wire1.endTransmission();
+	  Wire1.requestFrom((sensor_addr >> 1), 1);
+	  if (Wire1.available())
 	  {
-	    *regDat = Wire.read();
+	    *regDat = Wire1.read();
 	  }
 	  delay(1);
 	#endif  
