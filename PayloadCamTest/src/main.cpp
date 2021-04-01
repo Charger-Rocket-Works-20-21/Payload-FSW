@@ -12,9 +12,9 @@
 #define SD_CS 9
 
 // set pin 4,5,6,7 as the slave select for SPI:
-const int CS1 = 8;
+const int CS1 = 10;
 const int CS2 = 9;
-const int CS3 = 10;
+const int CS3 = 8;
 bool CAM1_EXIST = false; 
 bool CAM2_EXIST = false;
 bool CAM3_EXIST = false;

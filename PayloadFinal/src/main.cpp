@@ -143,7 +143,7 @@ void setup() {
 	}
 	// gps.begin(); // Freezes Code if included, will need to fix
 	
-	delay(1000);
+	delay(500);
 	bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
 	bmp.setPressureOversampling(BMP3_OVERSAMPLING_8X);
 	bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
@@ -185,7 +185,7 @@ void setup() {
 	}
 
 	noInterrupts();
-	delay(2000);
+	delay(500);
 }
 
 void loop() {
@@ -236,7 +236,7 @@ void loop() {
 	calibration = sys + gyro + accel + mag;
 
 	String packet = "";
-	packet += "UAH Charger RocketWorks";
+	packet += ",UAH Charger RocketWorks";
 	packet += ",";
 	packet += String(packetCount);
 	packet += ",";
@@ -274,7 +274,7 @@ void loop() {
 		readCommand();
 		if (transmitAllowed) {
 			// XBee.println(packet);
-			Serial7.println(packet);
+			Serial7.print(packet);
 			if (states.currentState != 0) {
 				EEPROM.update(1, states.currentState);
 				EEPROM.update(2, packetCount);
@@ -558,6 +558,7 @@ void initCameras() {
 }
 
 void sendPhotos(char str[8]) {
+	delay(1000);
 	// byte buf[256];
 	// uint32_t length = 0;
 	File photoFile;
@@ -566,6 +567,7 @@ void sendPhotos(char str[8]) {
 	if (!photoFile) {
 		Serial.print("Failed to open ");
 		Serial.println(str);
+		return;
 	}
 
 	// length = photoFile.size();
@@ -576,8 +578,21 @@ void sendPhotos(char str[8]) {
 	// 	photoFile.readBytes(buf, )
 	// }
 	while (photoFile.available()) {
-		XBee.print(photoFile.read());
+		XBee.write(photoFile.read());
 	}
 
 	XBee.println(",Image End");
+
+	// Serial.print("Image,");
+
+	// // Send Image
+	// // while (length--) {
+	// // 	photoFile.readBytes(buf, )
+	// // }
+	// while (photoFile.available()) {
+	// 	Serial.print(photoFile.read());
+	// 	delay(5);
+	// }
+
+	// Serial.println(",Image End");
 }

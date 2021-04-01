@@ -43,9 +43,9 @@ public:
 	void setCurrentState(uint8_t stateID);
 	flightState currentState;
 	// set pins 8, 9, 10 as the slave selects for SPI:
-	const int CS1 = 8;
+	const int CS1 = 10;
 	const int CS2 = 9;
-	const int CS3 = 10;
+	const int CS3 = 8;
 	bool CAM1_EXIST = false; 
 	bool CAM2_EXIST = false;
 	bool CAM3_EXIST = false;
