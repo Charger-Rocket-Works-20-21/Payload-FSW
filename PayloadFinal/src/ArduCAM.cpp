@@ -771,7 +771,6 @@ uint8_t ArduCAM::get_bit(uint8_t addr, uint8_t bit)
 {
   uint8_t temp;
   temp = read_reg(addr);
-  Serial.println(temp);
   temp = temp & bit;
   return temp;
 }
@@ -3174,7 +3173,7 @@ byte ArduCAM::rdSensorReg16_8(uint16_t regID, uint8_t* regDat)
 	//     *regDat = Wire.read();
 	//   }
 	//   delay(1);
-		Serial.println("HERE");
+		// Serial.println("HERE");
 	  Wire1.beginTransmission(sensor_addr >> 1);
 	  Wire1.write(regID >> 8);
 	  Wire1.write(regID & 0x00FF);

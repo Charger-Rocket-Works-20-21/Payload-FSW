@@ -25,7 +25,6 @@ extern double resultCurrent, resultPrevious, resultInitial;
 extern double orientx, orienty, orientz;
 extern double landedOrientx, landedOrienty, landedOrientz;
 extern double leveledx, leveledy, leveledz;
-extern ArduCAM myCAM1, myCAM2, myCAM3;
  
 
 class States {
@@ -38,7 +37,6 @@ public:
 	void levelling(double radialOrient, double tangentialOrient);
     void finished();
 	void actuateServo(bool locked);
-	void myCAMSaveToSDFile(ArduCAM myCAM, char str[8]);
 
 	void setCurrentState(uint8_t stateID);
 	flightState currentState;

@@ -80,6 +80,7 @@ char cam3String[8] = {'c', 'a', 'm', '3'};
 
 void readCommand();
 void initCameras();
+void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]);
 void sendPhotos(char str[8]);
 
 void setup() {
@@ -176,6 +177,7 @@ void setup() {
 	landedOrienty = EEPROM.read(4);
 	landedOrientz = EEPROM.read(5);
 
+	initCameras();
 
 	for (int i = 0; i < 10; i++) {
 		digitalWrite(LED_BUILTIN, HIGH);
@@ -319,6 +321,9 @@ void loop() {
 	case FINISHED:
 		if (!sentPhotos) {
 			transmitAllowed = false;
+			if(states.CAM1_EXIST) {myCAMSaveToSDFile(myCAM1, cam1String);}
+			if(states.CAM2_EXIST) {myCAMSaveToSDFile(myCAM2, cam2String);}
+			if(states.CAM3_EXIST) {myCAMSaveToSDFile(myCAM3, cam3String);}
 			sendPhotos(cam1String);
 			sendPhotos(cam2String);
 			sendPhotos(cam3String);
@@ -347,11 +352,11 @@ void readCommand() {
 		}
 		else if (command.equalsIgnoreCase("PIC")) {
 			// Retake Pictures
-			bno.enterSuspendMode();
-			states.myCAMSaveToSDFile(myCAM1, cam1String);
-			states.myCAMSaveToSDFile(myCAM2, cam2String);
-			states.myCAMSaveToSDFile(myCAM3, cam3String);
-			bno.enterNormalMode();
+			delay(500);
+			if(states.CAM1_EXIST) {myCAMSaveToSDFile(myCAM1, cam1String);}
+			if(states.CAM2_EXIST) {myCAMSaveToSDFile(myCAM2, cam2String);}
+			if(states.CAM3_EXIST) {myCAMSaveToSDFile(myCAM3, cam3String);}
+			delay(500);
 		}
 		else if (command.equalsIgnoreCase("I1")) {
 			// Resend Image 1
@@ -478,27 +483,27 @@ void initCameras() {
 		temp = myCAM1.read_reg(ARDUCHIP_TEST1);
 		if(temp != 0x55)
 		{
-			Serial.println(F("SPI1 interface Error!"));
+			Serial.println(F("CAMERA 1 NOT DETECTED"));
 		}else{
 			states.CAM1_EXIST = true;
-			Serial.println(F("SPI1 interface OK."));
+			Serial.println(F("Camera 1 Detected"));
 		}
 		myCAM2.write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = myCAM2.read_reg(ARDUCHIP_TEST1);
 		if (temp != 0x55)
 		{
-			Serial.println(F("SPI2 interface Error!"));
+			Serial.println(F("CAMERA 2 NOT DETECTED"));
 		} else {
 			states.CAM2_EXIST = true;
-			Serial.println(F("SPI2 interface OK."));
+			Serial.println(F("Camera 2 Detected"));
 		}
 		myCAM3.write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = myCAM3.read_reg(ARDUCHIP_TEST1);
 		if(temp != 0x55) {
-			Serial.println(F("SPI3 interface Error!"));
+			Serial.println(F("CAMERA 3 NOT DETECTED"));
 		} else {
 			states.CAM3_EXIST = true;
-			Serial.println(F("SPI3 interface OK."));
+			Serial.println(F("Camera 3 Detected"));
 		}
 		if (!(states.CAM1_EXIST||states.CAM2_EXIST||states.CAM3_EXIST)) {
 			delay(1000);
@@ -555,6 +560,80 @@ void initCameras() {
 	myCAM1.clear_fifo_flag();
 	myCAM2.clear_fifo_flag();
 	myCAM3.clear_fifo_flag();
+}
+
+void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
+	byte buf[256];
+	static int i = 0;
+	uint8_t temp = 0,temp_last=0;
+	uint32_t length = 0;
+	bool is_header = false;
+	File outFile;
+	//Flush the FIFO
+	myCAM.flush_fifo();
+	//Clear the capture done flag
+	myCAM.clear_fifo_flag();
+	//Start capture
+	myCAM.start_capture();
+	Serial.println(F("start Capture"));
+	while(!myCAM.get_bit(ARDUCHIP_TRIG , CAP_DONE_MASK));
+	Serial.println(F("Capture Done."));  
+	length = myCAM.read_fifo_length();
+	Serial.print(F("The fifo length is :"));
+	Serial.println(length, DEC);
+	if (length >= MAX_FIFO_SIZE) { //8M
+		Serial.println(F("Over size."));
+		return;
+	}
+	if (length == 0 ) { //0 kb
+		Serial.println(F("Size is 0."));
+		return;
+	}
+	//Construct a file name
+	strcat(str, ".jpg");
+	//Open the new file
+	outFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
+	if(!outFile){
+		Serial.println(F("File open faild"));
+		return;
+	}
+	myCAM.CS_LOW();
+	myCAM.set_fifo_burst();
+	while ( length--) {
+		temp_last = temp;
+		temp =  SPI.transfer(0x00);
+		//Read JPEG data from FIFO
+		if ((temp == 0xD9) && (temp_last == 0xFF)) { //If find the end ,break while,
+			buf[i++] = temp;  //save the last  0XD9     
+			//Write the remain bytes in the buffer
+			myCAM.CS_HIGH();
+			outFile.write(buf, i);    
+			//Close the file
+			outFile.close();
+			Serial.println(F("Image save OK."));
+			is_header = false;
+			i = 0;
+		}  
+		if (is_header == true) { 
+			//Write image data to buffer if not full
+			if (i < 256)
+			buf[i++] = temp;
+			else {
+			//Write 256 bytes image data to file
+			myCAM.CS_HIGH();
+			outFile.write(buf, 256);
+			i = 0;
+			buf[i++] = temp;
+			myCAM.CS_LOW();
+			myCAM.set_fifo_burst();
+			}        
+		}
+		else if ((temp == 0xD8) & (temp_last == 0xFF)) {
+			is_header = true;
+			buf[i++] = temp_last;
+			buf[i++] = temp;   
+		} 
+	} 
 }
 
 void sendPhotos(char str[8]) {

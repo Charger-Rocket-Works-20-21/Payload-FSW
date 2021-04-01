@@ -14,7 +14,7 @@ void States::standby(double altitude, double initialAltitude, double velocity) {
 	currentFS = STANDBY;
 	//Perform PreLaunch Operations
 
-	if (altitude - initialAltitude >= 100 && velocity >= 10) {
+	if (altitude - initialAltitude >= 100.0 && velocity >= 10.0) {
 		currentFS = ASCENT;
 		transitionTime = millis()/1000;
 	}
@@ -25,7 +25,7 @@ void States::ascent(double altitude, double initialAltitude, double velocity) {
 	//Perform Ascent Operations
 
 	currentTime = millis()/1000;
-	if ((currentTime - transitionTime) >= minTimes[0] && (altitude - initialAltitude) >= 1000 && fabs(velocity) <= 5) {
+	if ((currentTime - transitionTime) >= minTimes[0] && (altitude - initialAltitude) >= 1000.0 && fabs(velocity) <= 5.0) {
 		currentFS = DESCENT;
 		transitionTime = millis()/1000;
 	}
@@ -37,13 +37,13 @@ void States::descent(double altitude, double initialAltitude, double velocity, d
 	//Perform Descent Operations
 
 	currentTime = millis()/1000;
-	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < 100) {
+	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < -15.0) { // TODO CHANGE BACK TO 100 METERS
 		if (distance < 8.0) {
 			actuateServo(false);
 			delay(500);
 		}
 	}
-	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 10.0 && altitude < 50) {
+	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 10.0 && altitude < 50.0) {
 		landedOrientx = orientx;
 		landedOrienty = orienty;
 		landedOrientz = orientz;
@@ -116,9 +116,7 @@ void States::levelling(double radialOrient, double tangentialOrient) {
 		else {
 			Serial.println("Could not open datalog.txt");
 		}
-		if(CAM1_EXIST) {myCAMSaveToSDFile(myCAM1, "cam1");}
-		if(CAM2_EXIST) {myCAMSaveToSDFile(myCAM2, "cam2");}
-		if(CAM3_EXIST) {myCAMSaveToSDFile(myCAM3, "cam3");}
+		
 		delay(1000);
 		currentFS = FINISHED;
 	}	
@@ -152,88 +150,6 @@ void States::actuateServo(bool locked) {
 		digitalWrite(RELEASE_POWER1, LOW);
 		digitalWrite(RELEASE_POWER2, LOW);
 	}
-}
-
-void States::myCAMSaveToSDFile(ArduCAM myCAM, char str[8]) {
-	byte buf[256];
-	static int i = 0;
-	static int k = 0;
-	uint8_t temp = 0,temp_last=0;
-	uint32_t length = 0;
-	bool is_header = false;
-	File outFile;
-	//Flush the FIFO
-	myCAM.flush_fifo();
-	//Clear the capture done flag
-	myCAM.clear_fifo_flag();
-	//Start capture
-	myCAM.start_capture();
-	Serial.println(F("start Capture"));
-	double camStartTime = millis()/1000;
-	double camNowTime;
-	while(!myCAM.get_bit(ARDUCHIP_TRIG , CAP_DONE_MASK)) {
-		camNowTime = millis()/1000;
-		if (camNowTime - camStartTime >= 10000) {
-			return;
-		}
-	}
-	Serial.println(F("Capture Done."));  
-	length = myCAM.read_fifo_length();
-	Serial.print(F("The fifo length is :"));
-	Serial.println(length, DEC);
-	if (length >= MAX_FIFO_SIZE) { //8M
-		Serial.println(F("Over size."));
-		return;
-	}
-	if (length == 0 ) { //0 kb
-		Serial.println(F("Size is 0."));
-		return;
-	}
-	//Construct a file name
-	strcat(str, ".jpg");
-	//Open the new file
-	outFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
-	if(!outFile){
-		Serial.println(F("File open failed"));
-		return;
-	}
-	myCAM.CS_LOW();
-	myCAM.set_fifo_burst();
-	while ( length--) {
-		temp_last = temp;
-		temp =  SPI.transfer(0x00);
-		//Read JPEG data from FIFO
-		if ((temp == 0xD9) && (temp_last == 0xFF)) { //If find the end ,break while,
-			buf[i++] = temp;  //save the last  0XD9     
-			//Write the remain bytes in the buffer
-			myCAM.CS_HIGH();
-			outFile.write(buf, i);    
-			//Close the file
-			outFile.close();
-			Serial.println(F("Image save OK."));
-			is_header = false;
-			i = 0;
-		}  
-		if (is_header == true) { 
-			//Write image data to buffer if not full
-			if (i < 256)
-			buf[i++] = temp;
-			else {
-			//Write 256 bytes image data to file
-			myCAM.CS_HIGH();
-			outFile.write(buf, 256);
-			i = 0;
-			buf[i++] = temp;
-			myCAM.CS_LOW();
-			myCAM.set_fifo_burst();
-			}        
-		}
-		else if ((temp == 0xD8) & (temp_last == 0xFF)) {
-			is_header = true;
-			buf[i++] = temp_last;
-			buf[i++] = temp;   
-		} 
-	} 
 }
 
 void States::setCurrentState(uint8_t stateID) {

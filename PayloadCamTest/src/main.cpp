@@ -2,6 +2,9 @@
 #include <ArduCAM.h>
 #include <SPI.h>
 #include <SD.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <Adafruit_BMP3XX.h>
 #include "memorysaver.h"
 #include <stdlib.h>
 //This demo can only work on OV5640_MINI_5MP_PLUS or OV5642_MINI_5MP_PLUS platform.
@@ -10,6 +13,9 @@
 #endif
 #define   FRAMES_NUM    0x00
 #define SD_CS 9
+
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28, &Wire1);
+Adafruit_BMP3XX bmp;
 
 // set pin 4,5,6,7 as the slave select for SPI:
 const int CS1 = 10;
@@ -51,6 +57,20 @@ void setup() {
 	// initialize SPI:
 	Serial.println("Starting SPI");
 	SPI.begin(); 
+
+	if (!bmp.begin_I2C(0x76, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
+		Serial.println("BMP388 Not Detected");
+  	}
+	else {
+		Serial.println("BMP388 Detected");
+	}
+	if (!bno.begin()) {
+		Serial.println("BNO055 Not Detected");
+	}
+	else {
+		Serial.println("BNO055 Detected");
+	}
+
 	//Reset the CPLD
 	Serial.println("Resetting CPLD 1");
 	myCAM1.write_reg(0x07, 0x80);
@@ -166,6 +186,38 @@ void setup() {
 
 
 void loop() {
+	// Read Temperature, Pressure, and Altitude from Barometer
+	if (!bmp.performReading()) {
+		Serial.println("Failed To Perform Reading");
+	}
+
+	// Read Accelerometer and Magnetometer data from IMU
+	sensors_event_t accelEvent;
+	sensors_event_t orientEvent;
+	bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+	bno.getEvent(&orientEvent);
+	
+	String packet = "";
+	packet += ",UAH Charger RocketWorks";
+	packet += ",";
+	packet += String(bmp.readAltitude(1013.25));
+	packet += ",";
+	packet += String(accelEvent.acceleration.x);
+	packet += ",";
+	packet += String(accelEvent.acceleration.y);
+	packet += ",";
+	packet += String(accelEvent.acceleration.z);
+	packet += ",";
+	packet += String(orientEvent.orientation.x);
+	packet += ",";
+	packet += String(orientEvent.orientation.y);
+	packet += ",";
+	packet += String(orientEvent.orientation.z);
+	packet += ",";
+	packet += "UAH Charger RocketWorks End";
+	Serial.println(packet);
+	delay(2000);
+
 	if(CAM1_EXIST)
 		myCAMSaveToSDFile(myCAM1);
 	if(CAM2_EXIST)
