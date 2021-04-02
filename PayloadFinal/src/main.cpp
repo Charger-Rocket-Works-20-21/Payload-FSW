@@ -478,7 +478,7 @@ void initCameras() {
 	delay(100);
 
 	//Check if the 3 ArduCAM Mini 5MP PLus Cameras' SPI bus is OK
-	while(1) {
+	for (int i = 0; i <= 3; i++) {
 		myCAM1.write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = myCAM1.read_reg(ARDUCHIP_TEST1);
 		if(temp != 0x55)
@@ -526,7 +526,7 @@ void initCameras() {
 		}   
 	}
 	#else
-	while(1){
+		for (int i = 0; i <= 3; i++) {
 		//Check if the camera module type is OV5642
 		myCAM1.rdSensorReg16_8(OV5642_CHIPID_HIGH, &vid);
 		myCAM1.rdSensorReg16_8(OV5642_CHIPID_LOW, &pid);
@@ -554,7 +554,7 @@ void initCameras() {
 	#if defined (OV5640_MINI_5MP_PLUS)
 	myCAM1.OV5640_set_JPEG_size(OV5640_320x240);delay(1000);
 	#else
-	myCAM1.OV5642_set_JPEG_size(OV5642_320x240);delay(1000);
+	myCAM1.OV5642_set_JPEG_size(OV5642_1024x768);delay(1000);
 	#endif
 	delay(1000);
 	myCAM1.clear_fifo_flag();

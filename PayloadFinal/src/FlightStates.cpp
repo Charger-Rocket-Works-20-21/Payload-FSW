@@ -38,12 +38,12 @@ void States::descent(double altitude, double initialAltitude, double velocity, d
 
 	currentTime = millis()/1000;
 	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < -15.0) { // TODO CHANGE BACK TO 100 METERS
-		if (distance < 8.0) {
+		if (distance < 1.0) {
 			actuateServo(false);
 			delay(500);
 		}
 	}
-	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 10.0 && altitude < 50.0) {
+	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 15.0 && altitude - initialAltitude < 50.0) {
 		landedOrientx = orientx;
 		landedOrienty = orienty;
 		landedOrientz = orientz;
@@ -143,8 +143,8 @@ void States::actuateServo(bool locked) {
 		release1.attach(RELEASE1);
 		release2.attach(RELEASE2);
 		release1.write(160);
-		release2.write(160);
-		delay(100);
+		release2.write(0);
+		delay(250);
 		release1.detach();
 		release2.detach();
 		digitalWrite(RELEASE_POWER1, LOW);

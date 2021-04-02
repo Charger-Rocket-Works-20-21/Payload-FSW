@@ -54,7 +54,7 @@ double tangentialOrient;
 bool calibrated, initialized, calibrating;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 double resultCurrent, resultPrevious;
-double tolerance = 0.05;
+double tolerance = 0.1;
 
 int hasChanged (double currentOrient, double initialOrient);
 void driveMotor (int motorNumber, int direction);
@@ -79,7 +79,7 @@ void setup() {
 	// digitalWrite(MOTOR3, HIGH);
 	// while(1);
 
-	if (!bno.begin()) {
+	if (!bno.begin(bno.OPERATION_MODE_NDOF)) {
 		Serial.println("BNO055 Not Detected...");
 		while(1);
 	}
@@ -89,7 +89,7 @@ void setup() {
 	
 	delay(1000);
 	bno.setExtCrystalUse(true);
-
+	
 	#ifdef USESD
 	SD.begin(BUILTIN_SDCARD);
 
@@ -154,38 +154,38 @@ void loop() {
 	tangentialOrient = accelz;
 	resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector
 	
-	if (resultCurrent >= 1.0) { // while the resultant acceleration is greater than 1.0 m/s^2. This is over estimate, 5 degrees seems to be closer to 1.75 m/s^2
-		calibrateLeveler();
+	// if (resultCurrent >= 1.0) { // while the resultant acceleration is greater than 1.0 m/s^2. This is over estimate, 5 degrees seems to be closer to 1.75 m/s^2
+	// 	calibrateLeveler();
 
-		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
-			if (oriented1 == 1) {
-				driveMotor(1, 1);
-			}
-			else if (oriented1 == 2) {
-				driveMotor(1, 2);
-			}
-			if (oriented2 == 1) {
-				driveMotor(2, 1);
-			}
-			else if (oriented2 == 2) {
-				driveMotor(2, 2);
-			}
-			if (oriented3 == 1) {
-				driveMotor(3, 1);
-			}
-			else if (oriented3 == 2) {
-				driveMotor(3, 2);
-			}
-			if (hasChanged(resultCurrent, resultPrevious) != 1) {
-				resetCalibration();
-			}
-		}
-	}
-	else {
-		driveMotor(1, 0);
-		driveMotor(2, 0);
-		driveMotor(3, 0);
-	}
+	// 	if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
+	// 		if (oriented1 == 1) {
+	// 			driveMotor(1, 1);
+	// 		}
+	// 		else if (oriented1 == 2) {
+	// 			driveMotor(1, 2);
+	// 		}
+	// 		if (oriented2 == 1) {
+	// 			driveMotor(2, 1);
+	// 		}
+	// 		else if (oriented2 == 2) {
+	// 			driveMotor(2, 2);
+	// 		}
+	// 		if (oriented3 == 1) {
+	// 			driveMotor(3, 1);
+	// 		}
+	// 		else if (oriented3 == 2) {
+	// 			driveMotor(3, 2);
+	// 		}
+	// 		if (hasChanged(resultCurrent, resultPrevious) != 1) {
+	// 			resetCalibration();
+	// 		}
+	// 	}
+	// }
+	// else {
+	// 	driveMotor(1, 0);
+	// 	driveMotor(2, 0);
+	// 	driveMotor(3, 0);
+	// }
 
 	String packet = "";
 	packet += String(packetCount);
@@ -221,6 +221,8 @@ void loop() {
 	debugPacket += String(oriented3);
 	debugPacket += ",";
 	debugPacket += String(resultPrevious);
+	debugPacket += ",";
+	debugPacket += String("");
 	Serial.println(debugPacket);
 
 	#ifdef USESD
