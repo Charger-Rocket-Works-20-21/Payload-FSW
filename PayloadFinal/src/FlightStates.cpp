@@ -1,63 +1,63 @@
 #include "FlightStates.h"
 
-flightState currentFS = STANDBY;
+flightState currentState = UNARMED;
 
 double currentTime, transitionTime;
 double minTimes[] = {10.0, 30.0};
 
 void States::unarmed() {
-	currentFS = UNARMED;
+	currentState = UNARMED;
 	//Hard lock on doing nothing - transmits sensor stuff and that's it
 }
 
 void States::standby(double altitude, double initialAltitude, double velocity) {
-	currentFS = STANDBY;
+	currentState = STANDBY;
 	//Perform PreLaunch Operations
 
 	if (altitude - initialAltitude >= 100.0 && velocity >= 10.0) {
-		currentFS = ASCENT;
+		currentState = ASCENT;
 		transitionTime = millis()/1000;
 	}
 }
 
 void States::ascent(double altitude, double initialAltitude, double velocity) {
-	currentFS = ASCENT;
+	currentState = ASCENT;
 	//Perform Ascent Operations
 
 	currentTime = millis()/1000;
 	if ((currentTime - transitionTime) >= minTimes[0] && (altitude - initialAltitude) >= 1000.0 && fabs(velocity) <= 5.0) {
-		currentFS = DESCENT;
+		currentState = DESCENT;
 		transitionTime = millis()/1000;
 	}
 	
 }
 
 void States::descent(double altitude, double initialAltitude, double velocity, double accelx, double accely, double accelz, double distance) {
-	currentFS = DESCENT;
+	currentState = DESCENT;
 	//Perform Descent Operations
 
 	currentTime = millis()/1000;
-	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < -15.0) { // TODO CHANGE BACK TO 100 METERS
-		if (distance < 1.0) {
+	if ((currentTime - transitionTime) >= minTimes[1] /*&& altitude - initialAltitude < -15.0*/) { // TODO CHANGE BACK TO 100 METERS
+		if (distance < 7.0) {
 			actuateServo(false);
 			delay(500);
+			if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 15.0 && altitude - initialAltitude < 50.0) {
+				landedOrientx = orientx;
+				landedOrienty = orienty;
+				landedOrientz = orientz;
+				currentState = LEVELLING;
+			}
 		}
-	}
-	if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 15.0 && altitude - initialAltitude < 50.0) {
-		landedOrientx = orientx;
-		landedOrienty = orienty;
-		landedOrientz = orientz;
-		currentFS = LEVELLING;
 	}
 }
 
-void States::levelling(double radialOrient, double tangentialOrient) {
-    currentFS = LEVELLING;
+void States::levelling(double x, double y, double z) {
+    currentState = LEVELLING;
 	//Perform Levelling Operations
-	double resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
+	double resultCurrent = sqrt(pow((x-9.81), 2) + pow(y, 2) + pow(z, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 	
 	if (resultCurrent >= 1.0) {
-		calibrateLeveler(radialOrient, tangentialOrient);
+		calibrateLeveler();
 
 		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
 			if (oriented1 == 1) {
@@ -118,12 +118,12 @@ void States::levelling(double radialOrient, double tangentialOrient) {
 		}
 		
 		delay(1000);
-		currentFS = FINISHED;
+		currentState = FINISHED;
 	}	
 }
 
 void States::finished() {
-	currentFS = FINISHED;
+	currentState = FINISHED;
 	//Decrease transmission rate
 	//Run until powered off
 }
@@ -142,8 +142,9 @@ void States::actuateServo(bool locked) {
 		digitalWrite(RELEASE_POWER2, HIGH);
 		release1.attach(RELEASE1);
 		release2.attach(RELEASE2);
-		release1.write(160);
-		release2.write(0);
+		release1.write(60);
+		release2.write(60);
+		// while(1);
 		delay(250);
 		release1.detach();
 		release2.detach();

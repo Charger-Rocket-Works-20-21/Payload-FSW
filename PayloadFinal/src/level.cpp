@@ -57,9 +57,9 @@ void resetCalibration() {
 	driveMotor(3, 0);
 }
 
-void calibrateLeveler(double radialOrient, double tangentialOrient) {
+void calibrateLeveler() {
 	if (!initialized) {
-		resultInitial = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
+		//resultInitial = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 		initialized = true;
 	}
 

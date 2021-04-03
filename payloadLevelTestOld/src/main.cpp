@@ -28,7 +28,7 @@ double missionTime;
 bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
-double smoothingFactor = 0.25;
+double smoothingFactor = 0.9;
 // std::vector<double> smoothOrientation;
 // std::vector<double> initialOrientation;
 // struct gyroStruct
@@ -47,17 +47,14 @@ double orientx;
 double orienty;
 double orientz;
 
-//double initialOrientation;
-//double radialOrient;
-//double tangentialOrient;
+double initialOrientation;
+double radialOrient;
+double tangentialOrient;
 
 bool calibrated, initialized, calibrating;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
-//double resultCurrent, resultPrevious;
-double resultBuffer[3];
-double resultAccel[10];
-double posTolerance = 5.0;
-double negTolerance = -5.0;
+double resultCurrent, resultPrevious;
+double tolerance = 0.05;
 
 int hasChanged (double currentOrient, double initialOrient);
 void driveMotor (int motorNumber, int direction);
@@ -86,7 +83,7 @@ void setup() {
 	// driveMotor(3,2);
 	// while(1);
 
-	if (!bno.begin(bno.OPERATION_MODE_NDOF)) {
+	if (!bno.begin()) {
 		Serial.println("BNO055 Not Detected...");
 		while(1);
 	}
@@ -96,7 +93,7 @@ void setup() {
 	
 	delay(1000);
 	bno.setExtCrystalUse(true);
-	
+
 	#ifdef USESD
 	SD.begin(BUILTIN_SDCARD);
 
@@ -111,12 +108,6 @@ void setup() {
 		Serial.println("Could not open datalog.txt");
 	}
 	#endif
-
-	sensors_event_t accelInitialEvent;
-	bno.getEvent(&accelInitialEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-	accelx = smoothingFactor * accelInitialEvent.acceleration.x + (1 - smoothingFactor) * accelx;
-	accely = smoothingFactor * accelInitialEvent.acceleration.y + (1 - smoothingFactor) * accely;
-	accelz = smoothingFactor * accelInitialEvent.acceleration.z + (1 - smoothingFactor) * accelz;
 
 	for (int i = 0; i < 10; i++) {
 		digitalWrite(LED_BUILTIN, HIGH);
@@ -146,80 +137,59 @@ void loop() {
 	
 	packetCount++;
 	missionTime = millis()/1000.0;
-	// imu::Quaternion quat = bno.getQuat();
-	// Serial.println(quat.w());
-	// Serial.println(quat.x());
-	// Serial.println(quat.y());
-	// Serial.println(quat.z());
-	// String quatPacket = "";
-	// quatPacket += String(quat.w);
 
 	// Read Accelerometer and Magnetometer data from IMU
-	for (int i = 0; i < 5; i++) {
-		sensors_event_t accelEvent;
-		sensors_event_t orientEvent;
-		bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-		bno.getEvent(&orientEvent);
-		uint8_t sys, gyro, accel, mag = 0;
-		bno.getCalibration(&sys, &gyro, &accel, &mag);
-		calibration = sys + gyro + accel + mag;
-		resultAccel[i] = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * resultAccel[i];
-		// accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * accelx;
-		// accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * accely;
-		// accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * accelz;
-		// orientx = orientEvent.orientation.x;
-		// orienty = orientEvent.orientation.y;
-		// orientz = orientEvent.orientation.z;
+	sensors_event_t accelEvent;
+	sensors_event_t orientEvent;
+	bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+	bno.getEvent(&orientEvent);
+	uint8_t sys, gyro, accel, mag = 0;
+	bno.getCalibration(&sys, &gyro, &accel, &mag);
+	calibration = sys + gyro + accel + mag;
+
+	accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * accelx;
+	accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * accely;
+	accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * accelz;
+	orientx = smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * orientx;
+	orienty = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * orienty;
+	orientz = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * orientz;
+
+	radialOrient = orienty - 90;
+	if (fabs(orientz) <= 90) {
+		tangentialOrient = fabs(orientz);
 	}
-	accelx = (resultAccel[0] + resultAccel[1] + resultAccel[2] + resultAccel[3] + resultAccel[4])/5.0;
-	//radialOrient = accely;
-	//tangentialOrient = accelz;
-	//resultCurrent = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector
-	for (int i = 0; i < 2; i++) {
-		resultBuffer[i] = resultBuffer[i+1];
+	else if (orientz >= 0) {
+		tangentialOrient = fabs(orientz - 180);
 	}
-	resultBuffer[2] = 1000.0*sqrt(pow((accelx-9.81), 2.0)/* + pow(accely, 2) + pow(accelz, 2)*/); // Resultant vector
-	if (resultBuffer[2] >= 150.0) { // while the resultant acceleration is greater than 1.0 m/s^2. This is over estimate, 5 degrees seems to be closer to 1.75 m/s^2
+	else {
+		tangentialOrient = fabs(orientz + 180);
+	}
+	resultCurrent = sqrt(pow(radialOrient, 2) + pow(tangentialOrient, 2)); // Resultant vector
+	
+	if (resultCurrent >= 5.0) { // while the resultant acceleration is greater than 1.0 m/s^2. This is over estimate, 5 degrees seems to be closer to 1.75 m/s^2
 		calibrateLeveler();
 
 		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
-			if (oriented1 == 0) {
-				driveMotor(1,0);
-			}
-			else if (oriented1 == 1) {
-				Serial.print("RAISING 1\t");
-				driveMotor(1,1);
+			if (oriented1 == 1) {
+				driveMotor(1, 1);
 			}
 			else if (oriented1 == 2) {
-				Serial.print("LOWERING 1\t");
-				driveMotor(1,2);
+				driveMotor(1, 2);
 			}
-			if (oriented2 == 0) {
-				driveMotor(2,0);
-			}
-			else if (oriented2 == 1) {
-				Serial.print("RAISING 2\t");
-				driveMotor(2,1);
+			if (oriented2 == 1) {
+				driveMotor(2, 1);
 			}
 			else if (oriented2 == 2) {
-				Serial.print("LOWERING 2\t");
-				driveMotor(2,2);
+				driveMotor(2, 2);
 			}
-			if (oriented3 == 0) {
-				driveMotor(3,0);
-			}
-			else if (oriented3 == 1) {
-				Serial.print("RAISING 3\t");
-				driveMotor(3,1);
+			if (oriented3 == 1) {
+				driveMotor(3, 1);
 			}
 			else if (oriented3 == 2) {
-				Serial.print("LOWERING 3\t");
-				driveMotor(3,2);
+				driveMotor(3, 2);
 			}
-			if (hasChanged(resultBuffer[2], (resultBuffer[0]+resultBuffer[1])/2) == 0) {
-				Serial.println("HERE");
+			if (hasChanged(resultCurrent, resultPrevious) != 1) {
 				resetCalibration();
-				// calibrateLeveler();
 			}
 		}
 	}
@@ -234,21 +204,21 @@ void loop() {
 	packet += ",";
 	packet += String(missionTime);
 	packet += ",";
-	packet += String(accelx);
-	// packet += ",";
-	// packet += String(accelEvent.acceleration.y);
-	// packet += ",";
-	// packet += String(accelEvent.acceleration.z);
-	// packet += ",";
-	// packet += String(orientEvent.orientation.x);
-	// packet += ",";
-	// packet += String(orientEvent.orientation.y);
-	// packet += ",";
-	// packet += String(orientEvent.orientation.z);
+	packet += String(accelEvent.acceleration.x);
+	packet += ",";
+	packet += String(accelEvent.acceleration.y);
+	packet += ",";
+	packet += String(accelEvent.acceleration.z);
+	packet += ",";
+	packet += String(orientEvent.orientation.x);
+	packet += ",";
+	packet += String(orientEvent.orientation.y);
+	packet += ",";
+	packet += String(orientEvent.orientation.z);
 	packet += ",";
 	packet += String(calibration);
 	packet += ",";
-	packet += String(resultBuffer[2]);
+	packet += String(resultCurrent);
 	Serial.println(packet);
 
 	String debugPacket = "";
@@ -262,9 +232,7 @@ void loop() {
 	debugPacket += ",";
 	debugPacket += String(oriented3);
 	debugPacket += ",";
-	debugPacket += String((resultBuffer[0]+resultBuffer[1])/2);
-	debugPacket += ",";
-	debugPacket += String("");
+	debugPacket += String(resultPrevious);
 	Serial.println(debugPacket);
 
 	#ifdef USESD
@@ -278,6 +246,7 @@ void loop() {
 	}
 	#endif
 
+	resultPrevious = resultCurrent;
 	delay(SAMPLERATE_DELAY_MS);
 }
 
@@ -285,10 +254,10 @@ void loop() {
 // Return 1 for good change
 // Return 2 for bad change
 int hasChanged (double currentOrient, double previousOrient) {
-	if (previousOrient - currentOrient > posTolerance) {
+	if (previousOrient - currentOrient > tolerance) {
 		return 1;
 	}
-	else if (previousOrient - currentOrient < negTolerance) {
+	else if (previousOrient - currentOrient < -tolerance) {
 		return 2;
 	}
 	else {
@@ -342,53 +311,34 @@ void calibrateLeveler() {
 	}
 
 	if (calibrated && !initialized) {
-		//initialOrientation = sqrt(pow((accelx), 2) + pow(accely, 2) + pow(accelz, 2)); // Resultant vector
+		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector
 		initialized = true;
 	}
 
 	if (initialized && oriented1 == 0) {
 		driveMotor(1, 1);
-		int helping = hasChanged(resultBuffer[2], (resultBuffer[0]+resultBuffer[1])/2);
+		bool helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
 			oriented1 = helping;
 			driveMotor(1, 0);
 		}
-		// if (helping != 2) {
-		// 	driveMotor(1,1);
-		// }
-		// else {
-		// 	driveMotor(1,2);
-		// }
 	}
 
 	else if (oriented1 != 0 && oriented2 == 0) {
-		Serial.println("DRIVING 2");
 		driveMotor(2, 1);
-		int helping = hasChanged(resultBuffer[2], (resultBuffer[0]+resultBuffer[1])/2);
+		bool helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
 			oriented2 = helping;
 			driveMotor(2, 0);
 		}
-		// if (helping != 2) {
-		// 	driveMotor(2,1);
-		// }
-		// else {
-		// 	driveMotor(2,2);
-		// }
 	}
 
 	else if (oriented2 != 0 && oriented3 == 0) {
 		driveMotor(3, 1);
-		int helping = hasChanged(resultBuffer[2], (resultBuffer[0]+resultBuffer[1])/2);
+		bool helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
 			oriented3 = helping;
 			driveMotor(3, 0);
 		}
-		// if (helping != 2) {
-		// 	driveMotor(3,1);
-		// }
-		// else {
-		// 	driveMotor(3,2);
-		// }
 	}
 }

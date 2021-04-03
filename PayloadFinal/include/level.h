@@ -15,6 +15,6 @@ extern uint8_t calibration;
 int hasChanged (double currentOrient, double previousOrient);
 void driveMotor (int motorNumber, int direction);
 void resetCalibration();
-void calibrateLeveler(double radialOrient, double tangentialOrient);
+void calibrateLeveler();
 
 #endif /* LEVEL_H_ */

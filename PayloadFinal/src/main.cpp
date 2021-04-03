@@ -118,28 +118,28 @@ void setup() {
 	SD.begin(BUILTIN_SDCARD);
 
 	if (!bmp.begin_I2C(BMP_ADDRESS, &Wire1)) {   // hardware I2C mode, can pass in address & alt Wire
-		Serial.println("BMP388 Not Detected");
-		XBee.println("BMP388 Not Detected");
+		Serial.print("BMP388 Not Detected\t");
+		XBee.print("BMP388 Not Detected\t");
   	}
 	else {
-		Serial.println("BMP388 Detected");
-		XBee.println("BMP388 Detected");
+		Serial.print("BMP388 Detected\t\t");
+		XBee.print("BMP388 Detected\t\t");
 	}
 	if (!bno.begin()) {
-		Serial.println("BNO055 Not Detected");
-		XBee.println("BNO055 Not Detected");
+		Serial.print("BNO055 Not Detected\t\t");
+		XBee.print("BNO055 Not Detected\t\t");
 	}
 	else {
-		Serial.println("BNO055 Detected");
-		XBee.println("BNO055 Detected");
+		Serial.print("BNO055 Detected\t\t");
+		XBee.print("BNO055 Detected\t\t");
 	}
 	if (distanceSensor.begin() != 0) {
-		Serial.println("Rangefinder Not Detected");
-		XBee.println("Rangefinder Not Detected");
+		Serial.println("Rangefinder Not Detected\t\t");
+		XBee.println("Rangefinder Not Detected\t\t");
 	}
 	else {
-		Serial.println("Rangefinder Detected");
-		XBee.println("Rangefinder Detected");
+		Serial.println("Rangefinder Detected\t\t");
+		XBee.println("Rangefinder Detected\t\t");
 		rangefinderInit = true;
 	}
 	// gps.begin(); // Freezes Code if included, will need to fix
@@ -163,19 +163,24 @@ void setup() {
 	}
 
 	// Record Initial Altitude and store it to EEPROM, if not already saved
-	if (EEPROM.read(0) != 0) {
+	Serial.println("Reading EEPROM for previous state.");
+	if (EEPROM.read(1) != 0) {
 		initialAlt = EEPROM.read(0);
 	}
 	else {
-		initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+		for (int i = 0; i < 5; i++) {
+			initialAlt = smoothingFactor * bmp.readAltitude(SEALEVELPRESSURE_HPA) + (1 - smoothingFactor) * initialAlt;
+
+		}
+		Serial.println(initialAlt);
 		EEPROM.update(0, initialAlt);
 	}
 
-	states.setCurrentState(EEPROM.read(1));
-	packetCount = EEPROM.read(2);
-	landedOrientx = EEPROM.read(3);
-	landedOrienty = EEPROM.read(4);
-	landedOrientz = EEPROM.read(5);
+	// states.setCurrentState(EEPROM.read(1));
+	// packetCount = EEPROM.read(2);
+	// landedOrientx = EEPROM.read(3);
+	// landedOrienty = EEPROM.read(4);
+	// landedOrientz = EEPROM.read(5);
 
 	initCameras();
 
@@ -186,7 +191,7 @@ void setup() {
 		delay(100);
 	}
 
-	noInterrupts();
+	// noInterrupts();
 	delay(500);
 }
 
@@ -316,7 +321,8 @@ void loop() {
 		states.descent(altitude, initialAlt, velocity, accelx, accely, accelz, distance);
 		break;
 	case LEVELLING:
-		states.levelling(accely, accelz); // Uses sensor X and Z vectors
+		Serial.println("Starting Levelling");
+		states.levelling(accelx, accely, accelz);
 		break;
 	case FINISHED:
 		if (!sentPhotos) {
@@ -397,9 +403,9 @@ void readCommand() {
 				delay(100);
 			}
 		}
-		// else if (command.equalsIgnoreCase("FS0")) {
-		// 	states.currentState = UNARMED;
-		// }
+		else if (command.equalsIgnoreCase("FS0")) {
+			states.currentState = UNARMED;
+		}
 		else if (command.equalsIgnoreCase("FS1")) {
 			states.currentState = STANDBY;
 		}
@@ -416,47 +422,6 @@ void readCommand() {
 			states.currentState = FINISHED;
 		}
 	}
-	// if (Serial7.available()) {
-	// 	String command = Serial7.readString();
-	// 	// if (command.equalsIgnoreCase("BLK")) {
-	// 	// 	// Blink Onboard LED
-	// 	// 	for (int i = 0; i < 10; i++) {
-	// 	// 		digitalWrite(LED_BUILTIN, HIGH);
-	// 	// 		delay(100);
-	// 	// 		digitalWrite(LED_BUILTIN, LOW);
-	// 	// 		delay(100);
-	// 	// 	}
-	// 	// }
-	// 	if (command.equalsIgnoreCase("FS3")) {
-	// 		states.currentState = DESCENT;
-	// 		for (int k = 0; k < 10; k++) {
-	// 			Serial.println("SETTING FLIGHT STATE TO DESCENT");
-	// 			delay(50);
-	// 		}
-	// 	}
-	// 	char c = Serial7.read();
-
-	// 	if (c == '\n') {
-	// 		if (String(buf) == "BLK") {
-	// 			// Blink Onboard LED
-	// 			for (int i = 0; i < 10; i++) {
-	// 				digitalWrite(LED_BUILTIN, HIGH);
-	// 				delay(100);
-	// 				digitalWrite(LED_BUILTIN, LOW);
-	// 				delay(100);
-	// 			}
-	// 		}
-	// 		 //Serial.println(buf);
-	// 		for (int i = 0; i < BSIZE; i++) buf[i] = 0;
-	// 		buf_pos = 0;
-	// 		//Serial.println(buf);
-	// 	}
-	// 	else {
-	// 		buf[buf_pos] = c;
-	// 		buf_pos = (buf_pos + 1) % BSIZE;
-	// 		//Serial.println(buf);
-	// 	}
-	// }
 }
 
 void initCameras() {
@@ -478,88 +443,107 @@ void initCameras() {
 	delay(100);
 
 	//Check if the 3 ArduCAM Mini 5MP PLus Cameras' SPI bus is OK
-	for (int i = 0; i <= 3; i++) {
+	for (int i = 0; i < 3; i++) {
 		myCAM1.write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = myCAM1.read_reg(ARDUCHIP_TEST1);
 		if(temp != 0x55)
 		{
-			Serial.println(F("CAMERA 1 NOT DETECTED"));
+			Serial.print(F("CAMERA 1 NOT DETECTED\t"));
 		}else{
 			states.CAM1_EXIST = true;
-			Serial.println(F("Camera 1 Detected"));
+			Serial.print(F("Camera 1 Detected\t"));
 		}
 		myCAM2.write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = myCAM2.read_reg(ARDUCHIP_TEST1);
 		if (temp != 0x55)
 		{
-			Serial.println(F("CAMERA 2 NOT DETECTED"));
+			Serial.print(F("CAMERA 2 NOT DETECTED\t"));
 		} else {
 			states.CAM2_EXIST = true;
-			Serial.println(F("Camera 2 Detected"));
+			Serial.print(F("Camera 2 Detected\t"));
 		}
 		myCAM3.write_reg(ARDUCHIP_TEST1, 0x55);
 		temp = myCAM3.read_reg(ARDUCHIP_TEST1);
 		if(temp != 0x55) {
-			Serial.println(F("CAMERA 3 NOT DETECTED"));
+			Serial.print(F("CAMERA 3 NOT DETECTED\t"));
 		} else {
 			states.CAM3_EXIST = true;
-			Serial.println(F("Camera 3 Detected"));
+			Serial.print(F("Camera 3 Detected\t"));
 		}
+		Serial.println("");
 		if (!(states.CAM1_EXIST||states.CAM2_EXIST||states.CAM3_EXIST)) {
-			delay(1000);
+			delay(250);
 			continue;
 		} else {
 			break;
 		}
 	}
 
-	#if defined (OV5640_MINI_5MP_PLUS)
-	while(1){
-		//Check if the camera module type is OV5640
-		myCAM1.rdSensorReg16_8(OV5640_CHIPID_HIGH, &vid);
-		myCAM1.rdSensorReg16_8(OV5640_CHIPID_LOW, &pid);
-		if ((vid != 0x56) || (pid != 0x40)){
-		Serial.println(F("Can't find OV5640 module!"));
-		delay(1000);continue;
-		}else{
-		Serial.println(F("OV5640 detected."));break;
-		}   
+	if ((states.CAM1_EXIST||states.CAM2_EXIST||states.CAM3_EXIST)) {
+		#if defined (OV5640_MINI_5MP_PLUS)
+		while(1){
+			//Check if the camera module type is OV5640
+			myCAM1.rdSensorReg16_8(OV5640_CHIPID_HIGH, &vid);
+			myCAM1.rdSensorReg16_8(OV5640_CHIPID_LOW, &pid);
+			if ((vid != 0x56) || (pid != 0x40)){
+			Serial.println(F("Can't find OV5640 module!"));
+			delay(1000);continue;
+			}else{
+			Serial.println(F("OV5640 detected."));break;
+			}   
+		}
+		#else
+			for (int i = 0; i < 3; i++) {
+			//Check if the camera module type is OV5642
+			myCAM1.rdSensorReg16_8(OV5642_CHIPID_HIGH, &vid);
+			myCAM1.rdSensorReg16_8(OV5642_CHIPID_LOW, &pid);
+			if ((vid != 0x56) || (pid != 0x42)) {
+				Serial.println(F("Can't find OV5642 module!"));
+				delay(250);
+				continue;
+			} else {
+				Serial.println(F("OV5642 detected."));
+				break;
+			}  
+		}
+		#endif
 	}
-	#else
-		for (int i = 0; i <= 3; i++) {
-		//Check if the camera module type is OV5642
-		myCAM1.rdSensorReg16_8(OV5642_CHIPID_HIGH, &vid);
-		myCAM1.rdSensorReg16_8(OV5642_CHIPID_LOW, &pid);
-		if ((vid != 0x56) || (pid != 0x42)) {
-			Serial.println(F("Can't find OV5642 module!"));
-			delay(1000);
-			continue;
-		} else {
-			Serial.println(F("OV5642 detected."));
-			break;
-		}  
-	}
-	#endif
 
-	//Change to JPEG capture mode and initialize the OV5640 module
-	myCAM1.set_format(JPEG);
-	myCAM1.InitCAM();
-	myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
-	myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
-	myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
-	myCAM1.clear_fifo_flag();
-	myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
-	myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
-	myCAM3.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
-	#if defined (OV5640_MINI_5MP_PLUS)
-	myCAM1.OV5640_set_JPEG_size(OV5640_320x240);delay(1000);
-	#else
-	myCAM1.OV5642_set_JPEG_size(OV5642_1024x768);delay(1000);
-	#endif
-	delay(1000);
-	myCAM1.clear_fifo_flag();
-	myCAM2.clear_fifo_flag();
-	myCAM3.clear_fifo_flag();
+	//Change to JPEG capture mode and initialize the OV5640 modules
+	if (states.CAM1_EXIST) {
+		Serial.print("Initializing CAM1\t");
+		myCAM1.set_format(JPEG);
+		myCAM1.InitCAM();
+		myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+		myCAM1.clear_fifo_flag();
+		myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+		myCAM1.OV5642_set_JPEG_size(OV5642_1024x768);
+		delay(1000);
+		myCAM1.clear_fifo_flag();
+	}
+	if (states.CAM2_EXIST) {
+		Serial.print("Initializing CAM2\t");
+		myCAM2.set_format(JPEG);
+		myCAM2.InitCAM();
+		myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+		myCAM2.clear_fifo_flag();
+		myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+		myCAM2.OV5642_set_JPEG_size(OV5642_1024x768);
+		delay(1000);
+		myCAM2.clear_fifo_flag();
+	}
+	if (states.CAM3_EXIST) {
+		Serial.println("Initializing CAM3\t");
+		myCAM3.set_format(JPEG);
+		myCAM3.InitCAM();
+		myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+		myCAM3.clear_fifo_flag();
+		myCAM3.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+		myCAM3.OV5642_set_JPEG_size(OV5642_1024x768);
+		delay(1000);
+		myCAM3.clear_fifo_flag();
+	}
+	
 }
 
 void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
