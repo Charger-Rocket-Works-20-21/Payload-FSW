@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <vector>
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
@@ -12,7 +13,7 @@
 #include <SD.h>
 #endif
 
-#define SAMPLERATE_DELAY_MS 100
+#define SAMPLERATE_DELAY_MS 250
 
 #define MOTOR1 14
 #define MOTOR2 15
@@ -28,7 +29,7 @@ double missionTime;
 bool ledOn;
 uint8_t calibration;
 uint16_t blinkRate;
-double smoothingFactor = 0.9;
+double smoothingFactor = 0.75;
 // std::vector<double> smoothOrientation;
 // std::vector<double> initialOrientation;
 // struct gyroStruct
@@ -40,12 +41,12 @@ double smoothingFactor = 0.9;
 
 // struct gyroStruct smoothOrientation;
 
-double accelx;
-double accely;
-double accelz;
-double orientx;
-double orienty;
-double orientz;
+double accelx, accely, accelz;
+double orientx, orienty, orientz;
+double targetw, targetx, targety, targetz;
+double quatw, quatx, quaty, quatz;
+imu::Vector<3> eulerAngle;
+double angle;
 
 double initialOrientation;
 double radialOrient;
@@ -53,7 +54,7 @@ double tangentialOrient;
 
 bool calibrated, initialized, calibrating;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
-double resultCurrent, resultPrevious;
+double resultCurrent, resultPrevious, orientResult;
 double tolerance = 0.05;
 
 int hasChanged (double currentOrient, double initialOrient);
@@ -88,7 +89,7 @@ void setup() {
 		while(1);
 	}
 	else {
-		Serial.println("BNO055 Detected");
+		// Serial.println("BNO055 Detected");
 	}
 	
 	delay(1000);
@@ -154,6 +155,48 @@ void loop() {
 	orienty = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * orienty;
 	orientz = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * orientz;
 
+	// if (orientx >= 180) {
+	// 	orientx = orientx - 360;
+	// }
+	double cy = cos(orientx*PI/180 * 0.5);
+    double sy = sin(orientx*PI/180 * 0.5);
+    double cp = cos(-PI/2 * 0.5);
+    double sp = sin(-PI/2 * 0.5);
+    double cr = cos(0.0 * 0.5);
+    double sr = sin(0.0 * 0.5);
+
+    targetw = cr * cp * cy + sr * sp * sy;
+    targetx = sr * cp * cy - cr * sp * sy;
+    targety = -(cr * sp * cy + sr * cp * sy);
+    targetz = cr * cp * sy - sr * sp * cy;
+	imu::Quaternion targetQuat = imu::Quaternion(targetw, targetx, targety, targetz);
+	// targetQuat.toAxisAngle(eulerAngle, angle);
+	Serial.print(targetw); Serial.print("\t");
+	Serial.print(targetx); Serial.print("\t");
+	Serial.print(targety); Serial.print("\t");
+	Serial.print(targetz); Serial.print("\t"); Serial.println(" ");
+	targetQuat.normalize();
+	imu::Quaternion quatEvent = bno.getQuat();
+	quatw = smoothingFactor * quatEvent.w() + (1 - smoothingFactor) * quatw;
+	quatx = smoothingFactor * quatEvent.x() + (1 - smoothingFactor) * quatx;
+	quaty = smoothingFactor * quatEvent.y() + (1 - smoothingFactor) * quaty;
+	quatz = smoothingFactor * quatEvent.z() + (1 - smoothingFactor) * quatz;
+	Serial.print(quatw); Serial.print("\t");
+	Serial.print(-quatx); Serial.print("\t");
+	Serial.print(-quaty); Serial.print("\t");
+	Serial.print(-quatz); Serial.print("\t"); Serial.println(" ");
+	
+	imu::Quaternion quat = imu::Quaternion(quatw, quatx, quaty, quatz);
+	quat.normalize();
+
+	Serial.print(quat.w()); Serial.print("\t");
+	Serial.print(quat.x()); Serial.print("\t");
+	Serial.print(quat.y()); Serial.print("\t");
+	Serial.print(quat.z()); Serial.print("\t"); Serial.println(" ");
+	imu::Quaternion quatDiff = targetQuat * quat;
+	Serial.println(quatDiff.w());
+	double angleDiff = 180*2*acos(quatDiff.w())/PI;
+
 	radialOrient = orienty - 90;
 	if (fabs(orientz) <= 90) {
 		tangentialOrient = fabs(orientz);
@@ -164,8 +207,9 @@ void loop() {
 	else {
 		tangentialOrient = fabs(orientz + 180);
 	}
-	resultCurrent = sqrt(pow(radialOrient, 2) + pow(tangentialOrient, 2)); // Resultant vector
-	
+	orientResult = sqrt(pow(radialOrient, 2) + pow(tangentialOrient, 2)); // Resultant vector
+	resultCurrent = angleDiff;
+
 	if (resultCurrent >= 5.0) { // while the resultant acceleration is greater than 1.0 m/s^2. This is over estimate, 5 degrees seems to be closer to 1.75 m/s^2
 		calibrateLeveler();
 
@@ -210,15 +254,27 @@ void loop() {
 	packet += ",";
 	packet += String(accelEvent.acceleration.z);
 	packet += ",";
-	packet += String(orientEvent.orientation.x);
+	packet += String(orientx);
 	packet += ",";
-	packet += String(orientEvent.orientation.y);
+	packet += String(orienty);
 	packet += ",";
-	packet += String(orientEvent.orientation.z);
+	packet += String(orientz);
 	packet += ",";
 	packet += String(calibration);
 	packet += ",";
+	packet += String(orientResult);
+	// packet += ",";
+	// packet += String(quat.w());
+	// packet += ",";
+	// packet += String(quat.x());
+	// packet += ",";
+	// packet += String(quat.y());
+	// packet += ",";
+	// packet += String(quat.z());
+	packet += ",";
 	packet += String(resultCurrent);
+	packet += ",";
+	
 	Serial.println(packet);
 
 	String debugPacket = "";
@@ -242,7 +298,7 @@ void loop() {
 		dataFile.close();
 	}
 	else {
-		//Serial.println("Could not open datalog.txt");
+		Serial.println("Could not open datalog.txt");
 	}
 	#endif
 
@@ -317,7 +373,7 @@ void calibrateLeveler() {
 
 	if (initialized && oriented1 == 0) {
 		driveMotor(1, 1);
-		bool helping = hasChanged(resultCurrent, resultPrevious);
+		int helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
 			oriented1 = helping;
 			driveMotor(1, 0);
@@ -326,7 +382,7 @@ void calibrateLeveler() {
 
 	else if (oriented1 != 0 && oriented2 == 0) {
 		driveMotor(2, 1);
-		bool helping = hasChanged(resultCurrent, resultPrevious);
+		int helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
 			oriented2 = helping;
 			driveMotor(2, 0);
@@ -335,7 +391,7 @@ void calibrateLeveler() {
 
 	else if (oriented2 != 0 && oriented3 == 0) {
 		driveMotor(3, 1);
-		bool helping = hasChanged(resultCurrent, resultPrevious);
+		int helping = hasChanged(resultCurrent, resultPrevious);
 		if (helping != 0) {
 			oriented3 = helping;
 			driveMotor(3, 0);
