@@ -42,7 +42,7 @@ double smoothingFactor = 0.75;
 // struct gyroStruct smoothOrientation;
 
 double accelx, accely, accelz;
-double orientx, orienty, orientz;
+double orientx, orienty, orientz, orientxCorrected;
 double targetw, targetx, targety, targetz;
 double quatw, quatx, quaty, quatz;
 imu::Vector<3> eulerAngle;
@@ -155,12 +155,15 @@ void loop() {
 	orienty = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * orienty;
 	orientz = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * orientz;
 
-	// if (orientx >= 180) {
-	// 	orientx = orientx - 360;
-	// }
+	if (orientx >= 180) {
+		orientxCorrected = orientx - 360;
+	}
+	else {
+		orientxCorrected = orientx;
+	}
 
-	double cy = cos(orientx*PI/180 * 0.5);
-    double sy = sin(orientx*PI/180 * 0.5);
+	double cy = cos(orientxCorrected*PI/180 * 0.5);
+    double sy = sin(orientxCorrected*PI/180 * 0.5);
     double cp = cos(-PI/2 * 0.5);
     double sp = sin(-PI/2 * 0.5);
     double cr = cos(0.0 * 0.5);
@@ -256,7 +259,7 @@ void loop() {
 	packet += ",";
 	packet += String(accelz);
 	packet += ",";
-	packet += String(orientx);
+	packet += String(orientxCorrected);
 	packet += ",";
 	packet += String(orienty);
 	packet += ",";
