@@ -158,6 +158,7 @@ void loop() {
 	// if (orientx >= 180) {
 	// 	orientx = orientx - 360;
 	// }
+
 	double cy = cos(orientx*PI/180 * 0.5);
     double sy = sin(orientx*PI/180 * 0.5);
     double cp = cos(-PI/2 * 0.5);
@@ -171,30 +172,30 @@ void loop() {
     targetz = cr * cp * sy - sr * sp * cy;
 	imu::Quaternion targetQuat = imu::Quaternion(targetw, targetx, targety, targetz);
 	// targetQuat.toAxisAngle(eulerAngle, angle);
-	Serial.print(targetw); Serial.print("\t");
-	Serial.print(targetx); Serial.print("\t");
-	Serial.print(targety); Serial.print("\t");
-	Serial.print(targetz); Serial.print("\t"); Serial.println(" ");
+	// Serial.print(targetw); Serial.print("\t");
+	// Serial.print(targetx); Serial.print("\t");
+	// Serial.print(targety); Serial.print("\t");
+	// Serial.print(targetz); Serial.print("\t"); Serial.println(" ");
 	targetQuat.normalize();
 	imu::Quaternion quatEvent = bno.getQuat();
 	quatw = smoothingFactor * quatEvent.w() + (1 - smoothingFactor) * quatw;
 	quatx = smoothingFactor * quatEvent.x() + (1 - smoothingFactor) * quatx;
 	quaty = smoothingFactor * quatEvent.y() + (1 - smoothingFactor) * quaty;
 	quatz = smoothingFactor * quatEvent.z() + (1 - smoothingFactor) * quatz;
-	Serial.print(quatw); Serial.print("\t");
-	Serial.print(-quatx); Serial.print("\t");
-	Serial.print(-quaty); Serial.print("\t");
-	Serial.print(-quatz); Serial.print("\t"); Serial.println(" ");
+	// Serial.print(quatw); Serial.print("\t");
+	// Serial.print(-quatx); Serial.print("\t");
+	// Serial.print(-quaty); Serial.print("\t");
+	// Serial.print(-quatz); Serial.print("\t"); Serial.println(" ");
 	
 	imu::Quaternion quat = imu::Quaternion(quatw, quatx, quaty, quatz);
 	quat.normalize();
 
-	Serial.print(quat.w()); Serial.print("\t");
-	Serial.print(quat.x()); Serial.print("\t");
-	Serial.print(quat.y()); Serial.print("\t");
-	Serial.print(quat.z()); Serial.print("\t"); Serial.println(" ");
+	// Serial.print(quat.w()); Serial.print("\t");
+	// Serial.print(quat.x()); Serial.print("\t");
+	// Serial.print(quat.y()); Serial.print("\t");
+	// Serial.print(quat.z()); Serial.print("\t"); Serial.println(" ");
 	imu::Quaternion quatDiff = targetQuat * quat;
-	Serial.println(quatDiff.w());
+	// Serial.println(quatDiff.w());
 	double angleDiff = 180*2*acos(quatDiff.w())/PI;
 
 	radialOrient = orienty - 90;
@@ -210,8 +211,9 @@ void loop() {
 	orientResult = sqrt(pow(radialOrient, 2) + pow(tangentialOrient, 2)); // Resultant vector
 	resultCurrent = angleDiff;
 
-	if (resultCurrent >= 5.0) { // while the resultant acceleration is greater than 1.0 m/s^2. This is over estimate, 5 degrees seems to be closer to 1.75 m/s^2
+	if (resultCurrent >= 5.0) { 
 		calibrateLeveler();
+		delay(25);
 
 		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
 			if (oriented1 == 1) {
@@ -248,11 +250,11 @@ void loop() {
 	packet += ",";
 	packet += String(missionTime);
 	packet += ",";
-	packet += String(accelEvent.acceleration.x);
+	packet += String(accelx);
 	packet += ",";
-	packet += String(accelEvent.acceleration.y);
+	packet += String(accely);
 	packet += ",";
-	packet += String(accelEvent.acceleration.z);
+	packet += String(accelz);
 	packet += ",";
 	packet += String(orientx);
 	packet += ",";
@@ -331,7 +333,7 @@ void driveMotor (int motorNumber, int direction) {
 		onPin = MOTOR2;
 		reversePin = MOTOR2R;
 	}
-	else if (motorNumber == 3) {
+	else {
 		onPin = MOTOR3;
 		reversePin = MOTOR3R;
 	}
@@ -356,6 +358,7 @@ void resetCalibration() {
 	driveMotor(1, 0);
 	driveMotor(2, 0);
 	driveMotor(3, 0);
+	delay(15);
 }
 
 void calibrateLeveler() {
@@ -367,7 +370,7 @@ void calibrateLeveler() {
 	}
 
 	if (calibrated && !initialized) {
-		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector
+		initialOrientation = sqrt(pow((radialOrient), 2) + pow(tangentialOrient, 2)); // Resultant vector, not actually used
 		initialized = true;
 	}
 
@@ -377,6 +380,7 @@ void calibrateLeveler() {
 		if (helping != 0) {
 			oriented1 = helping;
 			driveMotor(1, 0);
+			delay(25);
 		}
 	}
 
@@ -386,6 +390,7 @@ void calibrateLeveler() {
 		if (helping != 0) {
 			oriented2 = helping;
 			driveMotor(2, 0);
+			delay(25);
 		}
 	}
 
@@ -395,6 +400,7 @@ void calibrateLeveler() {
 		if (helping != 0) {
 			oriented3 = helping;
 			driveMotor(3, 0);
+			delay(25);
 		}
 	}
 }
