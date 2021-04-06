@@ -62,6 +62,7 @@ int hasChanged (double currentOrient, double initialOrient);
 void driveMotor (int motorNumber, int direction);
 void resetCalibration();
 void calibrateLeveler();
+imu::Quaternion invert(imu::Quaternion quat);
 
 void setup() {
 	Serial.begin(9600);
@@ -90,7 +91,7 @@ void setup() {
 		while(1);
 	}
 	else {
-		// Serial.println("BNO055 Detected");
+		Serial.println("BNO055 Detected");
 	}
 	
 	delay(1000);
@@ -208,6 +209,16 @@ void loop() {
 	imu::Quaternion quatDiff = targetQuat * quat;
 	// Serial.println(quatDiff.w());
 	double angleDiff = 180*2*acos(quatDiff.w())/PI;
+
+	if (angleDiff > 270.0) {
+		targetQuat = invert(targetQuat);
+		// Serial.print(targetw); Serial.print("\t");
+		// Serial.print(targetx); Serial.print("\t");
+		// Serial.print(targety); Serial.print("\t");
+		// Serial.print(targetz); Serial.print("\t"); Serial.println(" ");
+		quatDiff = targetQuat * quat;
+		angleDiff = 180*2*acos(quatDiff.w())/PI;
+	}
 
 	radialOrient = orienty - 90;
 	if (fabs(orientz) <= 90) {
@@ -436,4 +447,13 @@ void calibrateLeveler() {
 			delay(25);
 		}
 	}
+}
+
+imu::Quaternion invert(imu::Quaternion quat) {
+	double iquatw = -quat.w();
+	double iquatx = -quat.x();
+	double iquaty = -quat.y();
+	double iquatz = -quat.z();
+
+	return imu::Quaternion(iquatw, iquatx, iquaty, iquatz);
 }
