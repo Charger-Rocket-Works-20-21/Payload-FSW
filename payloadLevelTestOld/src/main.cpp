@@ -55,7 +55,8 @@ double tangentialOrient;
 bool calibrated, initialized, calibrating;
 int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
 double resultCurrent, resultPrevious, orientResult;
-double tolerance = 0.05;
+double tolerance = 0.025;
+int activeMotor = 1;
 
 int hasChanged (double currentOrient, double initialOrient);
 void driveMotor (int motorNumber, int direction);
@@ -136,6 +137,13 @@ void loop() {
 		}
 	}
 	
+	if (!calibrated && calibration >= 8) {
+		calibrated = true;
+		digitalWrite(LED_BUILTIN, HIGH);
+		delay(5000);
+		digitalWrite(LED_BUILTIN, LOW);
+	}
+
 	packetCount++;
 	missionTime = millis()/1000.0;
 
@@ -215,31 +223,47 @@ void loop() {
 	resultCurrent = angleDiff;
 
 	if (resultCurrent >= 5.0) { 
-		calibrateLeveler();
-		delay(25);
+		// calibrateLeveler();
+		// delay(25);
 
-		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
-			if (oriented1 == 1) {
-				driveMotor(1, 1);
-			}
-			else if (oriented1 == 2) {
-				driveMotor(1, 2);
-			}
-			if (oriented2 == 1) {
-				driveMotor(2, 1);
-			}
-			else if (oriented2 == 2) {
-				driveMotor(2, 2);
-			}
-			if (oriented3 == 1) {
-				driveMotor(3, 1);
-			}
-			else if (oriented3 == 2) {
-				driveMotor(3, 2);
-			}
-			if (hasChanged(resultCurrent, resultPrevious) != 1) {
-				resetCalibration();
-			}
+		// if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
+		// 	if (oriented1 == 1) {
+		// 		driveMotor(1, 1);
+		// 	}
+		// 	else if (oriented1 == 2) {
+		// 		driveMotor(1, 2);
+		// 	}
+		// 	if (oriented2 == 1) {
+		// 		driveMotor(2, 1);
+		// 	}
+		// 	else if (oriented2 == 2) {
+		// 		driveMotor(2, 2);
+		// 	}
+		// 	if (oriented3 == 1) {
+		// 		driveMotor(3, 1);
+		// 	}
+		// 	else if (oriented3 == 2) {
+		// 		driveMotor(3, 2);
+		// 	}
+		// 	if (hasChanged(resultCurrent, resultPrevious) == 0) {
+		// 		resetCalibration();
+		// 	}
+		// }
+
+		//TAKE 2 - Run each motor one at a time until it's level
+		if (activeMotor > 3) {
+			activeMotor = 1;
+		}
+
+		if (hasChanged(resultCurrent, resultPrevious) != 2) {
+			driveMotor(activeMotor, 1);
+		}
+
+		if (hasChanged(resultCurrent, resultPrevious) == 2) {
+			driveMotor(activeMotor, 2);
+			delay(100);
+			driveMotor(activeMotor, 0);
+			activeMotor++;
 		}
 	}
 	else {
@@ -336,7 +360,7 @@ void driveMotor (int motorNumber, int direction) {
 		onPin = MOTOR2;
 		reversePin = MOTOR2R;
 	}
-	else {
+	else if (motorNumber == 3) {
 		onPin = MOTOR3;
 		reversePin = MOTOR3R;
 	}
