@@ -7,25 +7,27 @@
 #include <SD.h>
 #include <SPI.h>
 #include <Servo.h>
-#include "level.h"
+// #include "level.h"
 #include "ArduCAM.h"
 
 #define RELEASE_POWER1 36
 #define RELEASE_POWER2 32
-#define RELEASE_PWM	2
-
 #define RELEASE1 2
 #define RELEASE2 4
 
+#define MOTOR1 14
+#define MOTOR2 15
+#define MOTOR3 18
+#define MOTOR1R 19
+#define MOTOR2R 20
+#define MOTOR3R 21
+
 enum flightState { UNARMED, STANDBY, ASCENT, DESCENT, LEVELLING, FINISHED };
 
-extern bool calibrated, initialized;
-extern int oriented1, oriented2, oriented3; //0 for untested, 1 for helpful, 2 for hurtful
-extern double resultCurrent, resultPrevious, resultInitial;
-extern double orientx, orienty, orientz;
+extern double resultCurrent, resultPrevious;
+extern double orientxCorrected, orienty, orientz;
 extern double landedOrientx, landedOrienty, landedOrientz;
-extern double leveledx, leveledy, leveledz;
- 
+extern double leveledOrientx, leveledOrienty, leveledOrientz;
 
 class States {
 public:
@@ -34,12 +36,16 @@ public:
 	void standby(double altitude, double initialAltitude, double velocity);
 	void ascent(double altitude, double initialAltitude, double velocity);
 	void descent(double altitude, double initialAltitude, double velocity, double accelx, double accely, double accelz, double distance);
-	void levelling(double x, double y, double z);
+	void leveling(double current, double previous);
     void finished();
+	
 	void actuateServo(bool locked);
+	int hasChanged (double currentOrient, double initialOrient);
+	void driveMotor (int motorNumber, int direction);
 
 	void setCurrentState(uint8_t stateID);
 	flightState currentState;
+
 	// set pins 8, 9, 10 as the slave selects for SPI:
 	const int CS1 = 10;
 	const int CS2 = 9;

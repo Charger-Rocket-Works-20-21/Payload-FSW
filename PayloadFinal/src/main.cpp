@@ -66,9 +66,12 @@ double pressure;
 double altitude, previousAltitude;
 double velocity;
 double accelx, accely, accelz;
-double orientx, orienty, orientz;
+double orientx, orienty, orientz, orientxCorrected;
+double targetw, targetx, targety, targetz;
+double quatw, quatx, quaty, quatz;
 double landedOrientx, landedOrienty, landedOrientz;
-double leveledx, leveledy, leveledz;
+double leveledOrientx, leveledOrienty, leveledOrientz;
+double resultCurrent, resultPrevious;
 uint8_t calibration;
 double distance;
 
@@ -82,6 +85,7 @@ void readCommand();
 void initCameras();
 void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]);
 void sendPhotos(char str[8]);
+imu::Quaternion invert(imu::Quaternion quat);
 
 void setup() {
   	// put your setup code here, to run once:
@@ -94,9 +98,9 @@ void setup() {
 	pinMode(MOTOR1, OUTPUT);
 	pinMode(MOTOR2, OUTPUT);
 	pinMode(MOTOR3, OUTPUT);
-	pinMode(MOTOR1R, OUTPUT);
-	pinMode(MOTOR2R, OUTPUT);
-	pinMode(MOTOR3R, OUTPUT);
+	// pinMode(MOTOR1R, OUTPUT);
+	// pinMode(MOTOR2R, OUTPUT);
+	// pinMode(MOTOR3R, OUTPUT);
 	pinMode(BNO_ADD_SEL, OUTPUT);
 	pinMode(7, OUTPUT);
 	pinMode(RELEASE_POWER1, OUTPUT);
@@ -112,6 +116,16 @@ void setup() {
 	digitalWrite(states.CS3, HIGH);
 	delay(500);
 	ledOn = true;
+
+	// FOR LEVEL TESTING
+	// states.driveMotor(1,1);
+	// states.driveMotor(2,1);
+	// states.driveMotor(3,1);
+	// while(1);
+	// states.driveMotor(1,2);
+	// states.driveMotor(2,2);
+	// states.driveMotor(3,2);
+	// while(1);
 
 	SPI.begin();
 
@@ -232,15 +246,23 @@ void loop() {
 	sensors_event_t orientEvent;
 	bno.getEvent(&accelEvent, Adafruit_BNO055::VECTOR_ACCELEROMETER);
 	bno.getEvent(&orientEvent);
-	accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * accelx;
-	accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * accely;
-	accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * accelz;
-	orientx = orientEvent.orientation.x;
-	orienty = orientEvent.orientation.y;
-	orientz = orientEvent.orientation.z;
 	uint8_t sys, gyro, accel, mag = 0;
 	bno.getCalibration(&sys, &gyro, &accel, &mag);
 	calibration = sys + gyro + accel + mag;
+
+	accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * accelx;
+	accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * accely;
+	accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * accelz;
+	orientx = orientEvent.orientation.x; //smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * orientx;
+	orienty = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * orienty;
+	orientz = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * orientz;
+	
+	if (orientx >= 180) {
+		orientxCorrected = orientx - 360;
+	}
+	else {
+		orientxCorrected = orientx;
+	}
 
 	String packet = "";
 	packet += ",UAH Charger RocketWorks";
@@ -259,7 +281,7 @@ void loop() {
 	packet += ",";
 	packet += String(accelz);
 	packet += ",";
-	packet += String(orientx);
+	packet += String(orientxCorrected);
 	packet += ",";
 	packet += String(orienty);
 	packet += ",";
@@ -321,9 +343,59 @@ void loop() {
 		states.descent(altitude, initialAlt, velocity, accelx, accely, accelz, distance);
 		break;
 	case LEVELLING:
-		Serial.println("Starting Levelling");
-		states.levelling(accelx, accely, accelz);
+	{
+		resultPrevious = resultCurrent;
+		double cy = cos(orientxCorrected*PI/180 * 0.5);
+		double sy = sin(orientxCorrected*PI/180 * 0.5);
+		double cp = cos(-PI/2 * 0.5);
+		double sp = sin(-PI/2 * 0.5);
+		double cr = cos(0.0 * 0.5);
+		double sr = sin(0.0 * 0.5);
+
+		targetw = cr * cp * cy + sr * sp * sy;
+		targetx = sr * cp * cy - cr * sp * sy;
+		targety = -(cr * sp * cy + sr * cp * sy);
+		targetz = cr * cp * sy - sr * sp * cy;
+		imu::Quaternion targetQuat = imu::Quaternion(targetw, targetx, targety, targetz);
+		// Serial.print(targetw); Serial.print("\t");
+		// Serial.print(targetx); Serial.print("\t");
+		// Serial.print(targety); Serial.print("\t");
+		// Serial.print(targetz); Serial.print("\t"); Serial.println(" ");
+		targetQuat.normalize();
+		imu::Quaternion quatEvent = bno.getQuat();
+		quatw = smoothingFactor * quatEvent.w() + (1 - smoothingFactor) * quatw;
+		quatx = smoothingFactor * quatEvent.x() + (1 - smoothingFactor) * quatx;
+		quaty = smoothingFactor * quatEvent.y() + (1 - smoothingFactor) * quaty;
+		quatz = smoothingFactor * quatEvent.z() + (1 - smoothingFactor) * quatz;
+		// Serial.print(quatw); Serial.print("\t");
+		// Serial.print(-quatx); Serial.print("\t");
+		// Serial.print(-quaty); Serial.print("\t");
+		// Serial.print(-quatz); Serial.print("\t"); Serial.println(" ");
+		
+		imu::Quaternion quat = imu::Quaternion(quatw, quatx, quaty, quatz);
+		quat.normalize();
+
+		// Serial.print(quat.w()); Serial.print("\t");
+		// Serial.print(quat.x()); Serial.print("\t");
+		// Serial.print(quat.y()); Serial.print("\t");
+		// Serial.print(quat.z()); Serial.print("\t"); Serial.println(" ");
+		imu::Quaternion quatDiff = targetQuat * quat;
+		// Serial.println(quatDiff.w());
+		double angleDiff = 180*2*acos(quatDiff.w())/PI;
+
+		if (angleDiff > 270.0) {
+			targetQuat = invert(targetQuat);
+			// Serial.print(targetw); Serial.print("\t");
+			// Serial.print(targetx); Serial.print("\t");
+			// Serial.print(targety); Serial.print("\t");
+			// Serial.print(targetz); Serial.print("\t"); Serial.println(" ");
+			quatDiff = targetQuat * quat;
+			angleDiff = 180*2*acos(quatDiff.w())/PI;
+		}
+		resultCurrent = angleDiff;
+		states.leveling(resultCurrent, resultPrevious);
 		break;
+	}
 	case FINISHED:
 		if (!sentPhotos) {
 			transmitAllowed = false;
@@ -658,4 +730,13 @@ void sendPhotos(char str[8]) {
 	// }
 
 	// Serial.println(",Image End");
+}
+
+imu::Quaternion invert(imu::Quaternion quat) {
+	double iquatw = -quat.w();
+	double iquatx = -quat.x();
+	double iquaty = -quat.y();
+	double iquatz = -quat.z();
+
+	return imu::Quaternion(iquatw, iquatx, iquaty, iquatz);
 }

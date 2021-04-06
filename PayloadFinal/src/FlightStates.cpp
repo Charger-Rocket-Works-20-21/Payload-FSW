@@ -4,6 +4,8 @@ flightState currentState = UNARMED;
 
 double currentTime, transitionTime;
 double minTimes[] = {10.0, 30.0};
+double tolerance = 0.025;
+int activeMotor = 1;
 
 void States::unarmed() {
 	currentState = UNARMED;
@@ -37,12 +39,12 @@ void States::descent(double altitude, double initialAltitude, double velocity, d
 	//Perform Descent Operations
 
 	currentTime = millis()/1000;
-	if ((currentTime - transitionTime) >= minTimes[1] /*&& altitude - initialAltitude < -15.0*/) { // TODO CHANGE BACK TO 100 METERS
+	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < -15.0) { // TODO CHANGE BACK TO 100 METERS
 		if (distance < 7.0) {
 			actuateServo(false);
 			delay(500);
 			if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 15.0 && altitude - initialAltitude < 50.0) {
-				landedOrientx = orientx;
+				landedOrientx = orientxCorrected;
 				landedOrienty = orienty;
 				landedOrientz = orientz;
 				currentState = LEVELLING;
@@ -51,36 +53,24 @@ void States::descent(double altitude, double initialAltitude, double velocity, d
 	}
 }
 
-void States::levelling(double x, double y, double z) {
+void States::leveling(double current, double previous) {
     currentState = LEVELLING;
 	//Perform Levelling Operations
-	double resultCurrent = sqrt(pow((x-9.81), 2) + pow(y, 2) + pow(z, 2)); // Resultant vector REMEMBER TO ADD BACK 90 TO RADIAL FOR SLED CONFIGURATION
 	
-	if (resultCurrent >= 1.0) {
-		calibrateLeveler();
+	if (current >= 4.0) {
+		if (activeMotor > 3) {
+			activeMotor = 1;
+		}
 
-		if (oriented1 != 0 && oriented2 != 0 && oriented3 != 0) {
-			if (oriented1 == 1) {
-				driveMotor(1, 1);
-			}
-			else if (oriented1 == 2) {
-				driveMotor(1, 2);
-			}
-			if (oriented2 == 1) {
-				driveMotor(2, 1);
-			}
-			else if (oriented2 == 2) {
-				driveMotor(2, 2);
-			}
-			if (oriented3 == 1) {
-				driveMotor(3, 1);
-			}
-			else if (oriented3 == 2) {
-				driveMotor(3, 2);
-			}
-			if (hasChanged(resultCurrent, resultPrevious) != 1) {
-				resetCalibration();
-			}
+		if (hasChanged(current, previous) != 2) {
+			driveMotor(activeMotor, 1);
+		}
+
+		if (hasChanged(current, previous) == 2) {
+			driveMotor(activeMotor, 2);
+			delay(100);
+			driveMotor(activeMotor, 0);
+			activeMotor++;
 		}
 	}
 	else {	// If Levelled:
@@ -88,9 +78,9 @@ void States::levelling(double x, double y, double z) {
 		driveMotor(2, 0);
 		driveMotor(3, 0);
 
-		leveledx = orientx;
-		leveledy = orienty;
-		leveledz = orientz;
+		leveledOrientx = orientxCorrected;
+		leveledOrienty = orienty;
+		leveledOrientz = orientz;
 
 		String packet = "";
 		packet += "LEVELLING RESULTS";
@@ -101,11 +91,11 @@ void States::levelling(double x, double y, double z) {
 		packet += ",";
 		packet += landedOrientz;
 		packet += ",";
-		packet += leveledx;
+		packet += leveledOrientx;
 		packet += ",";
-		packet += leveledy;
+		packet += leveledOrienty;
 		packet += ",";
-		packet += leveledz;
+		packet += leveledOrientz;
 		packet += "LEVELLING RESULTS END";
 				
 		File dataFile = SD.open("datalog.txt", FILE_WRITE);
@@ -150,6 +140,48 @@ void States::actuateServo(bool locked) {
 		release2.detach();
 		digitalWrite(RELEASE_POWER1, LOW);
 		digitalWrite(RELEASE_POWER2, LOW);
+	}
+}
+
+// Return 0 for no change
+// Return 1 for good change
+// Return 2 for bad change
+int States::hasChanged (double currentOrient, double previousOrient) {
+	if (previousOrient - currentOrient > tolerance) {
+		return 1;
+	}
+	else if (previousOrient - currentOrient < -tolerance) {
+		return 2;
+	}
+	else {
+		return 0;
+	}
+}
+
+void States::driveMotor (int motorNumber, int direction) {
+	int onPin, reversePin;
+	if (motorNumber == 1) {
+		onPin = MOTOR1;
+		reversePin = MOTOR1R;
+	}
+	else if (motorNumber == 2) {
+		onPin = MOTOR2;
+		reversePin = MOTOR2R;
+	}
+	else if (motorNumber == 3) {
+		onPin = MOTOR3;
+		reversePin = MOTOR3R;
+	}
+	if (direction == 0) {
+		digitalWrite(onPin, LOW);
+	}
+	else if (direction == 1) {
+		digitalWrite(reversePin, LOW);
+		digitalWrite(onPin, HIGH);
+	}
+	else if (direction == 2) {
+		digitalWrite(reversePin, HIGH);
+		digitalWrite(onPin, HIGH);
 	}
 }
 
