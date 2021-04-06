@@ -159,7 +159,7 @@ void loop() {
 	accelx = smoothingFactor * accelEvent.acceleration.x + (1 - smoothingFactor) * accelx;
 	accely = smoothingFactor * accelEvent.acceleration.y + (1 - smoothingFactor) * accely;
 	accelz = smoothingFactor * accelEvent.acceleration.z + (1 - smoothingFactor) * accelz;
-	orientx = smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * orientx;
+	orientx = orientEvent.orientation.x; //smoothingFactor * orientEvent.orientation.x + (1 - smoothingFactor) * orientx;
 	orienty = smoothingFactor * orientEvent.orientation.y + (1 - smoothingFactor) * orienty;
 	orientz = smoothingFactor * orientEvent.orientation.z + (1 - smoothingFactor) * orientz;
 
@@ -222,7 +222,7 @@ void loop() {
 	orientResult = sqrt(pow(radialOrient, 2) + pow(tangentialOrient, 2)); // Resultant vector
 	resultCurrent = angleDiff;
 
-	if (resultCurrent >= 5.0) { 
+	if (resultCurrent >= 2.5) { 
 		// calibrateLeveler();
 		// delay(25);
 
@@ -251,19 +251,22 @@ void loop() {
 		// }
 
 		//TAKE 2 - Run each motor one at a time until it's level
-		if (activeMotor > 3) {
-			activeMotor = 1;
-		}
+		if (calibrated) {
 
-		if (hasChanged(resultCurrent, resultPrevious) != 2) {
-			driveMotor(activeMotor, 1);
-		}
+			if (activeMotor > 3) {
+				activeMotor = 1;
+			}
 
-		if (hasChanged(resultCurrent, resultPrevious) == 2) {
-			driveMotor(activeMotor, 2);
-			delay(100);
-			driveMotor(activeMotor, 0);
-			activeMotor++;
+			if (hasChanged(resultCurrent, resultPrevious) != 2) {
+				driveMotor(activeMotor, 1);
+			}
+
+			if (hasChanged(resultCurrent, resultPrevious) == 2) {
+				driveMotor(activeMotor, 2);
+				delay(100);
+				driveMotor(activeMotor, 0);
+				activeMotor++;
+			}
 		}
 	}
 	else {
@@ -307,17 +310,20 @@ void loop() {
 	Serial.println(packet);
 
 	String debugPacket = "";
-	debugPacket += String(calibrated);
+	// debugPacket += String(calibrated);
+	// debugPacket += ",";
+	// debugPacket += String(initialized);
+	// debugPacket += ",";
+	// debugPacket += String(oriented1);
+	// debugPacket += ",";
+	// debugPacket += String(oriented2);
+	// debugPacket += ",";
+	// debugPacket += String(oriented3);
+	// debugPacket += ",";
+	debugPacket += String(orientEvent.orientation.x);
 	debugPacket += ",";
-	debugPacket += String(initialized);
+	debugPacket += String(orientx);
 	debugPacket += ",";
-	debugPacket += String(oriented1);
-	debugPacket += ",";
-	debugPacket += String(oriented2);
-	debugPacket += ",";
-	debugPacket += String(oriented3);
-	debugPacket += ",";
-	debugPacket += String(resultPrevious);
 	Serial.println(debugPacket);
 
 	#ifdef USESD
