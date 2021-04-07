@@ -77,9 +77,9 @@ double distance;
 
 Geolocation currentLocation;
 
-char cam1String[8] = {'c', 'a', 'm', '1'};
-char cam2String[8] = {'c', 'a', 'm', '2'};
-char cam3String[8] = {'c', 'a', 'm', '3'};
+char cam1String[16] = {'c', 'a', 'm', '1', '.', 'j', 'p', 'g'};
+char cam2String[16] = {'c', 'a', 'm', '2', '.', 'j', 'p', 'g'};
+char cam3String[16] = {'c', 'a', 'm', '3', '.', 'j', 'p', 'g'};
 
 void readCommand();
 void initCameras();
@@ -190,11 +190,11 @@ void setup() {
 		EEPROM.update(0, initialAlt);
 	}
 
-	// states.setCurrentState(EEPROM.read(1));
-	// packetCount = EEPROM.read(2);
-	// landedOrientx = EEPROM.read(3);
-	// landedOrienty = EEPROM.read(4);
-	// landedOrientz = EEPROM.read(5);
+	states.setCurrentState(EEPROM.read(1));
+	packetCount = EEPROM.read(2);
+	landedOrientx = EEPROM.read(3);
+	landedOrienty = EEPROM.read(4);
+	landedOrientz = EEPROM.read(5);
 
 	initCameras();
 
@@ -210,6 +210,8 @@ void setup() {
 }
 
 void loop() {
+	
+
 	packetCount++;
 	previousTime = missionTime;
 	missionTime = millis()/1000.0;
@@ -398,7 +400,7 @@ void loop() {
 	}
 	case FINISHED:
 		if (!sentPhotos) {
-			transmitAllowed = false;
+			transmitAllowed = false;			
 			if(states.CAM1_EXIST) {myCAMSaveToSDFile(myCAM1, cam1String);}
 			if(states.CAM2_EXIST) {myCAMSaveToSDFile(myCAM2, cam2String);}
 			if(states.CAM3_EXIST) {myCAMSaveToSDFile(myCAM3, cam3String);}
@@ -581,41 +583,53 @@ void initCameras() {
 		#endif
 	}
 
-	//Change to JPEG capture mode and initialize the OV5640 modules
-	if (states.CAM1_EXIST) {
-		Serial.print("Initializing CAM1\t");
-		myCAM1.set_format(JPEG);
-		myCAM1.InitCAM();
-		myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
-		myCAM1.clear_fifo_flag();
-		myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
-		myCAM1.OV5642_set_JPEG_size(OV5642_1024x768);
-		delay(1000);
-		myCAM1.clear_fifo_flag();
-	}
-	if (states.CAM2_EXIST) {
-		Serial.print("Initializing CAM2\t");
-		myCAM2.set_format(JPEG);
-		myCAM2.InitCAM();
-		myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
-		myCAM2.clear_fifo_flag();
-		myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
-		myCAM2.OV5642_set_JPEG_size(OV5642_1024x768);
-		delay(1000);
-		myCAM2.clear_fifo_flag();
-	}
-	if (states.CAM3_EXIST) {
-		Serial.println("Initializing CAM3\t");
-		myCAM3.set_format(JPEG);
-		myCAM3.InitCAM();
-		myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
-		myCAM3.clear_fifo_flag();
-		myCAM3.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
-		myCAM3.OV5642_set_JPEG_size(OV5642_1024x768);
-		delay(1000);
-		myCAM3.clear_fifo_flag();
-	}
-	
+	// //Change to JPEG capture mode and initialize the OV5640 modules
+	// if (states.CAM1_EXIST) {
+	// 	Serial.print("Initializing CAM1\t");
+	// 	myCAM1.set_format(JPEG);
+	// 	myCAM1.InitCAM();
+	// 	myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	// 	myCAM1.clear_fifo_flag();
+	// 	myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	// 	myCAM1.OV5642_set_JPEG_size(OV5642_1024x768);
+	// 	delay(1000);
+	// 	myCAM1.clear_fifo_flag();
+	// }
+	// if (states.CAM2_EXIST) {
+	// 	Serial.print("Initializing CAM2\t");
+	// 	myCAM2.set_format(JPEG);
+	// 	myCAM2.InitCAM();
+	// 	myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	// 	myCAM2.clear_fifo_flag();
+	// 	myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	// 	myCAM2.OV5642_set_JPEG_size(OV5642_1024x768);
+	// 	delay(1000);
+	// 	myCAM2.clear_fifo_flag();
+	// }
+	// if (states.CAM3_EXIST) {
+	// 	Serial.println("Initializing CAM3\t");
+	// 	myCAM3.set_format(JPEG);
+	// 	myCAM3.InitCAM();
+	// 	myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	// 	myCAM3.clear_fifo_flag();
+	// 	myCAM3.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	// 	myCAM3.OV5642_set_JPEG_size(OV5642_1024x768);
+	// 	delay(1000);
+	// 	myCAM3.clear_fifo_flag();
+	// }
+	//Change to JPEG capture mode and initialize the OV5640 module
+	myCAM1.set_format(JPEG);
+	myCAM1.InitCAM();
+	myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
+	myCAM1.clear_fifo_flag();
+	myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	myCAM3.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+	myCAM1.clear_fifo_flag();
+	myCAM2.clear_fifo_flag();
+	myCAM3.clear_fifo_flag();
 }
 
 void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
@@ -624,7 +638,7 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 	uint8_t temp = 0,temp_last=0;
 	uint32_t length = 0;
 	bool is_header = false;
-	File outFile;
+	//File outFile;
 	//Flush the FIFO
 	myCAM.flush_fifo();
 	//Clear the capture done flag
@@ -645,11 +659,10 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 		Serial.println(F("Size is 0."));
 		return;
 	}
-	//Construct a file name
-	strcat(str, ".jpg");
 	//Open the new file
-	outFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
-	if(!outFile){
+	File photoFile = SD.open(str, FILE_WRITE);
+	//photoFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
+	if(!photoFile){
 		Serial.println(F("File open faild"));
 		return;
 	}
@@ -663,9 +676,9 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 			buf[i++] = temp;  //save the last  0XD9     
 			//Write the remain bytes in the buffer
 			myCAM.CS_HIGH();
-			outFile.write(buf, i);    
+			photoFile.write(buf, i);    
 			//Close the file
-			outFile.close();
+			photoFile.close();
 			Serial.println(F("Image save OK."));
 			is_header = false;
 			i = 0;
@@ -677,7 +690,7 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 			else {
 			//Write 256 bytes image data to file
 			myCAM.CS_HIGH();
-			outFile.write(buf, 256);
+			photoFile.write(buf, 256);
 			i = 0;
 			buf[i++] = temp;
 			myCAM.CS_LOW();
@@ -697,7 +710,6 @@ void sendPhotos(char str[8]) {
 	// byte buf[256];
 	// uint32_t length = 0;
 	File photoFile;
-	strcat(str, ".jpg");
 	photoFile = SD.open(str, O_READ);
 	if (!photoFile) {
 		Serial.print("Failed to open ");

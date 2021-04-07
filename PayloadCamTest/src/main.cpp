@@ -163,13 +163,11 @@ void setup() {
 	myCAM3.set_format(JPEG);
 	Serial.println("Initializing Cam 1");
 	myCAM1.InitCAM();
-	myCAM2.InitCAM();
 	Serial.println("Setting VSYNC");
 	myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
 	myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
 	myCAM3.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
 	myCAM1.clear_fifo_flag();
-	myCAM2.clear_fifo_flag();
 	Serial.println("Setting Frames Count");
 	myCAM1.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
 	myCAM2.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
@@ -179,12 +177,9 @@ void setup() {
 	#else
 	Serial.println("Setting Resolution");
 	myCAM1.OV5642_set_JPEG_size(OV5642_1280x960);delay(1000);
-	myCAM2.OV5642_set_JPEG_size(OV5642_1280x960);delay(1000);
 	#endif
 	delay(1000);
 	myCAM1.clear_fifo_flag();
-	myCAM2.clear_fifo_flag();
-	myCAM3.clear_fifo_flag();
 	Serial.println("End Setup");
 }
 
