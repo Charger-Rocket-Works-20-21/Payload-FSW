@@ -41,7 +41,7 @@ def turnToStringList(listOfVars):
     for e in listOfVars:
         strList = strList + "," + str(e)
 
-    return strList
+    return strList 
 
 
 def level(rotx,roty,rotz):
@@ -67,7 +67,9 @@ def generateImage(path):
 
 #flightState = 4
 time.sleep(3)
+#ser2.writeData(bytes("\r\n",'utf-8'))
 for i in range(10000):
+    
     
     if(xz < 30 and flightState ==0):
         az = 2
@@ -122,12 +124,12 @@ for i in range(10000):
     #Transmit Image
     if(flightState == 4):
         ##
-        img,x,y,colors = generateImage("Test0.jpg")
+        img,x,y,colors = generateImage("1.jpg")
         listOfVars = ["Image"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
         output = io.BytesIO()
-        img.save(output,format='TIFF')
+        img.save(output,format='JPEG')
         hex_data = output.getvalue()
         
         count = 0
@@ -145,7 +147,7 @@ for i in range(10000):
         #    temp = "," + str(i)
         #    ser2.writeData(bytes(temp,'utf-8'))
         #    time.sleep(0.01)
-        temp2 = ",Image End"
+        temp2 = ",Image End\n"
         ser2.writeData(bytes(temp2,'utf-8'))
         #3
 
@@ -156,7 +158,7 @@ for i in range(10000):
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
         output = io.BytesIO()
-        img.save(output,format='TIFF')
+        img.save(output,format='JPEG')
         hex_data = output.getvalue()
         
         count = 0
@@ -174,7 +176,7 @@ for i in range(10000):
         #    temp = "," + str(i)
         #    ser2.writeData(bytes(temp,'utf-8'))
         #    time.sleep(0.01)
-        temp2 = ",Image End"
+        temp2 = ",Image End\n"
         ser2.writeData(bytes(temp2,'utf-8'))
 
         
@@ -184,7 +186,7 @@ for i in range(10000):
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
         output = io.BytesIO()
-        img.save(output,format='TIFF')
+        img.save(output,format='JPEG')
         hex_data = output.getvalue()
         
         count = 0
@@ -202,13 +204,13 @@ for i in range(10000):
         #    temp = "," + str(i)
         #    ser2.writeData(bytes(temp,'utf-8'))
         #    time.sleep(0.01)
-        temp2 = ",Image End"
+        temp2 = ",Image End\n"
         ser2.writeData(bytes(temp2,'utf-8'))
 
         flightState = 5
     else:
 
-        listOfVars = [teamName,i,missionTime,flightState,xz,ax,ay,az,rotx,roty,rotz,teamName+" End"]
+        listOfVars = [teamName,i,missionTime,flightState,xz,ax,ay,az,rotx,roty,rotz,teamName+" End\n"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
 

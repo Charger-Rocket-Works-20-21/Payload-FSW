@@ -85,6 +85,7 @@ class window(QMainWindow):
       self.ser.comListUpdated.connect(self.updateComList, type=Qt.DirectConnection)
       self.ser.serP.packetDropped.connect(lambda: self.packetsDropped +1, type=Qt.DirectConnection)
       self.actionToggle_Serial_Settings_Dock.triggered.connect(self.toggleSerialSettingsVisible)
+      self.actionClear_Plots.triggered.connect(self.clearPlots)
       self.connectButton.released.connect(self.ser.toggleConnection)
       self.connectButton.released.connect(self.GCSTimer.start)
 
@@ -410,6 +411,31 @@ class window(QMainWindow):
 
         glFlush()
         #time.sleep(0.1)
+
+   @pyqtSlot(bool)
+   def clearPlots(self,stuff):
+      self.times.clear()
+      self.fs.clear()
+      self.alt.clear()
+      
+      self.ax.clear()
+      self.ay.clear()
+      self.az.clear()
+
+      self.rx.clear()
+      self.ry.clear()
+      self.rz.clear()
+            
+      self.fs_data.setData(self.times,self.fs)
+      self.alt_data.setData(self.times,self.alt)
+
+      self.ax_data.setData(self.times,self.ax)
+      self.ay_data.setData(self.times,self.ay)
+      self.az_data.setData(self.times,self.az)
+
+      print("Plots Clear")
+      
+
 
 
 def main():

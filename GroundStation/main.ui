@@ -46,7 +46,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
@@ -335,6 +335,7 @@
     <property name="title">
      <string>Windows</string>
     </property>
+    <addaction name="actionClear_Plots"/>
     <addaction name="actionToggle_Serial_Settings_Dock"/>
    </widget>
    <addaction name="menuSettings"/>
@@ -970,6 +971,11 @@
   <action name="actionToggle_Serial_Settings_Dock">
    <property name="text">
     <string>Toggle Serial Settings Dock</string>
+   </property>
+  </action>
+  <action name="actionClear_Plots">
+   <property name="text">
+    <string>Clear Plots</string>
    </property>
   </action>
  </widget>

@@ -18,7 +18,7 @@ from defisheye import Defisheye
 import cv2
 import imutils
 isLogGlobal = True
-isSimulateSerial = False
+isSimulateSerial = True
 
 import pywavefront
 from pywavefront import visualization
