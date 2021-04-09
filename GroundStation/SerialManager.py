@@ -380,7 +380,7 @@ class SerialProcess(QObject):
                 self.dataBuffer = self.dataBuffer[0:sIndex-2]+self.dataBuffer[fIndex+len(endNormal)+sIndex+len(startNormal):]
                 
                 strBuff = str(self.dataBuffer)
-                LOG("STR BUFF:   " + strBuff,self.isLogLocal)
+                LOG("STR BUFF:   " + strBuff,True)
 
             #strBuff = str(self.dataBuffer)
 

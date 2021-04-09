@@ -633,6 +633,10 @@ void initCameras() {
 }
 
 void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
+
+	XBee.print("Image,");
+
+
 	byte buf[256];
 	static int i = 0;
 	uint8_t temp = 0,temp_last=0;
@@ -660,12 +664,12 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 		return;
 	}
 	//Open the new file
-	File photoFile = SD.open(str, FILE_WRITE);
+	//File photoFile = SD.open(str, FILE_WRITE);
 	//photoFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
-	if(!photoFile){
-		Serial.println(F("File open faild"));
-		return;
-	}
+	//if(!photoFile){
+	//	Serial.println(F("File open faild"));
+	//	return;
+	//}
 	myCAM.CS_LOW();
 	myCAM.set_fifo_burst();
 	while ( length--) {
@@ -676,9 +680,9 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 			buf[i++] = temp;  //save the last  0XD9     
 			//Write the remain bytes in the buffer
 			myCAM.CS_HIGH();
-			photoFile.write(buf, i);    
+			XBee.write(buf, i);    
 			//Close the file
-			photoFile.close();
+			//photoFile.close();
 			Serial.println(F("Image save OK."));
 			is_header = false;
 			i = 0;
@@ -690,11 +694,12 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 			else {
 			//Write 256 bytes image data to file
 			myCAM.CS_HIGH();
-			photoFile.write(buf, 256);
+			XBee.write(buf, 256);
 			i = 0;
 			buf[i++] = temp;
 			myCAM.CS_LOW();
 			myCAM.set_fifo_burst();
+			delay(10);
 			}        
 		}
 		else if ((temp == 0xD8) & (temp_last == 0xFF)) {
@@ -703,6 +708,9 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 			buf[i++] = temp;   
 		} 
 	} 
+
+
+	XBee.println(",Image End");
 }
 
 void sendPhotos(char str[8]) {
