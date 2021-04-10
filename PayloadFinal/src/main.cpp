@@ -275,7 +275,7 @@ void loop() {
 	packet += ",";
 	packet += String(states.currentState);
 	packet += ",";
-	packet += String(altitude);
+	packet += String(altitude - initialAlt);
 	packet += ",";
 	packet += String(accelx);
 	packet += ",";
@@ -453,6 +453,7 @@ void readCommand() {
 		else if (command.equalsIgnoreCase("CAL")) {
 			// Calibrate Initial Altitude
 			initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+			XBee.println(initialAlt);
 		}
 		else if (command.equalsIgnoreCase("REL")) {
 			// Release Detach Mechanism

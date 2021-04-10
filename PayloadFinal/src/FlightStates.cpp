@@ -39,7 +39,7 @@ void States::descent(double altitude, double initialAltitude, double velocity, d
 	//Perform Descent Operations
 
 	currentTime = millis()/1000;
-	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < -15.0) { // TODO CHANGE BACK TO 100 METERS
+	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < -5.0) { // TODO CHANGE BACK TO 100 METERS
 		if (distance < 7.0) {
 			actuateServo(false);
 			delay(500);
