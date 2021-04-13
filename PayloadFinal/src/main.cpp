@@ -196,7 +196,9 @@ void setup() {
 	landedOrienty = EEPROM.read(4);
 	landedOrientz = EEPROM.read(5);
 
-	initCameras();
+	if (states.currentState == UNARMED){
+		initCameras();
+	}
 
 	for (int i = 0; i < 10; i++) {
 		digitalWrite(LED_BUILTIN, HIGH);
@@ -210,8 +212,6 @@ void setup() {
 }
 
 void loop() {
-	
-
 	packetCount++;
 	previousTime = missionTime;
 	missionTime = millis()/1000.0;
@@ -718,7 +718,7 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 void sendPhotos(char str[8]) {
 	delay(1000);
 	uint8_t buf;
-	uint16_t length = 0;
+	// uint16_t length = 0;
 	File photoFile;
 	photoFile = SD.open(str, FILE_READ);
 	if (!photoFile) {
@@ -743,12 +743,22 @@ void sendPhotos(char str[8]) {
 		
 		// photoFile.read(buf, length);
 		//XBee.write(photoFile.read());
+
+		// Working Over Serial
+		// buf = photoFile.read();
+		// if (buf < 16) {
+		// 	Serial.print("0");
+		// }
+		// Serial.print(buf, HEX);
+		// delay(10);
+
+		// Doesn't quite work since it's not writing the string of hex byte so it's adding in 0's
 		buf = photoFile.read();
 		if (buf < 16) {
-			Serial.print("0");
+			XBee.write("0");
 		}
-		Serial.print(buf, HEX);
-		delay(25);
+		XBee.write(buf);
+		delay(10);
 	}
 
 	XBee.println(",Image End");
