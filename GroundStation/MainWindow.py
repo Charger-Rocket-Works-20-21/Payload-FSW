@@ -37,6 +37,7 @@ class window(QMainWindow):
    packetCount = []
    packetsDropped = 0
    imgCounter = 0
+   imgTotal = 0
    portlist = []
    def __init__(self, parent = None):
       super(window, self).__init__(parent)
@@ -169,9 +170,9 @@ class window(QMainWindow):
 
       # Send commands based on button presses
       self.ButtonManualSend.released.connect(self.manualSendCommand,type=Qt.DirectConnection)
-      self.pushButton_resend1.released.connect(lambda: self.ser.serP.writeData(bytes("I1",'utf-8')))
-      self.pushButton_resend2.released.connect(lambda: self.ser.serP.writeData(bytes("I2",'utf-8')))
-      self.pushButton_resend3.released.connect(lambda: self.ser.serP.writeData(bytes("I3",'utf-8')))
+      self.pushButton_resend1.released.connect(self.send1)
+      self.pushButton_resend2.released.connect(self.send2)
+      self.pushButton_resend3.released.connect(self.send3)
 
       print("Main Thread: " + str(int(QThread.currentThreadId())))
 
@@ -194,6 +195,28 @@ class window(QMainWindow):
    def addGCSTimer(self):
       self.GCSTime = self.GCSTime +0.5
       self.GCSTimeLabel.setText("GCS Time: T+ " + str(self.GCSTime))
+
+   @pyqtSlot()
+   def send1(self):
+      self.ser.serP.writeData(bytes("I1",'utf-8'))
+      self.ser.serP.numImagesReceived +=self.ser.serP.numImagesReceived%3
+      self.imgCounter = 0
+
+   
+   @pyqtSlot()
+   def send2(self):
+      self.ser.serP.writeData(bytes("I2",'utf-8'))
+      self.ser.serP.numImagesReceived +=self.ser.serP.numImagesReceived%3+1
+      self.imgCounter = 1
+
+
+   @pyqtSlot()
+   def send3(self):
+      self.ser.serP.writeData(bytes("I3",'utf-8'))
+      self.ser.serP.numImagesReceived +=self.ser.serP.numImagesReceived%3+2
+      self.imgCounter = 2
+ 
+
    @pyqtSlot()
    def manualSendCommand(self):
       if(self.ser.serP.device):
@@ -241,23 +264,25 @@ class window(QMainWindow):
 
    @pyqtSlot('QPixmap')
    def displayImage(self,image):
-      if(self.imgCounter == 0):
-         w = self.image0.width()
-         h = self.image0.height()
-         self.image0.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
-      if(self.imgCounter == 1):
-         w = self.image1.width()
-         h = self.image1.height()
-         self.image1.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))    
-      if(self.imgCounter == 2):
-         w = self.image2.width()
-         h = self.image2.height()
-         self.image2.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
-      if(self.imgCounter == 3):
+      if(image.width()/image.height() < 2):
+         if(self.imgCounter == 0):
+            w = self.image0.width()
+            h = self.image0.height()
+            self.image0.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
+         if(self.imgCounter == 1):
+            w = self.image1.width()
+            h = self.image1.height()
+            self.image1.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))    
+         if(self.imgCounter == 2):
+            w = self.image2.width()
+            h = self.image2.height()
+            self.image2.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
+      if(self.imgTotal >= 3):
          w = self.image3.width()
          h = self.image3.height()
          self.image3.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
-      self.imgCounter = self.imgCounter +1
+      self.imgCounter = (self.imgCounter +1)%3
+      self.imgTotal +=1
 
 
    @pyqtSlot('QStringList')

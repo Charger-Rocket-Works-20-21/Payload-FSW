@@ -635,7 +635,7 @@ void initCameras() {
 
 void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 
-	XBee.print("Image,");
+	XBee.print(",Image,");
 
 
 	byte buf[256];
@@ -728,7 +728,7 @@ void sendPhotos(char str[8]) {
 	}
 
 	// length = photoFile.size();
-	XBee.print("Image,");
+	XBee.print(",Image,");
 	Serial.print("Image,");
 
 	// Send Image

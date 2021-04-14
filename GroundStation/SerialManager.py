@@ -213,9 +213,9 @@ class SerialProcess(QObject):
     def receiveImage(self,imageString):
         try:
 
-            s = imageString[1:]
-            print(s)
-            textFilepath = str(self.numImagesReceived)+".jpg"
+            s = imageString
+            #print(s)
+            textFilepath = str(self.numImagesReceived%3)+".jpg"
 
             flags = os.O_CREAT | os.O_WRONLY
 
@@ -239,7 +239,7 @@ class SerialProcess(QObject):
             #im = Image.open(io.BytesIO(s))
             #im = Image.fromarray(np.uint8(MatImg))
             #im.show()
-            im.save("image" + str(self.numImagesReceived)+".png")
+            im.save("image" + str(self.numImagesReceived%3)+".png")
             MatImg = np.array(im)
             qimage = QImage()
 
@@ -253,7 +253,7 @@ class SerialProcess(QObject):
             #obj = Defisheye(impath, dtype=dtype, format=format, fov=fov, pfov=pfov)
             #obj.convert(impath)
 
-            qimage.load("image" + str(self.numImagesReceived)+".png",format='PNG')
+            qimage.load("image" + str(self.numImagesReceived%3)+".png",format='PNG')
             #qimage.save("QIMAGE.png")
             pixm = QPixmap.fromImage(qimage)
 
@@ -264,7 +264,7 @@ class SerialProcess(QObject):
 
             
 
-            if(self.numImagesReceived ==3):
+            if(self.numImagesReceived >=3):
                 
                 images = []
                 im0 = cv2.imread("image0.png")
@@ -343,6 +343,7 @@ class SerialProcess(QObject):
 
     @pyqtSlot()
     def readFrames(self):
+        
         self.portlist = [comport.portName() for comport in QSerialPortInfo().availablePorts()]
 
         self.comListUpdated.emit(self.portlist)
@@ -364,23 +365,23 @@ class SerialProcess(QObject):
             buffer = self.dataBuffer
             sIndex = self.dataBuffer.indexOf(startImg)
 
-            buffer = buffer[sIndex+len(startImg):]
+            buffer = buffer[sIndex+len(startImg)+1:]
             LOG("Buffer1: " + str(buffer) + "\n",self.isLogLocal)
             if(not endImg in buffer):
                 break
 
             fIndex = buffer.indexOf(endImg)
-            buffer = buffer[0:fIndex]
-            LOG("Buffer2: " + str(buffer) + "\n",self.isLogLocal)
+            buffer = buffer[0:fIndex-1]
+            LOG("Buffer2: " + str(buffer[-100:]) + "\n",self.isLogLocal)
             if(buffer != ""):
                 self.isLogLocal = True
                 temp = QByteArray(buffer)
                 time.sleep(0.1)
                 self.imageReceived.emit(temp)
-                self.dataBuffer = self.dataBuffer[0:sIndex-1]+self.dataBuffer[fIndex+len(endImg)+sIndex+len(startImg)+1:]
-                LOG(self.dataBuffer,self.isLogLocal)
+                self.dataBuffer = self.dataBuffer[0:sIndex-2]+self.dataBuffer[fIndex+len(endImg)+sIndex+len(startImg)+1:]
+                LOG("STR BUFF IMG:    " + str(self.dataBuffer[-500:]),self.isLogLocal)
                 self.isLogLocal = False
-
+        
        
         strBuff = str(self.dataBuffer)
 
@@ -404,12 +405,16 @@ class SerialProcess(QObject):
                 self.dataBuffer = self.dataBuffer[0:sIndex-2]+self.dataBuffer[fIndex+len(endNormal)+sIndex+len(startNormal):]
                 
                 strBuff = str(self.dataBuffer)
-                LOG("STR BUFF:   " + strBuff,True)
+                LOG("STR BUFF TEL:   " + strBuff,True)
 
             #strBuff = str(self.dataBuffer)
-
-
-
+        self.isLogLocal = False
+        
+        comm = bytes(",,,",'utf-8')
+        while(self.dataBuffer.contains(comm)):
+            buffer = self.dataBuffer
+            Idx = buffer.indexOf(comm)
+            self.dataBuffer = self.dataBuffer[0:Idx]+self.dataBuffer[Idx+1:]
 
 
     @pyqtSlot()
