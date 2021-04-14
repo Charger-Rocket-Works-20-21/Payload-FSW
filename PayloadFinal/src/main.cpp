@@ -149,11 +149,11 @@ void setup() {
 	}
 	if (distanceSensor.begin() != 0) {
 		Serial.println("Rangefinder Not Detected\t\t");
-		XBee.println("Rangefinder Not Detected\t\t");
+		XBee.print("Rangefinder Not Detected\t\t");
 	}
 	else {
 		Serial.println("Rangefinder Detected\t\t");
-		XBee.println("Rangefinder Detected\t\t");
+		XBee.print("Rangefinder Detected\t\t");
 		rangefinderInit = true;
 	}
 	// gps.begin(); // Freezes Code if included, will need to fix
@@ -453,7 +453,7 @@ void readCommand() {
 		else if (command.equalsIgnoreCase("CAL")) {
 			// Calibrate Initial Altitude
 			initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
-			XBee.println(initialAlt);
+			XBee.print(initialAlt);
 		}
 		else if (command.equalsIgnoreCase("REL")) {
 			// Release Detach Mechanism
@@ -712,7 +712,7 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 	} 
 
 
-	XBee.println(",Image End");
+	XBee.print(",Image End");
 }
 
 void sendPhotos(char str[8]) {
@@ -755,13 +755,14 @@ void sendPhotos(char str[8]) {
 		// Doesn't quite work since it's not writing the string of hex byte so it's adding in 0's
 		buf = photoFile.read();
 		if (buf < 16) {
-			XBee.write("0");
+			//XBee.write("0");
 		}
+		
 		XBee.write(buf);
-		delay(10);
+		delay(2);
 	}
 
-	XBee.println(",Image End");
+	XBee.print(",Image End");
 	Serial.println(",Image End");
 
 	// Serial.print("Image,");

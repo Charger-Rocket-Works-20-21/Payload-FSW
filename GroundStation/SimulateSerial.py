@@ -205,7 +205,7 @@ for i in range(10000):
         #    ser2.writeData(bytes(temp,'utf-8'))
         #    time.sleep(0.01)
         temp2 = ",Image End\n"
-        ser2.writeData(bytes(temp2,'utf-8'))
+        ser2.writeData(bytes(temp2,'utf-8'))John42S
 
         flightState = 5
     else:

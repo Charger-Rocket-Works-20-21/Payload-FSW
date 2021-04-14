@@ -211,10 +211,32 @@ class SerialProcess(QObject):
     
     @pyqtSlot('QByteArray')
     def receiveImage(self,imageString):
-        #try:
-            s = imageString
-        
-            im = Image.open(io.BytesIO(s))
+        try:
+
+            s = imageString[1:]
+            print(s)
+            textFilepath = str(self.numImagesReceived)+".jpg"
+
+            flags = os.O_CREAT | os.O_WRONLY
+
+            try:
+                f = os.open(textFilepath, flags)
+            except OSError as e:
+                if e.errno == errno.EEXIST:  # Failed as the file already exists.
+                    pass
+                else:  # Something unexpected went wrong so reraise the exception.
+                    raise
+            else:  # No exception, so the file must have been created successfully.
+                with os.fdopen(f, 'wb') as file_obj:
+                    # Using `os.fdopen` converts the handle to an object that acts like a
+                    # regular Python file object, and the `with` context manager means the
+                    # file will be automatically closed when we're done with it.
+                    file_obj.write(s)
+
+            
+
+            im = Image.open(textFilepath)
+            #im = Image.open(io.BytesIO(s))
             #im = Image.fromarray(np.uint8(MatImg))
             #im.show()
             im.save("image" + str(self.numImagesReceived)+".png")
@@ -290,10 +312,12 @@ class SerialProcess(QObject):
                 self.imageProcessed.emit(pixm2)
 
 
-       #except:
-        #    LOG("IMAGE RECEIVE FAILED, UNABLE TO PROCESS",True)
-            
-        #    self.imageFailed.emit()
+        except:
+            LOG("IMAGE RECEIVE FAILED, UNABLE TO PROCESS",True)
+            self.imageFailed.emit()
+            with open("failedImage.txt", ) as f:
+                f.write(str(s))
+
 
     @pyqtSlot('QString')
     def receiveTelemetry(self,telemetryString):
