@@ -184,7 +184,7 @@ void setup() {
 	else {
 		for (int i = 0; i < 5; i++) {
 			initialAlt = smoothingFactor * bmp.readAltitude(SEALEVELPRESSURE_HPA) + (1 - smoothingFactor) * initialAlt;
-
+			delay(10);
 		}
 		Serial.println(initialAlt);
 		EEPROM.update(0, initialAlt);
@@ -480,6 +480,9 @@ void readCommand() {
 		}
 		else if (command.equalsIgnoreCase("FS0")) {
 			states.currentState = UNARMED;
+			for (int i = 0; i < EEPROM.length(); i++) {
+				EEPROM.update(i, 0);
+			}
 		}
 		else if (command.equalsIgnoreCase("FS1")) {
 			states.currentState = STANDBY;
@@ -584,7 +587,7 @@ void initCameras() {
 		#endif
 	}
 
-	// //Change to JPEG capture mode and initialize the OV5640 modules
+	//Change to JPEG capture mode and initialize the OV5640 modules
 	// if (states.CAM1_EXIST) {
 	// 	Serial.print("Initializing CAM1\t");
 	// 	myCAM1.set_format(JPEG);
@@ -620,6 +623,7 @@ void initCameras() {
 	// }
 	//Change to JPEG capture mode and initialize the OV5640 module
 	myCAM1.set_format(JPEG);
+	myCAM1.OV5642_set_Exposure_level(0);
 	myCAM1.InitCAM();
 	myCAM1.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
 	myCAM2.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
@@ -664,30 +668,35 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 		Serial.println(F("Size is 0."));
 		return;
 	}
-	//Open the new file
-	//File photoFile = SD.open(str, FILE_WRITE);
-	//photoFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
-	//if(!photoFile){
-	//	Serial.println(F("File open faild"));
-	//	return;
-	//}
+	// Open the new file
+	File photoFile = SD.open(str, FILE_WRITE);
+	photoFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
+	if(!photoFile){
+		Serial.println(F("File open faild"));
+		return;
+	}
 	myCAM.CS_LOW();
 	myCAM.set_fifo_burst();
 	while ( length--) {
 		temp_last = temp;
 		temp =  SPI.transfer(0x00);
+		if (temp < 16) {
+			Serial.print("0");
+		}
+		Serial.print(temp, HEX);
+		delay(2);
 		//Read JPEG data from FIFO
 		if ((temp == 0xD9) && (temp_last == 0xFF)) { //If find the end ,break while,
 			buf[i++] = temp;  //save the last  0XD9     
 			//Write the remain bytes in the buffer
 			myCAM.CS_HIGH();
-			XBee.write(buf, i);    
+			photoFile.write(buf, i);    
 			//Close the file
-			//photoFile.close();
+			photoFile.close();
 			Serial.println(F("Image save OK."));
 			is_header = false;
 			i = 0;
-		}  
+		}
 		if (is_header == true) { 
 			//Write image data to buffer if not full
 			if (i < 256)
@@ -695,8 +704,8 @@ void myCAMSaveToSDFile(ArduCAM myCAM,  char str[8]) {
 			else {
 			//Write 256 bytes image data to file
 			myCAM.CS_HIGH();
-			XBee.write(buf, 256);
-			Serial.print("Writing");
+			photoFile.write(buf, 256);
+			// Serial.print("Writing");
 			i = 0;
 			buf[i++] = temp;
 			myCAM.CS_LOW();
