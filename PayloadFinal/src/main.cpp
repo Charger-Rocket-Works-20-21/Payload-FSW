@@ -55,6 +55,7 @@ double missionTime, previousTime, diffTime, previousXbeeTime;
 bool ledOn;
 uint16_t blinkRate;
 bool transmitAllowed = true;
+bool initCams = false;
 bool sentPhotos = false;
 bool rangefinderInit = false;
 char buf[BSIZE];
@@ -74,6 +75,7 @@ double leveledOrientx, leveledOrienty, leveledOrientz;
 double resultCurrent, resultPrevious;
 uint8_t calibration;
 double distance;
+bool release = false;
 
 Geolocation currentLocation;
 
@@ -182,9 +184,9 @@ void setup() {
 		initialAlt = EEPROM.read(0);
 	}
 	else {
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 10; i++) {
 			initialAlt = smoothingFactor * bmp.readAltitude(SEALEVELPRESSURE_HPA) + (1 - smoothingFactor) * initialAlt;
-			delay(10);
+			delay(100);
 		}
 		Serial.println(initialAlt);
 		EEPROM.update(0, initialAlt);
@@ -197,6 +199,7 @@ void setup() {
 	landedOrientz = EEPROM.read(5);
 
 	if (states.currentState == UNARMED){
+		initCams = true;
 		initCameras();
 	}
 
@@ -288,6 +291,8 @@ void loop() {
 	packet += String(orienty);
 	packet += ",";
 	packet += String(orientz);
+	packet += ",";
+	packet += String(release);
 	packet += ",";
 	packet += "UAH Charger RocketWorks End";
 	Serial.println(packet);
@@ -400,7 +405,11 @@ void loop() {
 	}
 	case FINISHED:
 		if (!sentPhotos) {
-			transmitAllowed = false;			
+			transmitAllowed = false;
+			if (!initCams) {
+				initCameras();
+			}
+			delay(1000);
 			if(states.CAM1_EXIST) {myCAMSaveToSDFile(myCAM1, cam1String);}
 			if(states.CAM2_EXIST) {myCAMSaveToSDFile(myCAM2, cam2String);}
 			if(states.CAM3_EXIST) {myCAMSaveToSDFile(myCAM3, cam3String);}
@@ -452,7 +461,12 @@ void readCommand() {
 		}
 		else if (command.equalsIgnoreCase("CAL")) {
 			// Calibrate Initial Altitude
-			initialAlt = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+			for (int i = 0; i < 10; i++) {
+				initialAlt = smoothingFactor * bmp.readAltitude(SEALEVELPRESSURE_HPA) + (1 - smoothingFactor) * initialAlt;
+				delay(100);
+			}
+			Serial.println(initialAlt);
+			EEPROM.update(0, initialAlt);
 			XBee.print(initialAlt);
 		}
 		else if (command.equalsIgnoreCase("REL")) {

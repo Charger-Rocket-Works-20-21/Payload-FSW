@@ -3,7 +3,7 @@
 flightState currentState = UNARMED;
 
 double currentTime, transitionTime;
-double minTimes[] = {10.0, 30.0};
+double minTimes[] = {20.0, 30.0};
 double tolerance = 0.025;
 int activeMotor = 1;
 
@@ -39,11 +39,12 @@ void States::descent(double altitude, double initialAltitude, double velocity, d
 	//Perform Descent Operations
 
 	currentTime = millis()/1000;
-	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < -5.0) { // TODO CHANGE BACK TO 100 METERS
+	if ((currentTime - transitionTime) >= minTimes[1] && altitude - initialAltitude < 100) {
 		if (distance < 7.0) {
+			release = true;
 			actuateServo(false);
 			delay(500);
-			if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 15.0 && altitude - initialAltitude < 50.0) {
+			if (fabs(velocity) <= 5 && (accelx + accely + accelz) < 15.0 && altitude - initialAltitude < 100.0) {
 				landedOrientx = orientxCorrected;
 				landedOrienty = orienty;
 				landedOrientz = orientz;

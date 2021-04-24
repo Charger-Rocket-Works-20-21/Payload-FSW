@@ -28,6 +28,7 @@ extern double resultCurrent, resultPrevious;
 extern double orientxCorrected, orienty, orientz;
 extern double landedOrientx, landedOrienty, landedOrientz;
 extern double leveledOrientx, leveledOrienty, leveledOrientz;
+extern bool release;
 
 class States {
 public:
