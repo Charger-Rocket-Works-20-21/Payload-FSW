@@ -337,6 +337,7 @@
     </property>
     <addaction name="actionClear_Plots"/>
     <addaction name="actionToggle_Serial_Settings_Dock"/>
+    <addaction name="actionManual_Panorama"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuAbout"/>
@@ -976,6 +977,11 @@
   <action name="actionClear_Plots">
    <property name="text">
     <string>Clear Plots</string>
+   </property>
+  </action>
+  <action name="actionManual_Panorama">
+   <property name="text">
+    <string>Manual Panorama</string>
    </property>
   </action>
  </widget>

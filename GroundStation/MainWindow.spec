@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['MainWindow.py'],
+a = Analysis(['mainwindow.py'],
              pathex=['C:\\Users\\quaz9\\Documents\\MAE490\\Payload-FSW\\GroundStation'],
              binaries=[],
              datas=[],
@@ -23,7 +23,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='MainWindow',
+          name='mainwindow',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
