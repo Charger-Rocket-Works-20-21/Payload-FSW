@@ -53,7 +53,7 @@ class MySerial(QObject):
 
 class SerialProcess(QObject):
     ## Instance Vars
-    isLogLocal = False
+    isLogLocal = True
 
     dataBuffer = QByteArray()
     device = None
@@ -215,7 +215,7 @@ class SerialProcess(QObject):
 
             s = imageString
             #print(s)
-            textFilepath = str(self.numImagesReceived%3)+".jpg"
+            textFilepath = str(self.numImagesReceived)+".jpg"
 
             flags = os.O_CREAT | os.O_WRONLY
 
@@ -223,6 +223,7 @@ class SerialProcess(QObject):
                 f = os.open(textFilepath, flags)
             except OSError as e:
                 if e.errno == errno.EEXIST:  # Failed as the file already exists.
+                    print(e)
                     pass
                 else:  # Something unexpected went wrong so reraise the exception.
                     raise
@@ -233,13 +234,17 @@ class SerialProcess(QObject):
                     # file will be automatically closed when we're done with it.
                     file_obj.write(s)
 
-            
+            LOG(imageString)
 
             im = Image.open(textFilepath)
             #im = Image.open(io.BytesIO(s))
             #im = Image.fromarray(np.uint8(MatImg))
             #im.show()
-            im.save("image" + str(self.numImagesReceived%3)+".png")
+            im.save("image" + str(self.numImagesReceived)+".png")
+
+            if(self.numImagesReceived == 0):
+                im.save("panorama.png")
+
             MatImg = np.array(im)
             qimage = QImage()
 
@@ -253,7 +258,7 @@ class SerialProcess(QObject):
             #obj = Defisheye(impath, dtype=dtype, format=format, fov=fov, pfov=pfov)
             #obj.convert(impath)
 
-            qimage.load("image" + str(self.numImagesReceived%3)+".png",format='PNG')
+            qimage.load("image" + str(self.numImagesReceived)+".png",format='PNG')
             #qimage.save("QIMAGE.png")
             pixm = QPixmap.fromImage(qimage)
 
@@ -267,12 +272,19 @@ class SerialProcess(QObject):
             if(self.numImagesReceived >=3):
                 
                 images = []
-                im0 = cv2.imread("image0.png")
+                im0 = cv2.imread("panorama.png")
                 images.append(im0)
-                im1 = cv2.imread("image1.png")
+
+                imn = cv2.imread("image" + str(self.numImagesReceived) + ".png")
+                images.append(imn)
+                '''
+                for i in range(self.numImagesReceived):
+                    imn = cv2.imread("image" + str(i) + ".png")
+                    images.append(imn)
+                im1 = cv2.imread("image0.png")
                 images.append(im1)
                 im2 = cv2.imread("image2.png")
-                images.append(im2)
+                images.append(im2)'''
 
                 stitcher = cv2.createStitch() if imutils.is_cv3() else cv2.Stitcher_create()
                 (status,stitched) = stitcher.stitch(images)
@@ -315,8 +327,87 @@ class SerialProcess(QObject):
         except:
             LOG("IMAGE RECEIVE FAILED, UNABLE TO PROCESS",True)
             self.imageFailed.emit()
-            with open("failedImage.txt", ) as f:
-                f.write(str(s))
+            qimage2 = QImage()
+            qimage2.load("panorama.png",format='PNG')
+        
+            pixm2 = QPixmap.fromImage(qimage2)
+            self.imageProcessed.emit(pixm2)
+            #with open("failedImage" + str(self.numImagesReceived)+ ".txt", ) as f:
+            #    f.write(str(s))
+
+            textFilepath = "failedImage" + str(self.numImagesReceived)+ ".txt"
+            try:
+                f = os.open(textFilepath, flags)
+            except OSError as e:
+                if e.errno == errno.EEXIST:  # Failed as the file already exists.
+                    print(e)
+                else:  # Something unexpected went wrong so reraise the exception.
+                    raise
+            else:  # No exception, so the file must have been created successfully.
+                with os.fdopen(f, 'wb') as file_obj:
+                    # Using `os.fdopen` converts the handle to an object that acts like a
+                    # regular Python file object, and the `with` context manager means the
+                    # file will be automatically closed when we're done with it.
+                    file_obj.write(s)
+            '''
+            self.numImagesReceived += 1
+            if(self.numImagesReceived >=3):
+                
+                images = []
+                im0 = cv2.imread("panorama.png")
+                images.append(im0)
+
+                imn = cv2.imread("image" + str(self.numImagesReceived) + ".png")
+                images.append(imn)
+                '''
+            '''
+                for i in range(self.numImagesReceived):
+                    imn = cv2.imread("image" + str(i) + ".png")
+                    images.append(imn)
+                im1 = cv2.imread("image0.png")
+                images.append(im1)
+                im2 = cv2.imread("image2.png")
+                images.append(im2)'''
+            '''
+                stitcher = cv2.createStitch() if imutils.is_cv3() else cv2.Stitcher_create()
+                (status,stitched) = stitcher.stitch(images)
+
+                if status == 0:
+                    cv2.imwrite("panorama.png",stitched)
+
+                    
+                else:
+                    LOG("Panorama processing failed, defaulting to failsafe method")
+                    LOG(status)
+
+                    im0 = Image.open("image0.png")
+                    im1 = Image.open("image1.png")
+                    im2 = im
+                    
+                    im0_size = im0.size
+                    im1_size = im1.size
+                    im2_size = im2.size
+
+                    pan_w = im0_size[0] + im1_size[0] + im2_size[0]
+                    pan_h = max(im0_size[1], im1_size[1], im2_size[1])
+                    panorama = Image.new('RGB',(pan_w,pan_h),(250,250,250))
+                    panorama.paste(im0,(0,0))
+                    panorama.paste(im1,(im0_size[0],0))
+                    panorama.paste(im2,(im0_size[0]+im1_size[0],0))
+                    panorama.save("panorama.png")
+                    """
+
+
+                """
+
+                qimage2 = QImage()
+                qimage2.load("panorama.png",format='PNG')
+            
+                pixm2 = QPixmap.fromImage(qimage2)
+                self.imageProcessed.emit(pixm2)     
+                '''
+
+            print("Num Images Received: " + str(self.numImagesReceived))
 
 
     @pyqtSlot('QString')
@@ -343,7 +434,7 @@ class SerialProcess(QObject):
 
     @pyqtSlot()
     def readFrames(self):
-        
+        #self.isLogLocal = True
         self.portlist = [comport.portName() for comport in QSerialPortInfo().availablePorts()]
 
         self.comListUpdated.emit(self.portlist)

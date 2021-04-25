@@ -5,7 +5,7 @@ import random
 from PIL import Image
 import numpy as np
 import io
-time.sleep(1)
+time.sleep(3)
 ser2 = SerialProcess()
 ser2.serial.port = "COM1"
 ser2.serial.setBaud(115200)
@@ -65,7 +65,7 @@ def generateImage(path):
 
     return tempImg,x,y,colors
 
-#flightState = 4
+flightState = 4
 time.sleep(3)
 #ser2.writeData(bytes("\r\n",'utf-8'))
 for i in range(10000):
@@ -124,93 +124,94 @@ for i in range(10000):
     #Transmit Image
     if(flightState == 4):
         ##
-        img,x,y,colors = generateImage("1.jpg")
-        listOfVars = ["Image"]
-        strList = turnToStringList(listOfVars)
-        ser2.writeData(bytes(strList,'utf-8'))
-        output = io.BytesIO()
-        img.save(output,format='JPEG')
-        hex_data = output.getvalue()
-        
-        count = 0
-        #time.sleep(5)
-        for i in range(len(hex_data)):
-            if(i%10000 == 0):
-                if(i +10000>=len(hex_data)):
-                    ser2.writeData(hex_data[i:])
-                else:
-                    ser2.writeData(hex_data[i:i+10000])
-                #time.sleep(0.001)
-        
-        #time.sleep(0.1)
-        #for i in img:
-        #    temp = "," + str(i)
-        #    ser2.writeData(bytes(temp,'utf-8'))
-        #    time.sleep(0.01)
-        temp2 = ",Image End\n"
-        ser2.writeData(bytes(temp2,'utf-8'))
-        #3
+        for i in range(3):
+            img,x,y,colors = generateImage("Test0.jpg")
+            listOfVars = [",Image"]
+            strList = turnToStringList(listOfVars)
+            ser2.writeData(bytes(strList,'utf-8'))
+            output = io.BytesIO()
+            img.save(output,format='JPEG')
+            hex_data = output.getvalue()
+            
+            count = 0
+            #time.sleep(5)
+            for i in range(len(hex_data)):
+                if(i%10000 == 0):
+                    if(i +10000>=len(hex_data)):
+                        ser2.writeData(hex_data[i:])
+                    else:
+                        ser2.writeData(hex_data[i:i+10000])
+                    #time.sleep(0.001)
+            
+            #time.sleep(0.1)
+            #for i in img:
+            #    temp = "," + str(i)
+            #    ser2.writeData(bytes(temp,'utf-8'))
+            #    time.sleep(0.01)
+            temp2 = ",Image End"
+            ser2.writeData(bytes(temp2,'utf-8'))
+            #3
 
-        
-        time.sleep(5)
-        img,x,y,colors = generateImage("Test1.jpg")
-        listOfVars = ["Image"]
-        strList = turnToStringList(listOfVars)
-        ser2.writeData(bytes(strList,'utf-8'))
-        output = io.BytesIO()
-        img.save(output,format='JPEG')
-        hex_data = output.getvalue()
-        
-        count = 0
-        #time.sleep(5)
-        for i in range(len(hex_data)):
-            if(i%10000 == 0):
-                if(i +5000>=len(hex_data)):
-                    ser2.writeData(hex_data[i:])
-                else:
-                    ser2.writeData(hex_data[i:i+10000])
-                #time.sleep(0.001)
-        
-        time.sleep(0.1)
-        #for i in img:
-        #    temp = "," + str(i)
-        #    ser2.writeData(bytes(temp,'utf-8'))
-        #    time.sleep(0.01)
-        temp2 = ",Image End\n"
-        ser2.writeData(bytes(temp2,'utf-8'))
+            
+            time.sleep(5)
+            img,x,y,colors = generateImage("Test1.jpg")
+            listOfVars = [",Image"]
+            strList = turnToStringList(listOfVars)
+            ser2.writeData(bytes(strList,'utf-8'))
+            output = io.BytesIO()
+            img.save(output,format='JPEG')
+            hex_data = output.getvalue()
+            
+            count = 0
+            #time.sleep(5)
+            for i in range(len(hex_data)):
+                if(i%10000 == 0):
+                    if(i +5000>=len(hex_data)):
+                        ser2.writeData(hex_data[i:])
+                    else:
+                        ser2.writeData(hex_data[i:i+10000])
+                    #time.sleep(0.001)
+            
+            time.sleep(0.1)
+            #for i in img:
+            #    temp = "," + str(i)
+            #    ser2.writeData(bytes(temp,'utf-8'))
+            #    time.sleep(0.01)
+            temp2 = ",Image End"
+            ser2.writeData(bytes(temp2,'utf-8'))
 
-        
-        time.sleep(5)
-        img,x,y,colors = generateImage("Test2.jpg")
-        listOfVars = ["Image"]
-        strList = turnToStringList(listOfVars)
-        ser2.writeData(bytes(strList,'utf-8'))
-        output = io.BytesIO()
-        img.save(output,format='JPEG')
-        hex_data = output.getvalue()
-        
-        count = 0
-        #time.sleep(5)
-        for i in range(len(hex_data)):
-            if(i%10000 == 0):
-                if(i +10000>=len(hex_data)):
-                    ser2.writeData(hex_data[i:])
-                else:
-                    ser2.writeData(hex_data[i:i+10000])
-                #time.sleep(0.001)
-        
-        #time.sleep(0.1)
-        #for i in img:
-        #    temp = "," + str(i)
-        #    ser2.writeData(bytes(temp,'utf-8'))
-        #    time.sleep(0.01)
-        temp2 = ",Image End\n"
-        ser2.writeData(bytes(temp2,'utf-8'))John42S
+            
+            time.sleep(5)
+            img,x,y,colors = generateImage("Test2.jpg")
+            listOfVars = [",Image"]
+            strList = turnToStringList(listOfVars)
+            ser2.writeData(bytes(strList,'utf-8'))
+            output = io.BytesIO()
+            img.save(output,format='JPEG')
+            hex_data = output.getvalue()
+            
+            count = 0
+            #time.sleep(5)
+            for i in range(len(hex_data)):
+                if(i%10000 == 0):
+                    if(i +10000>=len(hex_data)):
+                        ser2.writeData(hex_data[i:])
+                    else:
+                        ser2.writeData(hex_data[i:i+10000])
+                    #time.sleep(0.001)
+            
+            #time.sleep(0.1)
+            #for i in img:
+            #    temp = "," + str(i)
+            #    ser2.writeData(bytes(temp,'utf-8'))
+            #    time.sleep(0.01)
+            temp2 = ",Image End"
+            ser2.writeData(bytes(temp2,'utf-8'))
 
-        flightState = 5
+            flightState = 5
     else:
 
-        listOfVars = [teamName,i,missionTime,flightState,xz,ax,ay,az,rotx,roty,rotz,teamName+" End\n"]
+        listOfVars = [teamName,i,missionTime,flightState,xz,ax,ay,az,rotx,roty,rotz,teamName+" End"]
         strList = turnToStringList(listOfVars)
         ser2.writeData(bytes(strList,'utf-8'))
 

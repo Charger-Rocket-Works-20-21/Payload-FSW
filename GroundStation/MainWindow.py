@@ -174,6 +174,9 @@ class window(QMainWindow):
       self.pushButton_resend2.released.connect(self.send2)
       self.pushButton_resend3.released.connect(self.send3)
 
+
+      self.actionManual_Panorama.triggered.connect(self.genManualPanorama)
+
       print("Main Thread: " + str(int(QThread.currentThreadId())))
 
       if(isSimulateSerial):
@@ -190,6 +193,86 @@ class window(QMainWindow):
       
       self.ser.serP.receiveImage(ba)
       """
+
+
+   @pyqtSlot()
+   def genManualPanorama(self):
+
+      relevant_path = "."
+      included_extensions = ['jpg','jpeg']
+      excluded_extensions = ['Test']
+      file_names = [fn for fn in os.listdir(relevant_path)
+              if (any(fn.endswith(ext) for ext in included_extensions) and not any(fn.startswith(ext) for ext in excluded_extensions))]
+      print(file_names)
+
+      images = []
+      for i in range(len(file_names)):
+         imn = cv2.imread(file_names[i])
+         images.append(imn)
+
+      stitcher = cv2.createStitch() if imutils.is_cv3() else cv2.Stitcher_create()
+
+      (status,stitched) = stitcher.stitch(images)
+
+      if status == 0:
+         cv2.imwrite("panoramaManual.png",stitched)
+
+         
+      else:
+         images = []
+         for i in range(len(file_names)):
+            try:
+               imn = Image.open(file_names[i])
+               images.append(imn)
+            except:
+               pass
+         LOG("Panorama processing failed, defaulting to failsafe method")
+         LOG(status)
+         if len(images)>0:
+            pan_w = 0
+            pan_h = 0
+            image_w = []
+            image_h = []
+            for i in range(len(images)):
+               print(i)
+               print(images[i].size)
+               print(type(images[i].size))
+               sze = images[i].size
+               image_w.append(sze[0])
+               image_h.append(sze[1])
+               pan_w += image_w[i]
+               pan_h += image_h[i]
+               
+            panorama = Image.new('RGB',(pan_w,pan_h),(250,250,250))
+
+            for i in range(len(images)):
+               current_w = 0
+               for j in range(i):
+                  current_w += image_w[j]
+
+               panorama.paste(images[i],(current_w,0))
+
+            panorama.save("panoramaManual.png")
+         else:
+            print("Could Not generate Manual Panorama. No valid images")
+
+
+         """
+
+
+      """
+
+      qimage2 = QImage()
+      qimage2.load("panorama.png",format='PNG')
+
+      pixm2 = QPixmap.fromImage(qimage2)
+
+      w = self.image3.width()
+      h = self.image3.height()
+
+      self.image3.setPixmap(pixm2.scaled(w,h,Qt.KeepAspectRatio))
+      LOG("Image 3 Display")
+
 
    @pyqtSlot()
    def addGCSTimer(self):
@@ -264,24 +347,28 @@ class window(QMainWindow):
 
    @pyqtSlot('QPixmap')
    def displayImage(self,image):
-      if(image.width()/image.height() < 2):
-         if(self.imgCounter == 0):
-            w = self.image0.width()
-            h = self.image0.height()
-            self.image0.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
-         if(self.imgCounter == 1):
-            w = self.image1.width()
-            h = self.image1.height()
-            self.image1.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))    
-         if(self.imgCounter == 2):
-            w = self.image2.width()
-            h = self.image2.height()
-            self.image2.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
+      
+      if(self.imgCounter == 0):
+         w = self.image0.width()
+         h = self.image0.height()
+         self.image0.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
+         LOG("Image 0 Display")
+      if(self.imgCounter == 1):
+         w = self.image1.width()
+         h = self.image1.height()
+         self.image1.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))    
+         LOG("Image 1 Display")
+      if(self.imgCounter == 2):
+         w = self.image2.width()
+         h = self.image2.height()
+         self.image2.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
+         LOG("Image 2 Display")
       if(self.imgTotal >= 3):
          w = self.image3.width()
          h = self.image3.height()
          self.image3.setPixmap(image.scaled(w,h,Qt.KeepAspectRatio))
-      self.imgCounter = (self.imgCounter +1)%3
+         LOG("Image 3 Display")
+      self.imgCounter = (self.imgCounter +1)
       self.imgTotal +=1
 
 
